@@ -3,6 +3,7 @@ import { TelegramService } from './telegram.service';
 import { TelegramController } from './telegram.controller';
 import { NestjsGrammyModule } from '@grammyjs/nestjs';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { CardModule } from '../card/card.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
         token: configService.get<string>('TELEGRAM_BOT_TOKEN') as string,
       }),
     }),
+    CardModule,
   ],
   providers: [TelegramController],
 })
