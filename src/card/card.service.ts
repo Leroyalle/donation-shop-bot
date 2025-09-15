@@ -11,4 +11,8 @@ export class CardService {
   async getAll() {
     return await this.cardRepository.find();
   }
+
+  async getById(id: string) {
+    return await this.cardRepository.findOne({ where: { id } });
+  }
 }

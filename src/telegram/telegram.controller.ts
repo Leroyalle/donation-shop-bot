@@ -3,6 +3,8 @@ import { InjectBot, Start, Update, CallbackQuery } from '@grammyjs/nestjs';
 import { Bot, Context } from 'grammy';
 import { InlineKeyboard } from 'grammy';
 import { CardService } from 'src/card/card.service';
+import { UserService } from 'src/user/user.service';
+import { CartService } from 'src/cart/cart.service';
 
 interface Product {
   id: number;
@@ -41,10 +43,25 @@ export class TelegramController {
   constructor(
     @InjectBot() private readonly bot: Bot<Context>,
     private readonly cardService: CardService,
+    private readonly userService: UserService,
+    private readonly cartService: CartService,
   ) {}
 
   @Start()
   async onStart(ctx: Context) {
+    const telegramId = ctx.from?.id;
+    const username = ctx.from?.username;
+    const firstName = ctx.from?.first_name;
+
+    if (!telegramId) return;
+
+    await this.userService.createOrFindUser({
+      telegramId,
+      name: firstName,
+      username,
+      cart: null,
+    });
+
     await ctx.reply(
       `Добро пожаловать в BRO STARS SHOP! 
 У нас вы можете пополнить баланс в APP STORE и оплатить любую программу в app store, продлить подписку или использовать средства для покупки в играх! 
@@ -67,6 +84,9 @@ export class TelegramController {
   @CallbackQuery('catalog')
   async getCatalog(ctx: Context) {
     console.log('[callback_query] catalog');
+    const telegramId = ctx.from?.id;
+    if (!telegramId) return;
+
     const cards = await this.cardService.getAll();
 
     if (cards.length === 0) {
@@ -86,6 +106,73 @@ export class TelegramController {
       ]);
 
       return await ctx.replyWithPhoto(card.imageUrl, {
+        caption: message,
+        reply_markup: keyboards,
+        parse_mode: 'HTML',
+      });
+    }
+  }
+
+  @CallbackQuery(/^addToCart:/)
+  async addToCart(ctx: Context) {
+    try {
+      console.log('add to cart init');
+      const data = ctx.callbackQuery?.data;
+      const id = data!.split(':')[1];
+      const telegramId = ctx.from?.id;
+
+      if (!telegramId) return;
+
+      const product = await this.cardService.getById(id);
+
+      if (!product) {
+        return await ctx.reply('Продукт не найден');
+      }
+
+      const user = await this.userService.findByTgId(telegramId);
+
+      if (!user) return;
+
+      console.log('after add to cart');
+
+      await this.cartService.addToCart(product.id, user);
+
+      return await ctx.reply(`Товар ${product.name} добавлен в корзину`);
+    } catch (e) {
+      await ctx.reply('Произошла ошибка при добавлении товара');
+      console.log(e);
+    }
+  }
+
+  @CallbackQuery('cart')
+  async getCart(ctx: Context) {
+    const telegramId = ctx.from?.id;
+
+    if (!telegramId) return;
+
+    const user = await this.userService.findByTgId(telegramId);
+
+    if (!user) return;
+
+    const cart = await this.cartService.getUserCart(user.id);
+
+    if (!cart) {
+      return await ctx.reply('Корзина не найдена');
+    }
+
+    for (const cartItem of cart.cartItems) {
+      const message = `<b>${cartItem.card.name}</b>\n${cartItem.card.description}`;
+
+      const keyboards = new InlineKeyboard([
+        [
+          {
+            text: `Купить - ${cartItem.card.price}`,
+            callback_data: `addToCart:${cartItem.card.id}`,
+          },
+        ],
+      ]);
+
+      return await ctx.replyWithPhoto(cartItem.card.imageUrl, {
         caption: message,
         reply_markup: keyboards,
         parse_mode: 'HTML',

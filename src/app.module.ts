@@ -3,6 +3,9 @@ import { TelegramModule } from './telegram/telegram.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { CardModule } from './card/card.module';
+import { CartModule } from './cart/cart.module';
+import { UserModule } from './user/user.module';
+import { CartItemModule } from './cart-item/cart-item.module';
 
 @Module({
   imports: [
@@ -29,6 +32,9 @@ import { CardModule } from './card/card.module';
       }),
     }),
     CardModule,
+    CartModule,
+    UserModule,
+    CartItemModule,
   ],
   providers: [],
 })

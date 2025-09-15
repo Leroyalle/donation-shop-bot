@@ -4,6 +4,8 @@ import { TelegramController } from './telegram.controller';
 import { NestjsGrammyModule } from '@grammyjs/nestjs';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { CardModule } from '../card/card.module';
+import { UserModule } from 'src/user/user.module';
+import { CartModule } from 'src/cart/cart.module';
 
 @Module({
   imports: [
@@ -16,6 +18,8 @@ import { CardModule } from '../card/card.module';
       }),
     }),
     CardModule,
+    UserModule,
+    CartModule,
   ],
   providers: [TelegramController],
 })
