@@ -27,6 +27,7 @@
     "@nestjs/mapped-types": "*",
     "@nestjs/platform-express": "^11.0.1",
     "@nestjs/typeorm": "^11.0.0",
+    "axios": "^1.12.2",
     "grammy": "^1.38.2",
     "mysql2": "^3.14.5",
     "pg": "^8.16.3",

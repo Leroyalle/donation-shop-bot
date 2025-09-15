@@ -59,6 +59,43 @@ export class CartService {
     console.log('cart after push', cart);
   }
 
+  async deleteFromCart(cartItemId: string) {
+    const cartItem = await this.cartItemService.findOne(cartItemId);
+
+    if (!cartItem) return;
+
+    await this.cartItemService.remove(cartItemId);
+
+    return cartItem;
+  }
+
+  async increment(cartItemId: string) {
+    const cartItem = await this.cartItemService.findOne(cartItemId);
+    if (!cartItem) return;
+
+    await this.cartItemService.update(cartItemId, {
+      quantity: cartItem.quantity + 1,
+    });
+
+    return this.cartItemService.findOne(cartItemId);
+  }
+
+  async decrement(cartItemId: string) {
+    const cartItem = await this.cartItemService.findOne(cartItemId);
+
+    if (!cartItem) return;
+
+    if (cartItem.quantity > 1) {
+      await this.cartItemService.update(cartItem.id, {
+        quantity: cartItem.quantity - 1,
+      });
+    } else {
+      await this.cartItemService.remove(cartItemId);
+    }
+
+    return this.cartItemService.findOne(cartItemId);
+  }
+
   async getUserCart(userId: string) {
     return await this.cartRepository.findOne({
       where: {

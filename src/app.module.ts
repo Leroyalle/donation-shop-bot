@@ -6,6 +6,7 @@ import { CardModule } from './card/card.module';
 import { CartModule } from './cart/cart.module';
 import { UserModule } from './user/user.module';
 import { CartItemModule } from './cart-item/cart-item.module';
+import { PaymentModule } from './payment/payment.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { CartItemModule } from './cart-item/cart-item.module';
     CartModule,
     UserModule,
     CartItemModule,
+    PaymentModule,
   ],
   providers: [],
 })

@@ -6,6 +6,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { CardModule } from '../card/card.module';
 import { UserModule } from 'src/user/user.module';
 import { CartModule } from 'src/cart/cart.module';
+import { CartItemModule } from 'src/cart-item/cart-item.module';
 
 @Module({
   imports: [

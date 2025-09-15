@@ -5,6 +5,8 @@ import { InlineKeyboard } from 'grammy';
 import { CardService } from 'src/card/card.service';
 import { UserService } from 'src/user/user.service';
 import { CartService } from 'src/cart/cart.service';
+import { Card } from 'src/card/entities/card.entity';
+import { CartItem } from 'src/cart-item/entities/cart-item.entity';
 
 interface Product {
   id: number;
@@ -83,7 +85,6 @@ export class TelegramController {
 
   @CallbackQuery('catalog')
   async getCatalog(ctx: Context) {
-    console.log('[callback_query] catalog');
     const telegramId = ctx.from?.id;
     if (!telegramId) return;
 
@@ -94,17 +95,7 @@ export class TelegramController {
     }
 
     for (const card of cards) {
-      const message = `<b>${card.name}</b>\n${card.description}`;
-
-      const keyboards = new InlineKeyboard([
-        [
-          {
-            text: `Купить - ${card.price}`,
-            callback_data: `addToCart:${card.id}`,
-          },
-        ],
-      ]);
-
+      const { message, keyboards } = this.buildCardCatalogKeyboard(card);
       return await ctx.replyWithPhoto(card.imageUrl, {
         caption: message,
         reply_markup: keyboards,
@@ -143,6 +134,37 @@ export class TelegramController {
       console.log(e);
     }
   }
+  @CallbackQuery(/^deleteFromCart:/)
+  async deleteFromCart(ctx: Context) {
+    try {
+      console.log('add to cart init');
+      const data = ctx.callbackQuery?.data;
+      const id = data!.split(':')[1];
+      const telegramId = ctx.from?.id;
+
+      if (!telegramId) return;
+
+      const user = await this.userService.findByTgId(telegramId);
+
+      if (!user) return;
+
+      console.log('after add to cart');
+
+      const deletedCartItem = await this.cartService.deleteFromCart(id);
+
+      console.log(deletedCartItem);
+
+      if (!deletedCartItem) return;
+
+      await ctx.deleteMessage();
+      return await ctx.reply(
+        `Товар ${deletedCartItem.card.name} удален из корзины`,
+      );
+    } catch (e) {
+      await ctx.reply('Произошла ошибка при удалении товара');
+      console.log(e);
+    }
+  }
 
   @CallbackQuery('cart')
   async getCart(ctx: Context) {
@@ -160,23 +182,68 @@ export class TelegramController {
       return await ctx.reply('Корзина не найдена');
     }
 
-    for (const cartItem of cart.cartItems) {
-      const message = `<b>${cartItem.card.name}</b>\n${cartItem.card.description}`;
+    if (cart.cartItems.length === 0) {
+      return ctx.reply('Корзина пуста');
+    }
 
-      const keyboards = new InlineKeyboard([
-        [
-          {
-            text: `Купить - ${cartItem.card.price}`,
-            callback_data: `addToCart:${cartItem.card.id}`,
-          },
-        ],
-      ]);
+    for (const cartItem of cart.cartItems) {
+      const { message, keyboards } = this.buildCartItemKeyboard(cartItem);
 
       return await ctx.replyWithPhoto(cartItem.card.imageUrl, {
         caption: message,
         reply_markup: keyboards,
         parse_mode: 'HTML',
       });
+    }
+  }
+
+  @CallbackQuery(/^increment:/)
+  async increment(ctx: Context) {
+    try {
+      const data = ctx.callbackQuery?.data;
+      const cartItemId = data!.split(':')[1];
+      const telegramId = ctx.from?.id;
+
+      if (!telegramId) return;
+
+      const user = await this.userService.findByTgId(telegramId);
+
+      if (!user) return;
+
+      const updatedCartItem = await this.cartService.increment(cartItemId);
+
+      if (!updatedCartItem) return;
+
+      const { keyboards } = this.buildCartItemKeyboard(updatedCartItem);
+
+      await ctx.editMessageReplyMarkup({ reply_markup: keyboards });
+    } catch {
+      await ctx.reply('Произошла ошибка при инкременте товара');
+    }
+  }
+
+  @CallbackQuery(/^decrement:/)
+  async decrement(ctx: Context) {
+    try {
+      const data = ctx.callbackQuery?.data;
+      const cartItemId = data!.split(':')[1];
+      const telegramId = ctx.from?.id;
+
+      if (!telegramId) return;
+
+      const user = await this.userService.findByTgId(telegramId);
+
+      if (!user) return;
+
+      const updatedCartItem = await this.cartService.decrement(cartItemId);
+
+      if (!updatedCartItem) return;
+
+      const { keyboards } = this.buildCartItemKeyboard(updatedCartItem);
+
+      await ctx.editMessageReplyMarkup({ reply_markup: keyboards });
+    } catch {
+      await ctx.reply('Произошла ошибка при декременте элемента корзины');
     }
   }
 
@@ -197,5 +264,49 @@ export class TelegramController {
     await ctx.editMessageText(
       `You bought: ${product.name} for ${product.price}`,
     );
+  }
+
+  buildCardCatalogKeyboard(card: Card) {
+    const message = `<b>${card.name}</b>\n${card.description}`;
+
+    const keyboards = new InlineKeyboard([
+      [
+        {
+          text: `Купить - ${card.price}`,
+          callback_data: `addToCart:${card.id}`,
+        },
+      ],
+    ]);
+
+    return { message, keyboards };
+  }
+
+  buildCartItemKeyboard(cartItem: CartItem) {
+    const message = `<b>${cartItem.card.name}</b>\n${cartItem.card.description}`;
+
+    const keyboards = new InlineKeyboard([
+      [
+        {
+          text: cartItem.quantity + 'шт',
+          callback_data: 'noop',
+        },
+      ],
+      [
+        {
+          text: `+`,
+          callback_data: `increment:${cartItem.id}`,
+        },
+        {
+          text: `Удалить`,
+          callback_data: `deleteFromCart:${cartItem.id}`,
+        },
+        {
+          text: `-`,
+          callback_data: `decrement:${cartItem.id}`,
+        },
+      ],
+    ]);
+
+    return { message, keyboards };
   }
 }

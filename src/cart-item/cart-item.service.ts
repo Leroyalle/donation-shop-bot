@@ -24,7 +24,13 @@ export class CartItemService {
   }
 
   async findOne(id: string) {
-    return await this.cartItemRepository.findOne({ where: { id } });
+    return await this.cartItemRepository.findOne({
+      where: { id },
+      relations: {
+        card: true,
+        cart: true,
+      },
+    });
   }
 
   async update(id: string, updateCartItemDto: Partial<Omit<CartItem, 'id'>>) {
@@ -35,7 +41,7 @@ export class CartItemService {
     }
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} cartItem`;
+  async remove(id: string) {
+    return await this.cartItemRepository.delete(id);
   }
 }
