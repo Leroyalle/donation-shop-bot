@@ -1,5 +1,5 @@
 export interface PaymentResponse {
-  data: string;
+  data: { data: string };
   error: PaymentError | null;
 }
 

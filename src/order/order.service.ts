@@ -10,11 +10,14 @@ export class OrderService {
     private readonly orderRepository: Repository<Order>,
   ) {}
 
-  async create(order: Omit<Order, 'id'>) {
-    await this.orderRepository.save(order);
+  async create(order: Omit<Order, 'id' | 'createdAt' | 'updatedAt'>) {
+    return await this.orderRepository.save(order);
   }
 
-  async update(id: string, order: Partial<Omit<Order, 'id'>>) {
-    await this.orderRepository.update(id, order);
+  async update(
+    id: string,
+    order: Partial<Omit<Order, 'id' | 'createdAt' | 'updatedAt'>>,
+  ) {
+    return await this.orderRepository.update(id, order);
   }
 }

@@ -2,11 +2,13 @@ import { Cart } from 'src/cart/entities/cart.entity';
 import { User } from 'src/user/entities/user.entity';
 import {
   Column,
+  CreateDateColumn,
   Entity,
   JoinColumn,
   ManyToOne,
   OneToOne,
   PrimaryGeneratedColumn,
+  UpdateDateColumn,
 } from 'typeorm';
 
 @Entity()
@@ -14,8 +16,8 @@ export class Order {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ unique: true })
-  paymentId: string;
+  @Column({ type: 'varchar', unique: true, nullable: true })
+  paymentId: string | null;
 
   @ManyToOne(() => User, (user) => user.orders)
   user: User;
@@ -32,4 +34,10 @@ export class Order {
 
   @Column()
   status: 'NEW' | 'CONFIRMED' | 'REJECTED';
+
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
 }
