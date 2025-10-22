@@ -110,4 +110,14 @@ export class CartService {
       },
     });
   }
+
+  async clearCart(userId: string) {
+    const cart = await this.getUserCart(userId);
+
+    if (!cart) return;
+
+    await this.cartItemService.deleteFromCart(cart.id);
+
+    return await this.cartRepository.findOne({ where: { id: cart.id } });
+  }
 }

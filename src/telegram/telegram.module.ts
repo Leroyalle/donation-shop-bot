@@ -1,11 +1,11 @@
 import { Module } from '@nestjs/common';
-import { TelegramService } from './telegram.service';
 import { TelegramController } from './telegram.controller';
 import { NestjsGrammyModule } from '@grammyjs/nestjs';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { CardModule } from '../card/card.module';
 import { UserModule } from 'src/user/user.module';
 import { CartModule } from 'src/cart/cart.module';
+import { PaymentModule } from 'src/payment/payment.module';
 import { CartItemModule } from 'src/cart-item/cart-item.module';
 
 @Module({
@@ -21,6 +21,17 @@ import { CartItemModule } from 'src/cart-item/cart-item.module';
     CardModule,
     UserModule,
     CartModule,
+    PaymentModule.registerAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => {
+        return {
+          secretKey: configService.get<string>('SECRET') as string,
+          loginKey: configService.get<string>('LOGIN') as string,
+        };
+      },
+    }),
+    CartItemModule,
   ],
   providers: [TelegramController],
 })

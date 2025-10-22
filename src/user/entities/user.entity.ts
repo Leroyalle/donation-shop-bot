@@ -1,8 +1,10 @@
 import { Cart } from 'src/cart/entities/cart.entity';
+import { Order } from 'src/order/entities/order.entity';
 import {
   Column,
   Entity,
   JoinColumn,
+  OneToMany,
   OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
@@ -24,4 +26,7 @@ export class User {
   @OneToOne(() => Cart, (cart) => cart.user, { cascade: true, nullable: true })
   @JoinColumn()
   cart: Cart | null;
+
+  @OneToMany(() => Order, (order) => order.user)
+  orders: Order[];
 }

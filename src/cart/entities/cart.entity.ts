@@ -1,4 +1,5 @@
 import { CartItem } from 'src/cart-item/entities/cart-item.entity';
+import { Order } from 'src/order/entities/order.entity';
 import { User } from 'src/user/entities/user.entity';
 import { Entity, OneToMany, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
 
@@ -12,4 +13,7 @@ export class Cart {
 
   @OneToMany(() => CartItem, (cartItem) => cartItem.cart)
   cartItems: CartItem[];
+
+  @OneToOne(() => Order, (order) => order.cart)
+  order: Order;
 }

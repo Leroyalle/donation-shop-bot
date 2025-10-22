@@ -7,6 +7,8 @@ import { UserService } from 'src/user/user.service';
 import { CartService } from 'src/cart/cart.service';
 import { Card } from 'src/card/entities/card.entity';
 import { CartItem } from 'src/cart-item/entities/cart-item.entity';
+import { CartItemService } from 'src/cart-item/cart-item.service';
+import { PaymentService } from 'src/payment/payment.service';
 
 interface Product {
   id: number;
@@ -47,6 +49,8 @@ export class TelegramController {
     private readonly cardService: CardService,
     private readonly userService: UserService,
     private readonly cartService: CartService,
+    private readonly cartItemService: CartItemService,
+    private readonly paymentService: PaymentService,
   ) {}
 
   @Start()
@@ -62,6 +66,7 @@ export class TelegramController {
       name: firstName,
       username,
       cart: null,
+      orders: [],
     });
 
     await ctx.reply(
@@ -189,12 +194,17 @@ export class TelegramController {
     for (const cartItem of cart.cartItems) {
       const { message, keyboards } = this.buildCartItemKeyboard(cartItem);
 
-      return await ctx.replyWithPhoto(cartItem.card.imageUrl, {
+      await ctx.replyWithPhoto(cartItem.card.imageUrl, {
         caption: message,
         reply_markup: keyboards,
         parse_mode: 'HTML',
       });
     }
+    return await ctx.reply('Оформить заказ:', {
+      reply_markup: new InlineKeyboard([
+        [{ text: 'Оформить', callback_data: 'buy' }],
+      ]),
+    });
   }
 
   @CallbackQuery(/^increment:/)
@@ -247,23 +257,35 @@ export class TelegramController {
     }
   }
 
-  @CallbackQuery(/buy_\d+/)
-  async onBuy(ctx: Context) {
-    const data = ctx.callbackQuery?.data;
-    const id = parseInt(data!.split('_')[1], 10);
-    const product = products.find((p) => p.id === id);
+  @CallbackQuery('buy')
+  async onClickBuy(ctx: Context) {
+    const telegramId = ctx.from?.id;
 
-    if (!product) {
+    if (!telegramId) return;
+
+    const user = await this.userService.findByTgId(telegramId);
+
+    if (!user) return;
+
+    const cart = await this.cartService.getUserCart(user.id);
+
+    if (!cart) {
       return ctx.answerCallbackQuery({
-        text: 'Product not found',
+        text: 'Корзина пуста',
         show_alert: true,
       });
     }
 
-    await ctx.answerCallbackQuery({ text: `You bought: ${product.name}! 🎉` });
-    await ctx.editMessageText(
-      `You bought: ${product.name} for ${product.price}`,
-    );
+    const paymentUrl = await this.paymentService.createPayment(cart, user);
+
+    if (!paymentUrl)
+      return await ctx.reply('Не удалось создать платеж. Попробуйте еще раз');
+
+    await ctx.reply('Оплатить заказ по ссылке:', {
+      reply_markup: new InlineKeyboard([
+        [{ text: 'Оплатить', url: paymentUrl }],
+      ]),
+    });
   }
 
   buildCardCatalogKeyboard(card: Card) {

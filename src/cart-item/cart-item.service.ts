@@ -44,4 +44,15 @@ export class CartItemService {
   async remove(id: string) {
     return await this.cartItemRepository.delete(id);
   }
+
+  async deleteFromCart(cartId: string) {
+    await this.cartItemRepository.delete({ cart: { id: cartId } });
+  }
+
+  async findAllByCart(cartId: string) {
+    return await this.cartItemRepository.find({
+      where: { cart: { id: cartId } },
+      relations: { card: true },
+    });
+  }
 }
