@@ -20,4 +20,14 @@ export class OrderService {
   ) {
     return await this.orderRepository.update(id, order);
   }
+
+  async findById(id: string) {
+    return await this.orderRepository.findOne({
+      where: { id },
+      relations: {
+        cart: true,
+        user: true,
+      },
+    });
+  }
 }

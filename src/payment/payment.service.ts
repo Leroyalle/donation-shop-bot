@@ -4,7 +4,7 @@ import { Cart } from 'src/cart/entities/cart.entity';
 import { CartItem } from 'src/cart-item/entities/cart-item.entity';
 import { User } from 'src/user/entities/user.entity';
 import axios from 'axios';
-import { TinkoffWebhookData } from './types/payment-status.type';
+import { PaymentWebhookData } from './types/payment-status.type';
 import { UserService } from 'src/user/user.service';
 import { CartService } from 'src/cart/cart.service';
 import { OrderService } from 'src/order/order.service';
@@ -15,6 +15,9 @@ import { PaymentRequest } from './types/payment-request-data.type';
 import { generatePaymentToken } from './lib/generate-payment-token.lib';
 import { PAYMENT_ENDPOINTS } from 'src/common/constants/api-paths';
 import { generateCkassaNumber } from './lib/generate-ckassa-order-id.lib';
+import { InjectBot } from '@grammyjs/nestjs';
+import { Bot, Context } from 'grammy';
+import { Order } from 'src/order/entities/order.entity';
 
 @Injectable()
 export class PaymentService {
@@ -24,6 +27,7 @@ export class PaymentService {
     private readonly cartService: CartService,
     private readonly orderService: OrderService,
     private readonly cartItemService: CartItemService,
+    @InjectBot() private readonly bot: Bot<Context>,
   ) {}
   onModuleInit() {
     console.log('PAYMENT CONF', this.paymentConfig);
@@ -93,32 +97,49 @@ export class PaymentService {
     }
   }
 
-  async paymentStatusWebhook(data: TinkoffWebhookData) {
-    const user = await this.userService.findById(data.DATA.userId);
+  async paymentStatusWebhook(data: PaymentWebhookData) {
+    // const user = await this.userService.findById(data.DATA.userId);
+    const order = await this.orderService.findById(data.property.orderId);
 
-    if (!user) return;
+    if (!order || !order.cart || !order.user.id) return;
 
-    const cart = await this.cartService.getUserCart(user.id);
+    // const cart = await this.cartService.getUserCart(order.cart.id);
 
-    if (!cart) return;
-
-    const cartItems = await this.cartItemService.findAllByCart(cart.id);
+    const cartItems = await this.cartItemService.findAllByCart(order.cart.id);
 
     if (cartItems.length === 0) return;
 
-    if (data.Success) {
-      const order = await this.orderService.update(cart.id, {
+    const result = await this.resolveWebhook(order, data.state);
+
+    if (result.state === 'SUCCESS') {
+      await this.bot.api.sendMessage(
+        order.user.telegramId,
+        'Заказ #' + order.id + ' успешно оплачен',
+        // TODO: высылать заказ
+      );
+    } else if (result.state === 'REJECTED') {
+      await this.bot.api.sendMessage(
+        order.user.telegramId,
+        'Заказ #' + order.id + ' отклонен',
+        // TODO: высылать заказ
+      );
+    }
+  }
+
+  async resolveWebhook(order: Order, state: string) {
+    if (state === 'SUCCESS') {
+      await this.orderService.update(order.cart.id, {
         status: 'CONFIRMED',
       });
-      await this.cartService.clearCart(cart.id);
-
-      return order;
+      await this.cartService.clearCart(order.cart.id);
     } else {
-      const order = await this.orderService.update(cart.id, {
+      await this.orderService.update(order.cart.id, {
         status: 'REJECTED',
       });
-
-      return order;
     }
+    return {
+      user: order.user,
+      state,
+    };
   }
 }

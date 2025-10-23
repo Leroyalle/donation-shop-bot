@@ -1,12 +1,14 @@
-export type TinkoffWebhookData = {
-  Success: boolean;
-  Status: PaymentStatus;
-  OrderId: string;
-  PaymentId: string;
-  DATA: {
-    userId: string;
-    amount: number;
-    [key: string]: any;
+export type PaymentWebhookData = {
+  regPayNum: number;
+  amount: number;
+  state: string;
+  result: {
+    code: number;
+    message: string;
+    details: unknown;
+  };
+  property: {
+    orderId: string;
   };
 };
 
