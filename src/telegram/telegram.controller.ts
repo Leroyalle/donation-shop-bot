@@ -10,28 +10,6 @@ import { CartItem } from 'src/cart-item/entities/cart-item.entity';
 import { CartItemService } from 'src/cart-item/cart-item.service';
 import { PaymentService } from 'src/payment/payment.service';
 
-interface Product {
-  id: number;
-  name: string;
-  price: string;
-  description?: string;
-}
-
-const products: Product[] = [
-  {
-    id: 1,
-    name: '250 гемов',
-    price: '100💎',
-    description: '150 гемов в игре бс',
-  },
-  {
-    id: 2,
-    name: '700 гемов',
-    price: '40💎',
-    description: '700 гемов в бравл старс',
-  },
-];
-
 const startButtons = [
   {
     name: 'Каталог',
@@ -90,6 +68,8 @@ export class TelegramController {
 
   @CallbackQuery('catalog')
   async getCatalog(ctx: Context) {
+    // stop Telegram loading animation for callback button
+
     const telegramId = ctx.from?.id;
     if (!telegramId) return;
 
@@ -98,6 +78,8 @@ export class TelegramController {
     if (cards.length === 0) {
       return await ctx.reply('Товаров пока нет!');
     }
+
+    await ctx.answerCallbackQuery();
 
     for (const card of cards) {
       const { message, keyboards } = this.buildCardCatalogKeyboard(card);
@@ -133,9 +115,11 @@ export class TelegramController {
 
       await this.cartService.addToCart(product.id, user);
 
-      return await ctx.reply(`Товар ${product.name} добавлен в корзину`);
+      await ctx.answerCallbackQuery();
+
+      return await ctx.reply(`✅ Товар ${product.name} добавлен в корзину`);
     } catch (e) {
-      await ctx.reply('Произошла ошибка при добавлении товара');
+      await ctx.reply('❌ Произошла ошибка при добавлении товара');
       console.log(e);
     }
   }
@@ -161,12 +145,14 @@ export class TelegramController {
 
       if (!deletedCartItem) return;
 
+      await ctx.answerCallbackQuery();
+
       await ctx.deleteMessage();
       return await ctx.reply(
-        `Товар ${deletedCartItem.card.name} удален из корзины`,
+        `✅ Товар ${deletedCartItem.card.name} удален из корзины`,
       );
     } catch (e) {
-      await ctx.reply('Произошла ошибка при удалении товара');
+      await ctx.reply('❌ Произошла ошибка при удалении товара');
       console.log(e);
     }
   }
@@ -183,12 +169,14 @@ export class TelegramController {
 
     const cart = await this.cartService.getUserCart(user.id);
 
+    await ctx.answerCallbackQuery();
+
     if (!cart) {
       return await ctx.reply('Корзина не найдена');
     }
 
     if (cart.cartItems.length === 0) {
-      return ctx.reply('Корзина пуста');
+      return await ctx.reply('Вы еще не добавили ни одного товара 🪹');
     }
 
     for (const cartItem of cart.cartItems) {
@@ -200,9 +188,9 @@ export class TelegramController {
         parse_mode: 'HTML',
       });
     }
-    return await ctx.reply('Оформить заказ:', {
+    return await ctx.reply('Оплатить корзину:', {
       reply_markup: new InlineKeyboard([
-        [{ text: 'Оформить', callback_data: 'buy' }],
+        [{ text: 'Перейти к оформлению', callback_data: 'buy' }],
       ]),
     });
   }
@@ -225,6 +213,8 @@ export class TelegramController {
       if (!updatedCartItem) return;
 
       const { keyboards } = this.buildCartItemKeyboard(updatedCartItem);
+
+      await ctx.answerCallbackQuery();
 
       await ctx.editMessageReplyMarkup({ reply_markup: keyboards });
     } catch {
@@ -251,10 +241,17 @@ export class TelegramController {
 
       const { keyboards } = this.buildCartItemKeyboard(updatedCartItem);
 
+      await ctx.answerCallbackQuery();
+
       await ctx.editMessageReplyMarkup({ reply_markup: keyboards });
     } catch {
       await ctx.reply('Произошла ошибка при декременте элемента корзины');
     }
+  }
+
+  @CallbackQuery('noop')
+  async noop(ctx: Context) {
+    await ctx.answerCallbackQuery();
   }
 
   @CallbackQuery('buy')
@@ -268,6 +265,8 @@ export class TelegramController {
     if (!user) return;
 
     const cart = await this.cartService.getUserCart(user.id);
+
+    await ctx.answerCallbackQuery();
 
     if (!cart) {
       return ctx.answerCallbackQuery({
@@ -294,7 +293,7 @@ export class TelegramController {
     const keyboards = new InlineKeyboard([
       [
         {
-          text: `Купить - ${card.price}`,
+          text: `Добавить в корзину - ${card.price}`,
           callback_data: `addToCart:${card.id}`,
         },
       ],
