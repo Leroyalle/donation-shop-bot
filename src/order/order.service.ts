@@ -21,9 +21,9 @@ export class OrderService {
     return await this.orderRepository.update(id, order);
   }
 
-  async findById(id: string) {
+  async findByPaymentId(paymentId: string) {
     return await this.orderRepository.findOne({
-      where: { id },
+      where: { paymentId },
       relations: {
         cart: true,
         user: true,
