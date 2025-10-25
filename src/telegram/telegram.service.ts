@@ -4,10 +4,20 @@ import { startButtons } from './constants/start-buttons.constants';
 import { CardService } from 'src/card/card.service';
 import { CartItem } from 'src/cart-item/entities/cart-item.entity';
 import { Card } from 'src/card/entities/card.entity';
+import { CartService } from 'src/cart/cart.service';
+import { UserService } from 'src/user/user.service';
+import { CartItemService } from 'src/cart-item/cart-item.service';
+import { PaymentService } from 'src/payment/payment.service';
 
 @Injectable()
 export class TelegramService {
-  constructor(private readonly cardService: CardService) {}
+  constructor(
+    private readonly cardService: CardService,
+    private readonly cartService: CartService,
+    private readonly userService: UserService,
+    private readonly cartItemService: CartItemService,
+    private readonly paymentService: PaymentService,
+  ) {}
 
   public async sendStartReply(ctx: Context) {
     await ctx.reply(
@@ -129,7 +139,7 @@ export class TelegramService {
       .text('Удалить', `deleteFromCart:${cartItem.id}:${page}`)
       .text('-', `decrement:${cartItem.id}:${page}`)
       .row()
-      .text(`✅ Заказ на ${amount} ₽ Оформить?`, 'buy')
+      .text(`✅ Заказ на ${amount} ₽ Оформить?`, 'checkout')
       .row()
       .text('🛒 Продолжить покупки', 'catalog:0');
 
@@ -147,5 +157,136 @@ export class TelegramService {
     console.log('after reply');
 
     return { message, keyboards };
+  }
+
+  public async handleIncrement(ctx: Context) {
+    try {
+      const data = ctx.callbackQuery?.data;
+      if (!data) return;
+      const [_, cartItemId, pageStr] = data.split(':');
+      const page = Number(pageStr) || 0;
+      const telegramId = ctx.from?.id;
+      if (!telegramId) return;
+      await this.cartService.increment(cartItemId);
+      await this.showCartPage(ctx, page);
+    } catch {
+      await ctx.reply('Произошла ошибка при инкременте товара');
+    }
+  }
+
+  public async handleDecrement(ctx: Context) {
+    try {
+      const data = ctx.callbackQuery?.data;
+      if (!data) return;
+      const [_, cartItemId, pageStr] = data.split(':');
+      const page = Number(pageStr) || 0;
+      const telegramId = ctx.from?.id;
+      if (!telegramId) return;
+      await this.cartService.decrement(cartItemId);
+      await this.showCartPage(ctx, page);
+    } catch {
+      await ctx.reply('Произошла ошибка при декременте элемента корзины');
+    }
+  }
+
+  public async showCartPage(
+    ctx: Context,
+    page: number,
+    editable: boolean = true,
+  ) {
+    const telegramId = ctx.from?.id;
+    if (!telegramId) return;
+
+    const user = await this.handleCreateOrFindUser(ctx);
+
+    if (!user) return;
+
+    const pageSize = 1;
+    const { cartItems, totalItems } =
+      await this.cartItemService.getUserCartPage(user.id, page, pageSize);
+    const cart = await this.cartService.getUserCart(user.id);
+
+    if (!cartItems || cartItems.length === 0 || !cart) {
+      await ctx.answerCallbackQuery();
+      return await ctx.reply('Вы еще не добавили ни одного товара 🪹');
+    }
+    const amount = cart.cartItems.reduce(
+      (acc, item) => acc + item.card.price * item.quantity,
+      0,
+    );
+    const totalPages = Math.ceil(totalItems / pageSize);
+    const { message, keyboards } = this.buildCartItemKeyboard(
+      cartItems[0],
+      page,
+      totalPages,
+      amount,
+    );
+
+    await ctx.answerCallbackQuery();
+    if (editable) {
+      await ctx.editMessageMedia(
+        {
+          type: 'photo',
+          media: cartItems[0].card.imageUrl,
+          caption: message,
+          parse_mode: 'HTML',
+        },
+        {
+          reply_markup: keyboards,
+        },
+      );
+    } else {
+      await ctx.replyWithPhoto(cartItems[0].card.imageUrl, {
+        caption: message,
+        parse_mode: 'HTML',
+        reply_markup: keyboards,
+      });
+    }
+  }
+
+  public async handleCreateOrFindUser(ctx: Context) {
+    const telegramId = ctx.from?.id;
+    if (!telegramId) return;
+
+    const username = ctx.from?.username;
+    const firstName = ctx.from?.first_name;
+
+    return await this.userService.createOrFindUser({
+      telegramId,
+      name: firstName,
+      username,
+      cart: null,
+      orders: [],
+    });
+  }
+
+  public async paymentHandler(ctx: Context, email: string) {
+    const telegramId = ctx.from?.id;
+    if (!telegramId) return;
+    const user = await this.handleCreateOrFindUser(ctx);
+    if (!user) return;
+
+    const cart = await this.cartService.getUserCart(user.id);
+    await ctx.answerCallbackQuery();
+
+    if (!cart || cart.cartItems.length === 0)
+      return ctx.answerCallbackQuery({
+        text: 'Корзина пуста',
+        show_alert: true,
+      });
+
+    const paymentUrl = await this.paymentService.createPayment(
+      cart,
+      user,
+      email,
+    );
+    if (!paymentUrl)
+      return await ctx.reply('Не удалось создать платеж. Попробуйте еще раз');
+
+    await ctx.reply('Оплатить заказ по ссылке:', {
+      reply_markup: new InlineKeyboard([
+        [{ text: 'Оплатить', url: paymentUrl }],
+      ]),
+    });
   }
 }

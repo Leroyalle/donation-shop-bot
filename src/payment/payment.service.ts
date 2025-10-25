@@ -26,7 +26,7 @@ export class PaymentService {
     console.log('PAYMENT CONF', this.paymentConfig);
   }
 
-  async createPayment(cart: Cart, user: User) {
+  async createPayment(cart: Cart, user: User, email: string) {
     try {
       const amount = cart.cartItems.reduce((acc, item) => {
         return (acc += Number(item.card.price) * item.quantity * 100);
@@ -39,6 +39,7 @@ export class PaymentService {
         cart,
         paymentId: null,
         items: JSON.stringify(cartItems),
+        email,
         user,
         status: 'NEW',
       });
@@ -118,7 +119,11 @@ export class PaymentService {
     if (state === 'PAYED') {
       await this.bot.api.sendMessage(
         order.user.telegramId,
-        'Заказ #' + order.id + ' на сумму ' + order.amount + ' успешно оплачен',
+        'Заказ #' +
+          order.id +
+          ' на сумму ' +
+          order.amount +
+          ' успешно оплачен \n\nДанные будут отправлены на вашу электронную почту в течении 20 минут!',
         // TODO: высылать заказ
       );
     }

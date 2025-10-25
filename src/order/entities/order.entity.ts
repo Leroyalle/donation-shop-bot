@@ -24,6 +24,10 @@ export class Order {
   @Column()
   amount: number;
 
+  // TODO: поставить класс валидатор
+  @Column({ nullable: true, type: 'varchar' })
+  email: string | null;
+
   @Column('jsonb')
   items: string;
 

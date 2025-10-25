@@ -8,6 +8,7 @@ import { CartModule } from 'src/cart/cart.module';
 import { PaymentModule } from 'src/payment/payment.module';
 import { CartItemModule } from 'src/cart-item/cart-item.module';
 import { TelegramService } from './telegram.service';
+import { session } from 'grammy';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { TelegramService } from './telegram.service';
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
         token: configService.get<string>('TELEGRAM_BOT_TOKEN') as string,
+        middlewares: [session()],
       }),
     }),
     CardModule,
