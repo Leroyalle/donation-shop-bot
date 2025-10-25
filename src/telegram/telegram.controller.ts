@@ -11,7 +11,7 @@ import { CartItemService } from 'src/cart-item/cart-item.service';
 import { PaymentService } from 'src/payment/payment.service';
 
 const startButtons = [
-  { name: 'Каталог', callback_data: 'catalog' },
+  { name: 'Каталог', callback_data: 'catalog:0' },
   { name: 'Заказы', callback_data: 'orders' },
   { name: 'Корзина', callback_data: 'cart' },
 ];
@@ -34,7 +34,6 @@ export class TelegramController {
       { command: 'catalog', description: 'Посмотреть каталог товаров' },
       { command: 'cart', description: 'Корзина' },
       { command: 'orders', description: 'Мои заказы' },
-      { command: 'help', description: 'Помощь / контакты' },
     ]);
     console.log('Bot commands set!');
   }
@@ -79,24 +78,39 @@ export class TelegramController {
     );
   }
 
-  @CallbackQuery('catalog')
+  @CallbackQuery(/^catalog:/)
   async getCatalog(ctx: Context) {
+    const data = ctx.callbackQuery?.data;
+    console.log(data);
+    if (!data) return;
+    const page = Number(data.split(':')[1]);
+    if (isNaN(page)) return;
     const telegramId = ctx.from?.id;
     if (!telegramId) return;
-
-    const cards = await this.cardService.getAll();
-    if (cards.length === 0) return await ctx.reply('Товаров пока нет!');
+    const perPage = 1;
+    const [cards, totalItems] = await this.cardService.getByPage(page, perPage);
+    console.log(cards);
+    if (cards.length === 0)
+      return await ctx.reply('Товаров пока нет! Попробуйте позже');
 
     await ctx.answerCallbackQuery();
-
-    for (const card of cards) {
-      const { message, keyboards } = this.buildCardCatalogKeyboard(card);
-      await ctx.replyWithPhoto(card.imageUrl, {
+    const { message, keyboards } = this.buildCardCatalogKeyboard(
+      cards[0],
+      page,
+      totalItems,
+      perPage,
+    );
+    await ctx.editMessageMedia(
+      {
+        type: 'photo',
+        media: cards[0].imageUrl,
         caption: message,
-        reply_markup: keyboards,
         parse_mode: 'HTML',
-      });
-    }
+      },
+      {
+        reply_markup: keyboards,
+      },
+    );
   }
 
   @CallbackQuery(/^addToCart:/)
@@ -173,7 +187,6 @@ export class TelegramController {
 
     await ctx.answerCallbackQuery();
 
-    // Здесь предполагается метод с пагинацией в БД
     const pageSize = 5;
     const { cartItems, totalItems } =
       await this.cartItemService.getUserCartPage(user.id, page, pageSize);
@@ -188,6 +201,7 @@ export class TelegramController {
 
     cartItems.forEach((cartItem) => {
       keyboard
+
         .text(`${cartItem.card.name} x${cartItem.quantity}`, 'noop')
         .row()
         .text('+', `increment:${cartItem.id}:${page}`)
@@ -284,12 +298,32 @@ export class TelegramController {
     });
   }
 
-  buildCardCatalogKeyboard(card: Card) {
+  private buildCardCatalogKeyboard(
+    card: Card,
+    page: number,
+    totalItems: number,
+    perPage: number = 1,
+  ) {
     const message = `<b>${card.name}</b>\n${card.description}`;
-    const keyboards = new InlineKeyboard().text(
-      `Добавить в корзину - ${card.price}`,
-      `addToCart:${card.id}`,
-    );
+    const keyboards = new InlineKeyboard().row({
+      text: `Добавить в корзину - ${card.price}`,
+      callback_data: `addToCart:${card.id}`,
+    });
+
+    const totalPages = Math.ceil(totalItems / perPage);
+
+    const navKeyboard: { text: string; callback_data: string }[] = [];
+    if (page > 0) {
+      navKeyboard.push({ text: '←', callback_data: `catalog:${page - 1}` });
+    }
+    navKeyboard.push({
+      text: `${page + 1}/${totalPages}`,
+      callback_data: 'noop',
+    });
+    if (page < totalPages - 1) {
+      navKeyboard.push({ text: '→', callback_data: `catalog:${page + 1}` });
+    }
+    keyboards.row(...navKeyboard);
     return { message, keyboards };
   }
 

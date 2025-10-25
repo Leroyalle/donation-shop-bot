@@ -66,7 +66,7 @@ export class CartItemService {
       relations: ['card', 'cart'],
       skip: page * pageSize,
       take: pageSize,
-      order: { createdAt: 'ASC' }, // или по какому-то другому полю
+      order: { createdAt: 'ASC' },
     });
 
     return { cartItems, totalItems };

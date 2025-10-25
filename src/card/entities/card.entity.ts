@@ -1,5 +1,11 @@
 import { CartItem } from 'src/cart-item/entities/cart-item.entity';
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 
 @Entity()
 export class Card {
@@ -20,6 +26,9 @@ export class Card {
 
   @ManyToOne(() => CartItem, (cartItem) => cartItem.card)
   cartItems: CartItem[];
+
+  @CreateDateColumn()
+  createdAt: Date;
 
   // @Column('date')
   // createdAt: Date;
