@@ -60,13 +60,7 @@ export class CartService {
   }
 
   async deleteFromCart(cartItemId: string) {
-    const cartItem = await this.cartItemService.findOne(cartItemId);
-
-    if (!cartItem) return;
-
-    await this.cartItemService.remove(cartItemId);
-
-    return cartItem;
+    return await this.cartItemService.remove(cartItemId);
   }
 
   async increment(cartItemId: string) {

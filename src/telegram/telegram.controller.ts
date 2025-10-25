@@ -45,17 +45,6 @@ export class TelegramController {
 
     await this.handleCreateOrFindUser(ctx);
 
-    // const username = ctx.from?.username;
-    // const firstName = ctx.from?.first_name;
-
-    // await this.userService.createOrFindUser({
-    //   telegramId,
-    //   name: firstName,
-    //   username,
-    //   cart: null,
-    //   orders: [],
-    // });
-
     await ctx.reply(
       `<b>👋 Добро пожаловать в BRO STARS SHOP!</b>\n
 Здесь вы можете:
@@ -146,7 +135,7 @@ export class TelegramController {
     try {
       const data = ctx.callbackQuery?.data;
       if (!data) return;
-      const id = data.split(':')[1];
+      const [_, id, page] = data.split(':');
       const telegramId = ctx.from?.id;
       if (!telegramId) return;
 
@@ -154,14 +143,13 @@ export class TelegramController {
 
       if (!user) return;
 
-      const deletedCartItem = await this.cartService.deleteFromCart(id);
-      if (!deletedCartItem) return;
+      await this.cartService.deleteFromCart(id);
+      await this.showCartPage(ctx, Number(page));
 
-      await ctx.answerCallbackQuery();
-      await ctx.deleteMessage();
-      await ctx.reply(
-        `✅ Товар ${deletedCartItem.card.name} удален из корзины`,
-      );
+      await ctx.answerCallbackQuery({
+        text: '✅ Товар удален из корзины',
+        show_alert: true,
+      });
     } catch (e) {
       await ctx.reply('❌ Произошла ошибка при удалении товара');
       console.log(e);
