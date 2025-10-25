@@ -29,12 +29,11 @@ export class UserService {
     const user = await this.findByTgId(userData.telegramId);
 
     if (!user) {
-      await this.userRepository.save({
+      return await this.userRepository.save({
         name: userData.name,
         username: userData.username,
         telegramId: userData.telegramId,
       });
-      return;
     }
     return user;
   }

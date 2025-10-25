@@ -43,16 +43,18 @@ export class TelegramController {
     const telegramId = ctx.from?.id;
     if (!telegramId) return;
 
-    const username = ctx.from?.username;
-    const firstName = ctx.from?.first_name;
+    await this.handleCreateOrFindUser(ctx);
 
-    await this.userService.createOrFindUser({
-      telegramId,
-      name: firstName,
-      username,
-      cart: null,
-      orders: [],
-    });
+    // const username = ctx.from?.username;
+    // const firstName = ctx.from?.first_name;
+
+    // await this.userService.createOrFindUser({
+    //   telegramId,
+    //   name: firstName,
+    //   username,
+    //   cart: null,
+    //   orders: [],
+    // });
 
     await ctx.reply(
       `<b>👋 Добро пожаловать в BRO STARS SHOP!</b>\n
@@ -119,13 +121,15 @@ export class TelegramController {
       const data = ctx.callbackQuery?.data;
       if (!data) return;
       const id = data.split(':')[1];
+
       const telegramId = ctx.from?.id;
       if (!telegramId) return;
 
       const product = await this.cardService.getById(id);
       if (!product) return await ctx.reply('Продукт не найден');
 
-      const user = await this.userService.findByTgId(telegramId);
+      const user = await this.handleCreateOrFindUser(ctx);
+
       if (!user) return;
 
       await this.cartService.addToCart(product.id, user);
@@ -146,7 +150,8 @@ export class TelegramController {
       const telegramId = ctx.from?.id;
       if (!telegramId) return;
 
-      const user = await this.userService.findByTgId(telegramId);
+      const user = await this.handleCreateOrFindUser(ctx);
+
       if (!user) return;
 
       const deletedCartItem = await this.cartService.deleteFromCart(id);
@@ -182,7 +187,8 @@ export class TelegramController {
     const telegramId = ctx.from?.id;
     if (!telegramId) return;
 
-    const user = await this.userService.findByTgId(telegramId);
+    const user = await this.handleCreateOrFindUser(ctx);
+
     if (!user) return;
 
     await ctx.answerCallbackQuery();
@@ -223,9 +229,7 @@ export class TelegramController {
       const page = Number(pageStr) || 0;
       const telegramId = ctx.from?.id;
       if (!telegramId) return;
-
       await this.cartService.increment(cartItemId);
-
       await this.showCartPage(ctx, page);
     } catch {
       await ctx.reply('Произошла ошибка при инкременте товара');
@@ -241,10 +245,7 @@ export class TelegramController {
       const page = Number(pageStr) || 0;
       const telegramId = ctx.from?.id;
       if (!telegramId) return;
-
       await this.cartService.decrement(cartItemId);
-
-      console.log('After show cart page', cartItemId, page);
       await this.showCartPage(ctx, page);
     } catch {
       await ctx.reply('Произошла ошибка при декременте элемента корзины');
@@ -260,14 +261,13 @@ export class TelegramController {
   async onClickBuy(ctx: Context) {
     const telegramId = ctx.from?.id;
     if (!telegramId) return;
-
-    const user = await this.userService.findByTgId(telegramId);
+    const user = await this.handleCreateOrFindUser(ctx);
     if (!user) return;
 
     const cart = await this.cartService.getUserCart(user.id);
     await ctx.answerCallbackQuery();
 
-    if (!cart)
+    if (!cart || cart.cartItems.length === 0)
       return ctx.answerCallbackQuery({
         text: 'Корзина пуста',
         show_alert: true,
@@ -340,5 +340,21 @@ export class TelegramController {
     console.log('after reply');
 
     return { message, keyboards };
+  }
+
+  private async handleCreateOrFindUser(ctx: Context) {
+    const telegramId = ctx.from?.id;
+    if (!telegramId) return;
+
+    const username = ctx.from?.username;
+    const firstName = ctx.from?.first_name;
+
+    return await this.userService.createOrFindUser({
+      telegramId,
+      name: firstName,
+      username,
+      cart: null,
+      orders: [],
+    });
   }
 }
