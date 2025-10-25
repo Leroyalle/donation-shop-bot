@@ -5,11 +5,8 @@ import { InlineKeyboard } from 'grammy';
 import { CardService } from 'src/card/card.service';
 import { UserService } from 'src/user/user.service';
 import { CartService } from 'src/cart/cart.service';
-import { Card } from 'src/card/entities/card.entity';
-import { CartItem } from 'src/cart-item/entities/cart-item.entity';
 import { CartItemService } from 'src/cart-item/cart-item.service';
 import { PaymentService } from 'src/payment/payment.service';
-import { startButtons } from './constants/start-buttons.constants';
 import { TelegramService } from './telegram.service';
 
 @Update()
@@ -51,6 +48,7 @@ export class TelegramController {
     if (!data) return;
     const page = Number(data.split(':')[1]);
     if (isNaN(page)) return;
+    await ctx.answerCallbackQuery();
     await this.telegramService.showCatalogPage(ctx, page);
   }
 
@@ -252,7 +250,7 @@ export class TelegramController {
       await this.telegramService.sendStartReply(ctx);
     }
     if (text === '📂') {
-      await this.telegramService.showCatalogPage(ctx, 0);
+      await this.telegramService.showCatalogPage(ctx, 0, false);
     }
     if (text === '🧺') {
       await this.showCartPage(ctx, 0);

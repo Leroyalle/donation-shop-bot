@@ -33,16 +33,20 @@ export class TelegramService {
       },
     );
 
-    await ctx.reply('Привет! Выбери действие:', {
+    await ctx.reply('', {
       reply_markup: {
-        keyboard: [['🏠'], ['📂'], ['🧺']],
+        keyboard: [['🏠', '📂', '🧺']],
         resize_keyboard: true,
         one_time_keyboard: false,
       },
     });
   }
 
-  public async showCatalogPage(ctx: Context, page: number) {
+  public async showCatalogPage(
+    ctx: Context,
+    page: number,
+    editable: boolean = true,
+  ) {
     const telegramId = ctx.from?.id;
     if (!telegramId) return;
     const perPage = 1;
@@ -51,24 +55,32 @@ export class TelegramService {
     if (cards.length === 0)
       return await ctx.reply('Товаров пока нет! Попробуйте позже');
 
-    await ctx.answerCallbackQuery();
     const { message, keyboards } = this.buildCardCatalogKeyboard(
       cards[0],
       page,
       totalItems,
       perPage,
     );
-    await ctx.editMessageMedia(
-      {
-        type: 'photo',
-        media: cards[0].imageUrl,
+
+    if (editable) {
+      await ctx.editMessageMedia(
+        {
+          type: 'photo',
+          media: cards[0].imageUrl,
+          caption: message,
+          parse_mode: 'HTML',
+        },
+        {
+          reply_markup: keyboards,
+        },
+      );
+    } else {
+      await ctx.replyWithPhoto(cards[0].imageUrl, {
         caption: message,
         parse_mode: 'HTML',
-      },
-      {
         reply_markup: keyboards,
-      },
-    );
+      });
+    }
   }
 
   public buildCardCatalogKeyboard(
