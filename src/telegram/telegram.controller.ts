@@ -187,7 +187,7 @@ export class TelegramController {
 
     await ctx.answerCallbackQuery();
 
-    const pageSize = 5;
+    const pageSize = 1;
     const { cartItems, totalItems } =
       await this.cartItemService.getUserCartPage(user.id, page, pageSize);
 
@@ -196,34 +196,22 @@ export class TelegramController {
     }
 
     const totalPages = Math.ceil(totalItems / pageSize);
-
-    const keyboard = new InlineKeyboard();
-
-    cartItems.forEach((cartItem) => {
-      keyboard
-
-        .text(`${cartItem.card.name} x${cartItem.quantity}`, 'noop')
-        .row()
-        .text('+', `increment:${cartItem.id}:${page}`)
-        .text('Удалить', `deleteFromCart:${cartItem.id}`)
-        .text('-', `decrement:${cartItem.id}:${page}`)
-        .row();
-    });
-
-    const navKeyboard: { text: string; callback_data: string }[] = [];
-    if (page > 0)
-      navKeyboard.push({ text: '←', callback_data: `cartPage:${page - 1}` });
-    navKeyboard.push({
-      text: `${page + 1}/${totalPages}`,
-      callback_data: 'noop',
-    });
-    if (page < totalPages - 1)
-      navKeyboard.push({ text: '→', callback_data: `cartPage:${page + 1}` });
-    keyboard.row(...navKeyboard);
-
-    console.log('after reply');
-
-    await ctx.reply('Корзина:', { reply_markup: keyboard });
+    const { message, keyboards } = this.buildCartItemKeyboard(
+      cartItems[0],
+      page,
+      totalPages,
+    );
+    await ctx.editMessageMedia(
+      {
+        type: 'photo',
+        media: cartItems[0].card.imageUrl,
+        caption: message,
+        parse_mode: 'HTML',
+      },
+      {
+        reply_markup: keyboards,
+      },
+    );
   }
 
   @CallbackQuery(/^increment:/)
@@ -327,7 +315,11 @@ export class TelegramController {
     return { message, keyboards };
   }
 
-  buildCartItemKeyboard(cartItem: CartItem) {
+  private buildCartItemKeyboard(
+    cartItem: CartItem,
+    page: number,
+    totalPages: number,
+  ) {
     const message = `<b>${cartItem.card.name}</b>\n${cartItem.card.description}`;
     const keyboards = new InlineKeyboard()
       .text(`${cartItem.quantity} шт`, 'noop')
@@ -335,6 +327,20 @@ export class TelegramController {
       .text('+', `increment:${cartItem.id}`)
       .text('Удалить', `deleteFromCart:${cartItem.id}`)
       .text('-', `decrement:${cartItem.id}`);
+
+    const navKeyboard: { text: string; callback_data: string }[] = [];
+    if (page > 0)
+      navKeyboard.push({ text: '←', callback_data: `cartPage:${page - 1}` });
+    navKeyboard.push({
+      text: `${page + 1}/${totalPages}`,
+      callback_data: 'noop',
+    });
+    if (page < totalPages - 1)
+      navKeyboard.push({ text: '→', callback_data: `cartPage:${page + 1}` });
+    keyboards.row(...navKeyboard);
+
+    console.log('after reply');
+
     return { message, keyboards };
   }
 }
