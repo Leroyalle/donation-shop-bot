@@ -6,7 +6,6 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
-  OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -28,7 +27,7 @@ export class Order {
   @Column('jsonb')
   items: string;
 
-  @OneToOne(() => Cart, (cart) => cart.order)
+  @ManyToOne(() => Cart, (cart) => cart.orders)
   @JoinColumn()
   cart: Cart;
 

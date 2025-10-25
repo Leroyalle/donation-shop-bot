@@ -14,6 +14,6 @@ export class Cart {
   @OneToMany(() => CartItem, (cartItem) => cartItem.cart)
   cartItems: CartItem[];
 
-  @OneToOne(() => Order, (order) => order.cart)
-  order: Order;
+  @OneToMany(() => Order, (order) => order.cart)
+  orders: Order[];
 }

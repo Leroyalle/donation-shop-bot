@@ -1,26 +1,39 @@
 import { Injectable } from '@nestjs/common';
-import { CreateTelegramDto } from './dto/create-telegram.dto';
-import { UpdateTelegramDto } from './dto/update-telegram.dto';
+import { Context, InlineKeyboard } from 'grammy';
+import { startButtons } from './constants/start-buttons.constants';
 
 @Injectable()
 export class TelegramService {
-  create(createTelegramDto: CreateTelegramDto) {
-    return 'This action adds a new telegram';
-  }
+  public async sendStartReply(ctx: Context) {
+    await ctx.reply(
+      `<b>👋 Добро пожаловать в BRO STARS SHOP!</b>\n
+    Здесь вы можете:
+    • Пополнить баланс в <b>App Store</b>
+    • Оплатить любую подписку или приложение
+    • Использовать средства для покупок в играх\n
+    <b>Почему выбирают нас:</b>
+    💎 100% легальный донат  
+    💳 Официальные карты пополнения  
+    🌍 Работает с российскими аккаунтами  
+    ⚡ Моментальная доставка\n
+    Выберите раздел ниже, чтобы начать 👇`,
+      {
+        parse_mode: 'HTML',
+        reply_markup: new InlineKeyboard([
+          startButtons.map((b) => ({
+            text: b.name,
+            callback_data: b.callback_data,
+          })),
+        ]),
+      },
+    );
 
-  findAll() {
-    return `This action returns all telegram`;
-  }
-
-  findOne(id: number) {
-    return `This action returns a #${id} telegram`;
-  }
-
-  update(id: number, updateTelegramDto: UpdateTelegramDto) {
-    return `This action updates a #${id} telegram`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} telegram`;
+    await ctx.reply('Привет! Выбери действие:', {
+      reply_markup: {
+        keyboard: [['🏠'], ['📂'], ['🧺']],
+        resize_keyboard: true,
+        one_time_keyboard: false,
+      },
+    });
   }
 }

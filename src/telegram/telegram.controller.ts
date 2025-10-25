@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { InjectBot, Start, Update, CallbackQuery } from '@grammyjs/nestjs';
+import { InjectBot, Start, Update, CallbackQuery, On } from '@grammyjs/nestjs';
 import { Bot, Context } from 'grammy';
 import { InlineKeyboard } from 'grammy';
 import { CardService } from 'src/card/card.service';
@@ -9,12 +9,8 @@ import { Card } from 'src/card/entities/card.entity';
 import { CartItem } from 'src/cart-item/entities/cart-item.entity';
 import { CartItemService } from 'src/cart-item/cart-item.service';
 import { PaymentService } from 'src/payment/payment.service';
-
-const startButtons = [
-  { name: 'Каталог', callback_data: 'catalog:0' },
-  { name: 'Заказы', callback_data: 'orders' },
-  { name: 'Корзина', callback_data: 'cart' },
-];
+import { startButtons } from './constants/start-buttons.constants';
+import { TelegramService } from './telegram.service';
 
 @Update()
 @Injectable()
@@ -26,6 +22,7 @@ export class TelegramController {
     private readonly cartService: CartService,
     private readonly cartItemService: CartItemService,
     private readonly paymentService: PaymentService,
+    private readonly telegramService: TelegramService,
   ) {}
 
   async onModuleInit() {
@@ -44,29 +41,7 @@ export class TelegramController {
     if (!telegramId) return;
 
     await this.handleCreateOrFindUser(ctx);
-
-    await ctx.reply(
-      `<b>👋 Добро пожаловать в BRO STARS SHOP!</b>\n
-Здесь вы можете:
-• Пополнить баланс в <b>App Store</b>
-• Оплатить любую подписку или приложение
-• Использовать средства для покупок в играх\n
-<b>Почему выбирают нас:</b>
-💎 100% легальный донат  
-💳 Официальные карты пополнения  
-🌍 Работает с российскими аккаунтами  
-⚡ Моментальная доставка\n
-Выберите раздел ниже, чтобы начать 👇`,
-      {
-        parse_mode: 'HTML',
-        reply_markup: new InlineKeyboard([
-          startButtons.map((b) => ({
-            text: b.name,
-            callback_data: b.callback_data,
-          })),
-        ]),
-      },
-    );
+    await this.telegramService.sendStartReply(ctx);
   }
 
   @CallbackQuery(/^catalog:/)
@@ -179,22 +154,28 @@ export class TelegramController {
 
     if (!user) return;
 
-    await ctx.answerCallbackQuery();
-
     const pageSize = 1;
     const { cartItems, totalItems } =
       await this.cartItemService.getUserCartPage(user.id, page, pageSize);
+    const cart = await this.cartService.getUserCart(user.id);
 
-    if (!cartItems || cartItems.length === 0) {
+    if (!cartItems || cartItems.length === 0 || !cart) {
+      await ctx.answerCallbackQuery();
       return await ctx.reply('Вы еще не добавили ни одного товара 🪹');
     }
-
+    const amount = cart.cartItems.reduce(
+      (acc, item) => acc + item.card.price * item.quantity,
+      0,
+    );
     const totalPages = Math.ceil(totalItems / pageSize);
     const { message, keyboards } = this.buildCartItemKeyboard(
       cartItems[0],
       page,
       totalPages,
+      amount,
     );
+
+    await ctx.answerCallbackQuery();
     await ctx.editMessageMedia(
       {
         type: 'photo',
@@ -280,8 +261,8 @@ export class TelegramController {
   ) {
     const message = `<b>${card.name}</b>\n${card.description}`;
     const keyboards = new InlineKeyboard().row({
-      text: `Добавить в корзину - ${card.price}`,
-      callback_data: `addToCart:${card.id}`,
+      text: `Добавить в корзину - ${card.price} ₽`,
+      callback_data: `addToCart:${card.id}:${page}`,
     });
 
     const totalPages = Math.ceil(totalItems / perPage);
@@ -305,14 +286,22 @@ export class TelegramController {
     cartItem: CartItem,
     page: number,
     totalPages: number,
+    amount: number,
   ) {
     const message = `<b>${cartItem.card.name}</b>\n${cartItem.card.description}`;
     const keyboards = new InlineKeyboard()
-      .text(`${cartItem.quantity} шт`, 'noop')
+      .text(
+        `${cartItem.quantity} шт - ${cartItem.card.price * cartItem.quantity} ₽`,
+        'noop',
+      )
       .row()
       .text('+', `increment:${cartItem.id}:${page}`)
       .text('Удалить', `deleteFromCart:${cartItem.id}:${page}`)
-      .text('-', `decrement:${cartItem.id}:${page}`);
+      .text('-', `decrement:${cartItem.id}:${page}`)
+      .row()
+      .text(`✅ Заказ на ${amount} ₽ Оформить?`, 'buy')
+      .row()
+      .text('🛒 Продолжить покупки', 'catalog:0');
 
     const navKeyboard: { text: string; callback_data: string }[] = [];
     if (page > 0)
@@ -344,5 +333,14 @@ export class TelegramController {
       cart: null,
       orders: [],
     });
+  }
+
+  @On('message')
+  async onTextMessage(ctx: Context) {
+    const text = ctx.message?.text;
+    if (!text) return;
+    if (text === '🏠') {
+      await this.showCartPage(ctx, 0);
+    }
   }
 }
