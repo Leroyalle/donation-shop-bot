@@ -7,6 +7,7 @@ import { UserModule } from 'src/user/user.module';
 import { CartModule } from 'src/cart/cart.module';
 import { PaymentModule } from 'src/payment/payment.module';
 import { CartItemModule } from 'src/cart-item/cart-item.module';
+import { TelegramService } from './telegram.service';
 
 @Module({
   imports: [
@@ -33,6 +34,6 @@ import { CartItemModule } from 'src/cart-item/cart-item.module';
     }),
     CartItemModule,
   ],
-  providers: [TelegramController],
+  providers: [TelegramController, TelegramService],
 })
 export class TelegramModule {}
