@@ -227,7 +227,6 @@ export class TelegramController {
       await this.cartService.increment(cartItemId);
 
       await this.showCartPage(ctx, page);
-      await ctx.deleteMessage();
     } catch {
       await ctx.reply('Произошла ошибка при инкременте товара');
     }
@@ -247,7 +246,6 @@ export class TelegramController {
 
       console.log('After show cart page', cartItemId, page);
       await this.showCartPage(ctx, page);
-      await ctx.deleteMessage();
     } catch {
       await ctx.reply('Произошла ошибка при декременте элемента корзины');
     }
@@ -324,9 +322,9 @@ export class TelegramController {
     const keyboards = new InlineKeyboard()
       .text(`${cartItem.quantity} шт`, 'noop')
       .row()
-      .text('+', `increment:${cartItem.id}`)
-      .text('Удалить', `deleteFromCart:${cartItem.id}`)
-      .text('-', `decrement:${cartItem.id}`);
+      .text('+', `increment:${cartItem.id}:${page}`)
+      .text('Удалить', `deleteFromCart:${cartItem.id}:${page}`)
+      .text('-', `decrement:${cartItem.id}:${page}`);
 
     const navKeyboard: { text: string; callback_data: string }[] = [];
     if (page > 0)
