@@ -10,7 +10,7 @@ export class CartItemService {
     private readonly cartItemRepository: Repository<CartItem>,
   ) {}
 
-  async create(createCartItemDto: Omit<CartItem, 'id'>) {
+  async create(createCartItemDto: Omit<CartItem, 'id' | 'createdAt'>) {
     return await this.cartItemRepository.save(createCartItemDto);
   }
 
@@ -54,5 +54,21 @@ export class CartItemService {
       where: { cart: { id: cartId } },
       relations: { card: true },
     });
+  }
+
+  async getUserCartPage(userId: string, page: number, pageSize: number) {
+    const [cartItems, totalItems] = await this.cartItemRepository.findAndCount({
+      where: {
+        cart: {
+          user: { id: userId },
+        },
+      },
+      relations: ['card', 'cart'],
+      skip: page * pageSize,
+      take: pageSize,
+      order: { createdAt: 'ASC' }, // или по какому-то другому полю
+    });
+
+    return { cartItems, totalItems };
   }
 }

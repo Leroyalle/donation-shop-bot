@@ -11,10 +11,7 @@ import { CartItemService } from 'src/cart-item/cart-item.service';
 import { PaymentService } from 'src/payment/payment.service';
 
 const startButtons = [
-  {
-    name: 'Каталог',
-    callback_data: 'catalog',
-  },
+  { name: 'Каталог', callback_data: 'catalog' },
   { name: 'Заказы', callback_data: 'orders' },
   { name: 'Корзина', callback_data: 'cart' },
 ];
@@ -31,13 +28,24 @@ export class TelegramController {
     private readonly paymentService: PaymentService,
   ) {}
 
+  async onModuleInit() {
+    await this.bot.api.setMyCommands([
+      { command: 'start', description: 'Запуск бота' },
+      { command: 'catalog', description: 'Посмотреть каталог товаров' },
+      { command: 'cart', description: 'Корзина' },
+      { command: 'orders', description: 'Мои заказы' },
+      { command: 'help', description: 'Помощь / контакты' },
+    ]);
+    console.log('Bot commands set!');
+  }
+
   @Start()
   async onStart(ctx: Context) {
     const telegramId = ctx.from?.id;
+    if (!telegramId) return;
+
     const username = ctx.from?.username;
     const firstName = ctx.from?.first_name;
-
-    if (!telegramId) return;
 
     await this.userService.createOrFindUser({
       telegramId,
@@ -48,14 +56,19 @@ export class TelegramController {
     });
 
     await ctx.reply(
-      `Добро пожаловать в BRO STARS SHOP! 
-У нас вы можете пополнить баланс в APP STORE и оплатить любую программу в app store, продлить подписку или использовать средства для покупки в играх! 
-
- 💯 ЛЕГАЛЬНЫЙ ДОНАТ В МОБИЛЬНЫЕ ИГРЫ И ПОДПИСКИ В ПРИЛОЖЕНИЯХ
- 💯 ОФИЦИАЛЬНЫЕ КАРТЫ ПОПОЛНЕНИЯ
- 💯 СНИМАЕТ ВСЕ ОГРАНИЧЕНИЯ ДЛЯ РОССИЙСКИХ АККАУНТОВ 
- 💯 МОМЕНТАЛЬНАЯ ДОСТАВКА`,
+      `<b>👋 Добро пожаловать в BRO STARS SHOP!</b>\n
+Здесь вы можете:
+• Пополнить баланс в <b>App Store</b>
+• Оплатить любую подписку или приложение
+• Использовать средства для покупок в играх\n
+<b>Почему выбирают нас:</b>
+💎 100% легальный донат  
+💳 Официальные карты пополнения  
+🌍 Работает с российскими аккаунтами  
+⚡ Моментальная доставка\n
+Выберите раздел ниже, чтобы начать 👇`,
       {
+        parse_mode: 'HTML',
         reply_markup: new InlineKeyboard([
           startButtons.map((b) => ({
             text: b.name,
@@ -68,22 +81,17 @@ export class TelegramController {
 
   @CallbackQuery('catalog')
   async getCatalog(ctx: Context) {
-    // stop Telegram loading animation for callback button
-
     const telegramId = ctx.from?.id;
     if (!telegramId) return;
 
     const cards = await this.cardService.getAll();
-
-    if (cards.length === 0) {
-      return await ctx.reply('Товаров пока нет!');
-    }
+    if (cards.length === 0) return await ctx.reply('Товаров пока нет!');
 
     await ctx.answerCallbackQuery();
 
     for (const card of cards) {
       const { message, keyboards } = this.buildCardCatalogKeyboard(card);
-      return await ctx.replyWithPhoto(card.imageUrl, {
+      await ctx.replyWithPhoto(card.imageUrl, {
         caption: message,
         reply_markup: keyboards,
         parse_mode: 'HTML',
@@ -94,61 +102,45 @@ export class TelegramController {
   @CallbackQuery(/^addToCart:/)
   async addToCart(ctx: Context) {
     try {
-      console.log('add to cart init');
       const data = ctx.callbackQuery?.data;
-      const id = data!.split(':')[1];
+      if (!data) return;
+      const id = data.split(':')[1];
       const telegramId = ctx.from?.id;
-
       if (!telegramId) return;
 
       const product = await this.cardService.getById(id);
-
-      if (!product) {
-        return await ctx.reply('Продукт не найден');
-      }
+      if (!product) return await ctx.reply('Продукт не найден');
 
       const user = await this.userService.findByTgId(telegramId);
-
       if (!user) return;
 
-      console.log('after add to cart');
-
       await this.cartService.addToCart(product.id, user);
-
       await ctx.answerCallbackQuery();
-
-      return await ctx.reply(`✅ Товар ${product.name} добавлен в корзину`);
+      await ctx.reply(`✅ Товар ${product.name} добавлен в корзину`);
     } catch (e) {
       await ctx.reply('❌ Произошла ошибка при добавлении товара');
       console.log(e);
     }
   }
+
   @CallbackQuery(/^deleteFromCart:/)
   async deleteFromCart(ctx: Context) {
     try {
-      console.log('add to cart init');
       const data = ctx.callbackQuery?.data;
-      const id = data!.split(':')[1];
+      if (!data) return;
+      const id = data.split(':')[1];
       const telegramId = ctx.from?.id;
-
       if (!telegramId) return;
 
       const user = await this.userService.findByTgId(telegramId);
-
       if (!user) return;
 
-      console.log('after add to cart');
-
       const deletedCartItem = await this.cartService.deleteFromCart(id);
-
-      console.log(deletedCartItem);
-
       if (!deletedCartItem) return;
 
       await ctx.answerCallbackQuery();
-
       await ctx.deleteMessage();
-      return await ctx.reply(
+      await ctx.reply(
         `✅ Товар ${deletedCartItem.card.name} удален из корзины`,
       );
     } catch (e) {
@@ -159,64 +151,81 @@ export class TelegramController {
 
   @CallbackQuery('cart')
   async getCart(ctx: Context) {
-    const telegramId = ctx.from?.id;
+    await this.showCartPage(ctx, 0);
+  }
 
+  @CallbackQuery(/^cartPage:/)
+  async onCartPage(ctx: Context) {
+    const data = ctx.callbackQuery?.data;
+    if (!data) return;
+    const page = Number(data.split(':')[1]);
+    if (isNaN(page)) return;
+
+    await this.showCartPage(ctx, page);
+  }
+
+  private async showCartPage(ctx: Context, page: number) {
+    const telegramId = ctx.from?.id;
     if (!telegramId) return;
 
     const user = await this.userService.findByTgId(telegramId);
-
     if (!user) return;
-
-    const cart = await this.cartService.getUserCart(user.id);
 
     await ctx.answerCallbackQuery();
 
-    if (!cart) {
-      return await ctx.reply('Корзина не найдена');
-    }
+    // Здесь предполагается метод с пагинацией в БД
+    const pageSize = 5;
+    const { cartItems, totalItems } =
+      await this.cartItemService.getUserCartPage(user.id, page, pageSize);
 
-    if (cart.cartItems.length === 0) {
+    if (!cartItems || cartItems.length === 0) {
       return await ctx.reply('Вы еще не добавили ни одного товара 🪹');
     }
 
-    for (const cartItem of cart.cartItems) {
-      const { message, keyboards } = this.buildCartItemKeyboard(cartItem);
+    const totalPages = Math.ceil(totalItems / pageSize);
 
-      await ctx.replyWithPhoto(cartItem.card.imageUrl, {
-        caption: message,
-        reply_markup: keyboards,
-        parse_mode: 'HTML',
-      });
-    }
-    return await ctx.reply('Оплатить корзину:', {
-      reply_markup: new InlineKeyboard([
-        [{ text: 'Перейти к оформлению', callback_data: 'buy' }],
-      ]),
+    const keyboard = new InlineKeyboard();
+
+    cartItems.forEach((cartItem) => {
+      keyboard
+        .text(`${cartItem.card.name} x${cartItem.quantity}`, 'noop')
+        .row()
+        .text('+', `increment:${cartItem.id}:${page}`)
+        .text('Удалить', `deleteFromCart:${cartItem.id}`)
+        .text('-', `decrement:${cartItem.id}:${page}`)
+        .row();
     });
+
+    const navKeyboard: { text: string; callback_data: string }[] = [];
+    if (page > 0)
+      navKeyboard.push({ text: '←', callback_data: `cartPage:${page - 1}` });
+    navKeyboard.push({
+      text: `${page + 1}/${totalPages}`,
+      callback_data: 'noop',
+    });
+    if (page < totalPages - 1)
+      navKeyboard.push({ text: '→', callback_data: `cartPage:${page + 1}` });
+    keyboard.row(...navKeyboard);
+
+    console.log('after reply');
+
+    await ctx.reply('Корзина:', { reply_markup: keyboard });
   }
 
   @CallbackQuery(/^increment:/)
   async increment(ctx: Context) {
     try {
       const data = ctx.callbackQuery?.data;
-      const cartItemId = data!.split(':')[1];
+      if (!data) return;
+      const [_, cartItemId, pageStr] = data.split(':');
+      const page = Number(pageStr) || 0;
       const telegramId = ctx.from?.id;
-
       if (!telegramId) return;
 
-      const user = await this.userService.findByTgId(telegramId);
+      await this.cartService.increment(cartItemId);
 
-      if (!user) return;
-
-      const updatedCartItem = await this.cartService.increment(cartItemId);
-
-      if (!updatedCartItem) return;
-
-      const { keyboards } = this.buildCartItemKeyboard(updatedCartItem);
-
-      await ctx.answerCallbackQuery();
-
-      await ctx.editMessageReplyMarkup({ reply_markup: keyboards });
+      await this.showCartPage(ctx, page);
+      await ctx.deleteMessage();
     } catch {
       await ctx.reply('Произошла ошибка при инкременте товара');
     }
@@ -226,24 +235,17 @@ export class TelegramController {
   async decrement(ctx: Context) {
     try {
       const data = ctx.callbackQuery?.data;
-      const cartItemId = data!.split(':')[1];
+      if (!data) return;
+      const [_, cartItemId, pageStr] = data.split(':');
+      const page = Number(pageStr) || 0;
       const telegramId = ctx.from?.id;
-
       if (!telegramId) return;
 
-      const user = await this.userService.findByTgId(telegramId);
+      await this.cartService.decrement(cartItemId);
 
-      if (!user) return;
-
-      const updatedCartItem = await this.cartService.decrement(cartItemId);
-
-      if (!updatedCartItem) return;
-
-      const { keyboards } = this.buildCartItemKeyboard(updatedCartItem);
-
-      await ctx.answerCallbackQuery();
-
-      await ctx.editMessageReplyMarkup({ reply_markup: keyboards });
+      console.log('After show cart page', cartItemId, page);
+      await this.showCartPage(ctx, page);
+      await ctx.deleteMessage();
     } catch {
       await ctx.reply('Произошла ошибка при декременте элемента корзины');
     }
@@ -257,26 +259,21 @@ export class TelegramController {
   @CallbackQuery('buy')
   async onClickBuy(ctx: Context) {
     const telegramId = ctx.from?.id;
-
     if (!telegramId) return;
 
     const user = await this.userService.findByTgId(telegramId);
-
     if (!user) return;
 
     const cart = await this.cartService.getUserCart(user.id);
-
     await ctx.answerCallbackQuery();
 
-    if (!cart) {
+    if (!cart)
       return ctx.answerCallbackQuery({
         text: 'Корзина пуста',
         show_alert: true,
       });
-    }
 
     const paymentUrl = await this.paymentService.createPayment(cart, user);
-
     if (!paymentUrl)
       return await ctx.reply('Не удалось создать платеж. Попробуйте еще раз');
 
@@ -289,45 +286,21 @@ export class TelegramController {
 
   buildCardCatalogKeyboard(card: Card) {
     const message = `<b>${card.name}</b>\n${card.description}`;
-
-    const keyboards = new InlineKeyboard([
-      [
-        {
-          text: `Добавить в корзину - ${card.price}`,
-          callback_data: `addToCart:${card.id}`,
-        },
-      ],
-    ]);
-
+    const keyboards = new InlineKeyboard().text(
+      `Добавить в корзину - ${card.price}`,
+      `addToCart:${card.id}`,
+    );
     return { message, keyboards };
   }
 
   buildCartItemKeyboard(cartItem: CartItem) {
     const message = `<b>${cartItem.card.name}</b>\n${cartItem.card.description}`;
-
-    const keyboards = new InlineKeyboard([
-      [
-        {
-          text: cartItem.quantity + 'шт',
-          callback_data: 'noop',
-        },
-      ],
-      [
-        {
-          text: `+`,
-          callback_data: `increment:${cartItem.id}`,
-        },
-        {
-          text: `Удалить`,
-          callback_data: `deleteFromCart:${cartItem.id}`,
-        },
-        {
-          text: `-`,
-          callback_data: `decrement:${cartItem.id}`,
-        },
-      ],
-    ]);
-
+    const keyboards = new InlineKeyboard()
+      .text(`${cartItem.quantity} шт`, 'noop')
+      .row()
+      .text('+', `increment:${cartItem.id}`)
+      .text('Удалить', `deleteFromCart:${cartItem.id}`)
+      .text('-', `decrement:${cartItem.id}`);
     return { message, keyboards };
   }
 }

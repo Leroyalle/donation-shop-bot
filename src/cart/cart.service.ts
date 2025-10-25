@@ -76,8 +76,6 @@ export class CartService {
     await this.cartItemService.update(cartItemId, {
       quantity: cartItem.quantity + 1,
     });
-
-    return this.cartItemService.findOne(cartItemId);
   }
 
   async decrement(cartItemId: string) {
@@ -92,8 +90,6 @@ export class CartService {
     } else {
       await this.cartItemService.remove(cartItemId);
     }
-
-    return this.cartItemService.findOne(cartItemId);
   }
 
   async getUserCart(userId: string) {
