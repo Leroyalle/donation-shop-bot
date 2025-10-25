@@ -51,32 +51,7 @@ export class TelegramController {
     if (!data) return;
     const page = Number(data.split(':')[1]);
     if (isNaN(page)) return;
-    const telegramId = ctx.from?.id;
-    if (!telegramId) return;
-    const perPage = 1;
-    const [cards, totalItems] = await this.cardService.getByPage(page, perPage);
-    console.log(cards);
-    if (cards.length === 0)
-      return await ctx.reply('Товаров пока нет! Попробуйте позже');
-
-    await ctx.answerCallbackQuery();
-    const { message, keyboards } = this.buildCardCatalogKeyboard(
-      cards[0],
-      page,
-      totalItems,
-      perPage,
-    );
-    await ctx.editMessageMedia(
-      {
-        type: 'photo',
-        media: cards[0].imageUrl,
-        caption: message,
-        parse_mode: 'HTML',
-      },
-      {
-        reply_markup: keyboards,
-      },
-    );
+    await this.telegramService.showCatalogPage(ctx, page);
   }
 
   @CallbackQuery(/^addToCart:/)
@@ -168,7 +143,7 @@ export class TelegramController {
       0,
     );
     const totalPages = Math.ceil(totalItems / pageSize);
-    const { message, keyboards } = this.buildCartItemKeyboard(
+    const { message, keyboards } = this.telegramService.buildCartItemKeyboard(
       cartItems[0],
       page,
       totalPages,
@@ -253,72 +228,6 @@ export class TelegramController {
     });
   }
 
-  private buildCardCatalogKeyboard(
-    card: Card,
-    page: number,
-    totalItems: number,
-    perPage: number = 1,
-  ) {
-    const message = `<b>${card.name}</b>\n${card.description}`;
-    const keyboards = new InlineKeyboard().row({
-      text: `Добавить в корзину - ${card.price} ₽`,
-      callback_data: `addToCart:${card.id}:${page}`,
-    });
-
-    const totalPages = Math.ceil(totalItems / perPage);
-
-    const navKeyboard: { text: string; callback_data: string }[] = [];
-    if (page > 0) {
-      navKeyboard.push({ text: '←', callback_data: `catalog:${page - 1}` });
-    }
-    navKeyboard.push({
-      text: `${page + 1}/${totalPages}`,
-      callback_data: 'noop',
-    });
-    if (page < totalPages - 1) {
-      navKeyboard.push({ text: '→', callback_data: `catalog:${page + 1}` });
-    }
-    keyboards.row(...navKeyboard);
-    return { message, keyboards };
-  }
-
-  private buildCartItemKeyboard(
-    cartItem: CartItem,
-    page: number,
-    totalPages: number,
-    amount: number,
-  ) {
-    const message = `<b>${cartItem.card.name}</b>\n${cartItem.card.description}`;
-    const keyboards = new InlineKeyboard()
-      .text(
-        `${cartItem.quantity} шт - ${cartItem.card.price * cartItem.quantity} ₽`,
-        'noop',
-      )
-      .row()
-      .text('+', `increment:${cartItem.id}:${page}`)
-      .text('Удалить', `deleteFromCart:${cartItem.id}:${page}`)
-      .text('-', `decrement:${cartItem.id}:${page}`)
-      .row()
-      .text(`✅ Заказ на ${amount} ₽ Оформить?`, 'buy')
-      .row()
-      .text('🛒 Продолжить покупки', 'catalog:0');
-
-    const navKeyboard: { text: string; callback_data: string }[] = [];
-    if (page > 0)
-      navKeyboard.push({ text: '←', callback_data: `cartPage:${page - 1}` });
-    navKeyboard.push({
-      text: `${page + 1}/${totalPages}`,
-      callback_data: 'noop',
-    });
-    if (page < totalPages - 1)
-      navKeyboard.push({ text: '→', callback_data: `cartPage:${page + 1}` });
-    keyboards.row(...navKeyboard);
-
-    console.log('after reply');
-
-    return { message, keyboards };
-  }
-
   private async handleCreateOrFindUser(ctx: Context) {
     const telegramId = ctx.from?.id;
     if (!telegramId) return;
@@ -340,6 +249,12 @@ export class TelegramController {
     const text = ctx.message?.text;
     if (!text) return;
     if (text === '🏠') {
+      await this.telegramService.sendStartReply(ctx);
+    }
+    if (text === '📂') {
+      await this.telegramService.showCatalogPage(ctx, 0);
+    }
+    if (text === '🧺') {
       await this.showCartPage(ctx, 0);
     }
   }
