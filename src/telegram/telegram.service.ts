@@ -8,6 +8,9 @@ import { CartService } from 'src/cart/cart.service';
 import { UserService } from 'src/user/user.service';
 import { CartItemService } from 'src/cart-item/cart-item.service';
 import { PaymentService } from 'src/payment/payment.service';
+import { HttpClientService } from 'src/http-client/http-client.service';
+import { PAY_DIGITAL_PAYMENT_ENDPOINTS } from 'src/common/constants/api-paths';
+import { AdditionalGroup } from 'src/common/types/additional-group.type';
 
 @Injectable()
 export class TelegramService {
@@ -17,6 +20,7 @@ export class TelegramService {
     private readonly userService: UserService,
     private readonly cartItemService: CartItemService,
     private readonly paymentService: PaymentService,
+    private readonly httpClientService: HttpClientService,
   ) {}
 
   public async sendStartReply(ctx: Context) {
@@ -292,13 +296,67 @@ export class TelegramService {
 
   public async showCategories(ctx: Context) {
     const keyboards = new InlineKeyboard([
-      [{ text: 'Все товары', callback_data: 'catalog:0' }],
+      [{ text: 'Основные товары', callback_data: 'catalog:0' }],
       [{ text: 'Пополнение Steam', callback_data: 'steam' }],
-      [{ text: 'Дополнительные товары', callback_data: 'additional' }],
+      [
+        {
+          text: 'Дополнительные товары',
+          callback_data: 'additionalCategories',
+        },
+      ],
     ]);
 
     await ctx.reply('Выберите категорию услуг:', {
       reply_markup: keyboards,
     });
+  }
+
+  public async showAdditionalGroups(ctx: Context, group: string) {
+    const { data } = await this.httpClientService.payDigitalInstance.get<
+      AdditionalGroup[]
+    >(PAY_DIGITAL_PAYMENT_ENDPOINTS.getGroups, {
+      params: {
+        group,
+      },
+    });
+
+    await ctx.reply('Выберите группу:', {
+      reply_markup: new InlineKeyboard(
+        data.map((group) => [
+          {
+            text: group.group,
+            callback_data: `additional:${group.group}`,
+          },
+        ]),
+      ),
+    });
+  }
+
+  public async showAdditionalCategories(ctx: Context) {
+    const { data } = await this.httpClientService.payDigitalInstance.get<
+      AdditionalGroup[]
+    >(PAY_DIGITAL_PAYMENT_ENDPOINTS.getGroups);
+
+    const categories: Set<string> = new Set();
+    data.forEach((group) => categories.add(group.category));
+
+    await ctx.reply('Выберите категорию:', {
+      reply_markup: new InlineKeyboard(
+        Array.from(categories).map((category) => [
+          {
+            text: category,
+            callback_data: `additional:${category}`,
+          },
+        ]),
+      ),
+    });
+  }
+
+  public async showAdditionalPage(ctx: Context) {
+    const products = await this.httpClientService.payDigitalInstance.get(
+      PAY_DIGITAL_PAYMENT_ENDPOINTS.getGroups,
+    );
+
+    console.log(products);
   }
 }

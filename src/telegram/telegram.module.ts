@@ -9,6 +9,7 @@ import { PaymentModule } from 'src/payment/payment.module';
 import { CartItemModule } from 'src/cart-item/cart-item.module';
 import { TelegramService } from './telegram.service';
 import { session } from 'grammy';
+import { HttpClientModule } from 'src/http-client/http-client.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { session } from 'grammy';
     }),
     CardModule,
     UserModule,
+    HttpClientModule,
     CartModule,
     PaymentModule.registerAsync({
       imports: [ConfigModule],

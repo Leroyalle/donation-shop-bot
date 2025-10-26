@@ -3,7 +3,6 @@ import { InjectBot, Start, Update, CallbackQuery, On } from '@grammyjs/nestjs';
 import { Bot, Context } from 'grammy';
 import { CardService } from 'src/card/card.service';
 import { CartService } from 'src/cart/cart.service';
-import { PaymentService } from 'src/payment/payment.service';
 import { TelegramService } from './telegram.service';
 
 @Update()
@@ -13,7 +12,6 @@ export class TelegramController {
     @InjectBot() private readonly bot: Bot<Context>,
     private readonly cardService: CardService,
     private readonly cartService: CartService,
-    private readonly paymentService: PaymentService,
     private readonly telegramService: TelegramService,
   ) {}
 
@@ -45,6 +43,18 @@ export class TelegramController {
     if (isNaN(page)) return;
     await ctx.answerCallbackQuery();
     await this.telegramService.showCatalogPage(ctx, page);
+  }
+
+  @CallbackQuery('additionalCategories')
+  async getAdditionalCategories(ctx: Context) {
+    await ctx.answerCallbackQuery();
+    await this.telegramService.showAdditionalCategories(ctx);
+  }
+
+  @CallbackQuery(/^additional:/)
+  async getAdditionalServices(ctx: Context) {
+    await ctx.answerCallbackQuery();
+    await this.telegramService.showAdditionalGroups(ctx);
   }
 
   @CallbackQuery('categories')
