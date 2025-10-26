@@ -43,13 +43,13 @@ export class TelegramService {
       },
     );
 
-    await ctx.reply('', {
-      reply_markup: {
-        keyboard: [['🏠', '📂', '🧺']],
-        resize_keyboard: true,
-        one_time_keyboard: false,
-      },
-    });
+    // await ctx.reply('Вы так же можете воспользоваться меню ниже:', {
+    //   reply_markup: {
+    //     keyboard: [['🏠', '📂', '🧺']],
+    //     resize_keyboard: true,
+    //     one_time_keyboard: false,
+    //   },
+    // });
   }
 
   public async showCatalogPage(
@@ -287,6 +287,18 @@ export class TelegramService {
       reply_markup: new InlineKeyboard([
         [{ text: 'Оплатить', url: paymentUrl }],
       ]),
+    });
+  }
+
+  public async showCategories(ctx: Context) {
+    const keyboards = new InlineKeyboard([
+      [{ text: 'Все товары', callback_data: 'catalog:0' }],
+      [{ text: 'Пополнение Steam', callback_data: 'steam' }],
+      [{ text: 'Дополнительные товары', callback_data: 'additional' }],
+    ]);
+
+    await ctx.reply('Выберите категорию услуг:', {
+      reply_markup: keyboards,
     });
   }
 }

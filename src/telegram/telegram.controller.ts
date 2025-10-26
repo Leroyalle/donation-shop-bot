@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectBot, Start, Update, CallbackQuery, On } from '@grammyjs/nestjs';
 import { Bot, Context } from 'grammy';
-import { InlineKeyboard } from 'grammy';
 import { CardService } from 'src/card/card.service';
 import { CartService } from 'src/cart/cart.service';
 import { PaymentService } from 'src/payment/payment.service';
@@ -46,6 +45,12 @@ export class TelegramController {
     if (isNaN(page)) return;
     await ctx.answerCallbackQuery();
     await this.telegramService.showCatalogPage(ctx, page);
+  }
+
+  @CallbackQuery('categories')
+  async getCategories(ctx: Context) {
+    await ctx.answerCallbackQuery();
+    await this.telegramService.showCategories(ctx);
   }
 
   @CallbackQuery(/^addToCart:/)
@@ -143,7 +148,7 @@ export class TelegramController {
     ctx.session.waitingForEmail = true;
   }
 
-  @On('message')
+  @On('message:text')
   async onTextMessage(ctx: Context) {
     const text = ctx.message?.text;
     if (!text) return;
@@ -160,6 +165,7 @@ export class TelegramController {
       ctx.session.email = text;
       await this.telegramService.paymentHandler(ctx, ctx.session.email);
     }
+
     if (text === '🏠') {
       await this.telegramService.sendStartReply(ctx);
     }
@@ -167,7 +173,7 @@ export class TelegramController {
       await this.telegramService.showCatalogPage(ctx, 0, false);
     }
     if (text === '🧺') {
-      await this.telegramService.showCartPage(ctx, 0);
+      await this.telegramService.showCartPage(ctx, 0, false);
     }
   }
 }

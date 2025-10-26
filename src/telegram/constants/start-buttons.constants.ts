@@ -1,5 +1,5 @@
 export const startButtons = [
-  { name: 'Каталог', callback_data: 'catalog:0' },
+  { name: 'Наши услуги', callback_data: 'categories' },
   { name: 'Заказы', callback_data: 'orders' },
   { name: 'Корзина', callback_data: 'cart' },
 ];
