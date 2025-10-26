@@ -53,8 +53,11 @@ export class TelegramController {
 
   @CallbackQuery(/^additional:/)
   async getAdditionalServices(ctx: Context) {
+    const data = ctx.callbackQuery?.data;
+    if (!data) return;
+    const [_, group] = data.split(':');
     await ctx.answerCallbackQuery();
-    await this.telegramService.showAdditionalGroups(ctx);
+    await this.telegramService.showAdditionalGroups(ctx, group);
   }
 
   @CallbackQuery('categories')
