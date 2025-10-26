@@ -8,6 +8,7 @@ import { UserModule } from './user/user.module';
 import { CartItemModule } from './cart-item/cart-item.module';
 import { PaymentModule } from './payment/payment.module';
 import { OrderModule } from './order/order.module';
+import { HttpClientModule } from './http-client/http-client.module';
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { OrderModule } from './order/order.module';
     CartItemModule,
     PaymentModule,
     OrderModule,
+    HttpClientModule,
   ],
   providers: [],
 })

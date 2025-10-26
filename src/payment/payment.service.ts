@@ -7,7 +7,7 @@ import { PaymentWebhookData } from './types/payment-status.type';
 import { CartService } from 'src/cart/cart.service';
 import { OrderService } from 'src/order/order.service';
 import { CartItemService } from 'src/cart-item/cart-item.service';
-import { PAYMENT_ENDPOINTS } from 'src/common/constants/api-paths';
+import { CKASSA_PAYMENT_ENDPOINTS } from 'src/common/constants/api-paths';
 import { generateCkassaNumber } from './lib/generate-ckassa-order-id.lib';
 import { InjectBot } from '@grammyjs/nestjs';
 import { Bot, Context } from 'grammy';
@@ -26,7 +26,7 @@ export class PaymentService {
     console.log('PAYMENT CONF', this.paymentConfig);
   }
 
-  async createPayment(cart: Cart, user: User, email: string) {
+  async createCkassaPayment(cart: Cart, user: User, email: string) {
     try {
       const amount = cart.cartItems.reduce((acc, item) => {
         return (acc += Number(item.card.price) * item.quantity * 100);
@@ -59,7 +59,7 @@ export class PaymentService {
       if (cartItems.length === 0) return;
 
       const response = await axios.post<string>(
-        PAYMENT_ENDPOINTS.invoice,
+        CKASSA_PAYMENT_ENDPOINTS.invoice,
         data,
         {
           headers: {
@@ -114,6 +114,8 @@ export class PaymentService {
       state,
     };
   }
+
+  async createPayDigitalPayment() {}
 
   async sendMessageToUser(order: Order, state: PaymentWebhookData['state']) {
     if (state === 'PAYED') {

@@ -275,7 +275,7 @@ export class TelegramService {
         show_alert: true,
       });
 
-    const paymentUrl = await this.paymentService.createPayment(
+    const paymentUrl = await this.paymentService.createCkassaPayment(
       cart,
       user,
       email,

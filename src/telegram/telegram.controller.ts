@@ -153,7 +153,7 @@ export class TelegramController {
     const text = ctx.message?.text;
     if (!text) return;
 
-    if (ctx.session.waitingForEmail && ctx.session.email) {
+    if (ctx.session?.waitingForEmail && ctx.session.email) {
       const valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(text);
 
       if (!valid) {
