@@ -4,6 +4,10 @@ import { Bot, Context } from 'grammy';
 import { CardService } from 'src/card/card.service';
 import { CartService } from 'src/cart/cart.service';
 import { TelegramService } from './telegram.service';
+import {
+  StartButton,
+  startButtonNames,
+} from './constants/start-buttons.constants';
 
 @Update()
 @Injectable()
@@ -56,7 +60,6 @@ export class TelegramController {
     const data = ctx.callbackQuery?.data;
     if (!data) return;
     const [_, group] = data.split(':');
-    await ctx.answerCallbackQuery();
     await this.telegramService.showAdditionalGroups(ctx, group);
   }
 
@@ -177,16 +180,38 @@ export class TelegramController {
       ctx.session.waitingForEmail = false;
       ctx.session.email = text;
       await this.telegramService.paymentHandler(ctx, ctx.session.email);
+      return;
     }
 
-    if (text === '🏠') {
-      await this.telegramService.sendStartReply(ctx);
+    if (!startButtonNames.has(text as StartButton)) return;
+
+    const actionsMap: Record<StartButton, () => Promise<void>> = {
+      '🛍️ Наши услуги': async () => {
+        await this.telegramService.showCategories(ctx);
+      },
+      '🧾 Заказы': async () => {
+        await ctx.reply('Вот ваши заказы');
+      },
+      '🧺 Корзина': async () => {
+        await this.telegramService.showCartPage(ctx, 0, false);
+      },
+      '🏠 Начало': async () => {
+        await this.telegramService.sendStartReply(ctx);
+      },
+    };
+
+    if (actionsMap[text]) {
+      await actionsMap[text]();
     }
-    if (text === '📂') {
-      await this.telegramService.showCatalogPage(ctx, 0, false);
-    }
-    if (text === '🧺') {
-      await this.telegramService.showCartPage(ctx, 0, false);
-    }
+
+    // if (text === 'Начало') {
+    //   await this.telegramService.sendStartReply(ctx);
+    // }
+    // if (text === '📂') {
+    //   await this.telegramService.showCatalogPage(ctx, 0, false);
+    // }
+    // if (text === '🧺') {
+    //   await this.telegramService.showCartPage(ctx, 0, false);
+    // }
   }
 }

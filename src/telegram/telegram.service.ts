@@ -38,12 +38,16 @@ export class TelegramService {
     Выберите раздел ниже, чтобы начать 👇`,
       {
         parse_mode: 'HTML',
-        reply_markup: new InlineKeyboard([
-          startButtons.map((b) => ({
-            text: b.name,
-            callback_data: b.callback_data,
-          })),
-        ]),
+        reply_markup: {
+          keyboard: [
+            startButtons.map((b) => ({
+              text: b.name,
+              callback_data: b.callback_data,
+            })),
+          ],
+          resize_keyboard: true,
+          one_time_keyboard: false,
+        },
       },
     );
 
@@ -211,7 +215,7 @@ export class TelegramService {
     const cart = await this.cartService.getUserCart(user.id);
 
     if (!cartItems || cartItems.length === 0 || !cart) {
-      await ctx.answerCallbackQuery();
+      // await ctx.answerCallbackQuery();
       return await ctx.reply('Вы еще не добавили ни одного товара 🪹');
     }
     const amount = cart.cartItems.reduce(
@@ -226,7 +230,7 @@ export class TelegramService {
       amount,
     );
 
-    await ctx.answerCallbackQuery();
+    // await ctx.answerCallbackQuery();
     if (editable) {
       await ctx.editMessageMedia(
         {
@@ -319,6 +323,8 @@ export class TelegramService {
         group,
       },
     });
+
+    await ctx.answerCallbackQuery();
 
     await ctx.reply('Выберите группу:', {
       reply_markup: new InlineKeyboard(
