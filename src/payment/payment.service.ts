@@ -12,6 +12,7 @@ import { generateCkassaNumber } from './lib/generate-ckassa-order-id.lib';
 import { InjectBot } from '@grammyjs/nestjs';
 import { Bot, Context } from 'grammy';
 import { Order } from 'src/order/entities/order.entity';
+import { HttpClientService } from 'src/http-client/http-client.service';
 
 @Injectable()
 export class PaymentService {
@@ -21,6 +22,7 @@ export class PaymentService {
     private readonly orderService: OrderService,
     private readonly cartItemService: CartItemService,
     @InjectBot() private readonly bot: Bot<Context>,
+    private readonly httpClientService: HttpClientService,
   ) {}
   onModuleInit() {
     console.log('PAYMENT CONF', this.paymentConfig);
@@ -58,16 +60,20 @@ export class PaymentService {
 
       if (cartItems.length === 0) return;
 
-      const response = await axios.post<string>(
+      // const response = await axios.post<string>(
+      //   CKASSA_PAYMENT_ENDPOINTS.invoice,
+      //   data,
+      //   {
+      //     headers: {
+      //       'Content-Type': 'application/json',
+      //       ApiLoginAuthorization: this.paymentConfig.loginKey,
+      //       ApiAuthorization: this.paymentConfig.secretKey,
+      //     },
+      //   },
+      // );
+      const response = await this.httpClientService.ckassaInstance.post(
         CKASSA_PAYMENT_ENDPOINTS.invoice,
         data,
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            ApiLoginAuthorization: this.paymentConfig.loginKey,
-            ApiAuthorization: this.paymentConfig.secretKey,
-          },
-        },
       );
 
       console.log('payRes', response);

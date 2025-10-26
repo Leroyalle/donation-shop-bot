@@ -6,6 +6,7 @@ import { UserModule } from 'src/user/user.module';
 import { OrderModule } from 'src/order/order.module';
 import { CartItemModule } from 'src/cart-item/cart-item.module';
 import { CartModule } from 'src/cart/cart.module';
+import { HttpClientModule } from 'src/http-client/http-client.module';
 
 @Module({})
 export class PaymentModule {
@@ -18,6 +19,7 @@ export class PaymentModule {
         CartItemModule,
         CartModule,
         OrderModule,
+        HttpClientModule,
       ],
       providers: [
         {

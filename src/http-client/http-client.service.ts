@@ -25,16 +25,10 @@ export class HttpClientService {
   }
 
   public get ckassaInstance() {
-    if (!this.ckassa) {
-      return null;
-    }
     return this.ckassa;
   }
 
   public get payDigitalInstance() {
-    if (!this.payDigital) {
-      return null;
-    }
     return this.payDigital;
   }
 }
