@@ -316,15 +316,57 @@ export class TelegramService {
   }
 
   public async showAdditionalGroups(ctx: Context, group: string) {
+    await ctx.answerCallbackQuery();
+
+    const { data } =
+      await this.httpClientService.payDigitalInstance.get<AdditionalGroup>(
+        PAY_DIGITAL_PAYMENT_ENDPOINTS.getProductsByGroup,
+        {
+          params: {
+            group,
+          },
+        },
+      );
+    console.log('ADDITIONAL,', data);
+
+    const topups = data.forms?.topup_fields.find(
+      (f) => f.name === 'product_id',
+    );
+
+    if (!topups || !topups.options) {
+      return await ctx.reply('❌ Произошла ошибка');
+    }
+
+    const keyboard = new InlineKeyboard();
+    keyboard.row({
+      text: data.short_info,
+      callback_data: `noop`,
+    });
+
+    topups.options.forEach((topup, i) => {
+      if (i % 2 === 0) {
+        keyboard.row();
+      }
+
+      keyboard.text(
+        topup.product + ' - ' + topup.price + '₽',
+        `topup:${topup.value}`,
+      );
+    });
+
+    await ctx.reply('Выбирите товар:', {
+      reply_markup: keyboard,
+    });
+  }
+
+  public async showAdditionalCategories(ctx: Context) {
     const { data } = await this.httpClientService.payDigitalInstance.get<
       AdditionalGroup[]
     >(PAY_DIGITAL_PAYMENT_ENDPOINTS.getGroups, {
       params: {
-        group,
+        category: 'games',
       },
     });
-
-    await ctx.answerCallbackQuery();
 
     await ctx.reply('Выберите группу:', {
       reply_markup: new InlineKeyboard(
@@ -336,26 +378,20 @@ export class TelegramService {
         ]),
       ),
     });
-  }
 
-  public async showAdditionalCategories(ctx: Context) {
-    const { data } = await this.httpClientService.payDigitalInstance.get<
-      AdditionalGroup[]
-    >(PAY_DIGITAL_PAYMENT_ENDPOINTS.getGroups);
+    // const categories: Set<string> = new Set();
+    // data.forEach((group) => categories.add(group.category));
 
-    const categories: Set<string> = new Set();
-    data.forEach((group) => categories.add(group.category));
-
-    await ctx.reply('Выберите категорию:', {
-      reply_markup: new InlineKeyboard(
-        Array.from(categories).map((category) => [
-          {
-            text: category,
-            callback_data: `additional:${category}`,
-          },
-        ]),
-      ),
-    });
+    // await ctx.reply('Выберите категорию:', {
+    //   reply_markup: new InlineKeyboard(
+    //     Array.from(categories).map((category) => [
+    //       {
+    //         text: category,
+    //         callback_data: `additional:${category}`,
+    //       },
+    //     ]),
+    //   ),
+    // });
   }
 
   public async showAdditionalPage(ctx: Context) {

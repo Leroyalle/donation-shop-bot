@@ -1,8 +1,30 @@
-type Category = 'games' | 'business';
-type Group = 'Xbox' | 'Valorant' | 'Twitch' | 'Steam';
+type Option = {
+  name?: string;
+  value: string | number;
+  product?: string;
+  price?: number;
+  region?: string;
+  name_prefix?: string;
+  type?: 'TOPUP' | 'VOUCHER';
+};
+
+type Field = {
+  name: string;
+  type: 'text' | 'options';
+  label?: string;
+  options?: Option[];
+};
+
+type Forms = {
+  topup_fields: Field[];
+  voucher_fields: Field[];
+};
 
 export type AdditionalGroup = {
+  image: string;
   icon: string;
-  category: Category;
-  group: Group;
+  group: string;
+  category: string;
+  short_info: string;
+  forms: Forms;
 };
