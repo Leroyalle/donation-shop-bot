@@ -1,16 +1,16 @@
-import 'grammy';
-import { SessionFlavor } from 'grammy';
-
-interface BotSession {
-  waitingForEmail?: boolean;
-  email?: string;
-}
+// ...existing code...
+import type { SessionFlavor } from 'grammy';
+import type { ConversationControls } from '@grammyjs/conversations';
 
 declare module 'grammy' {
-  interface SessionData extends BotSession {
-    _?: never;
+  interface SessionData {
+    waitingForEmail?: boolean;
+    email?: string;
   }
-  interface Context extends SessionFlavor<BotSession> {
-    _?: never;
+
+  interface Context extends SessionFlavor<SessionData> {
+    conversation: ConversationControls;
   }
 }
+
+// ...existing code...

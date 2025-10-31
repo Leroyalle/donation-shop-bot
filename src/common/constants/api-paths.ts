@@ -11,4 +11,5 @@ export const PAY_DIGITAL_PAYMENT_ENDPOINTS = {
   getAllProducts: `${PAY_DIGITAL_PAYMENT_URL}/get-products`,
   getGroups: `${PAY_DIGITAL_PAYMENT_URL}/get-groups`,
   getProductsByGroup: `${PAY_DIGITAL_PAYMENT_URL}/get-group-form`,
+  getProduct: `${PAY_DIGITAL_PAYMENT_URL}/get-product`,
 };

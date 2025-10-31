@@ -8,10 +8,12 @@ import {
   StartButton,
   startButtonNames,
 } from './constants/start-buttons.constants';
+import { TProductType } from 'src/common/types/product-type.type';
+import { createConversation } from '@grammyjs/conversations';
 
 @Update()
 @Injectable()
-export class TelegramController {
+export class TelegramUpdate {
   constructor(
     @InjectBot() private readonly bot: Bot<Context>,
     private readonly cardService: CardService,
@@ -22,12 +24,25 @@ export class TelegramController {
   async onModuleInit() {
     await this.bot.api.setMyCommands([
       { command: 'start', description: 'Запуск бота' },
-      { command: 'catalog', description: 'Посмотреть каталог товаров' },
+      { command: 'categories', description: 'Посмотреть каталог товаров' },
       { command: 'cart', description: 'Корзина' },
       { command: 'orders', description: 'Мои заказы' },
     ]);
+
     console.log('Bot commands set!');
   }
+
+  // @CallbackQuery('start')
+  // async handleStartCallback(ctx: Context) {
+  // }
+
+  // @On('message')
+  // async handleUpdate(ctx: Context) {
+  //   if (ctx.message?.text === '/start') {
+  //     await ctx.reply('Начинаем диалог!');
+  //     await ctx.conversation.enter('greeting');
+  //   }
+  // }
 
   @Start()
   async onStart(ctx: Context) {
@@ -35,7 +50,8 @@ export class TelegramController {
     if (!telegramId) return;
 
     await this.telegramService.handleCreateOrFindUser(ctx);
-    await this.telegramService.sendStartReply(ctx);
+    // await this.telegramService.sendStartReply(ctx);
+    await ctx.conversation.enter('topup-pay-collection');
   }
 
   @CallbackQuery(/^catalog:/)
@@ -61,6 +77,18 @@ export class TelegramController {
     if (!data) return;
     const [_, group] = data.split(':');
     await this.telegramService.showAdditionalGroups(ctx, group);
+  }
+
+  @CallbackQuery(/^topup:/)
+  async getTopup(ctx: Context) {
+    await ctx.answerCallbackQuery();
+    const data = ctx.callbackQuery?.data;
+    if (!data) return;
+    const [_, productId, type] = data.split(':');
+    if (!productId || !type) {
+      return await ctx.reply('❌ Произошла ошибка');
+    }
+    await this.telegramService.showTopup(ctx, productId, type as TProductType);
   }
 
   @CallbackQuery('categories')

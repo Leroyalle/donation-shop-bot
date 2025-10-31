@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { TelegramController } from './telegram.controller';
+import { TelegramUpdate } from './telegram.update';
 import { NestjsGrammyModule } from '@grammyjs/nestjs';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { CardModule } from '../card/card.module';
@@ -10,6 +10,8 @@ import { CartItemModule } from 'src/cart-item/cart-item.module';
 import { TelegramService } from './telegram.service';
 import { session } from 'grammy';
 import { HttpClientModule } from 'src/http-client/http-client.module';
+import { conversations, createConversation } from '@grammyjs/conversations';
+import { buyTopupConversation } from './lib/conversations/buy-topup.conversation';
 
 @Module({
   imports: [
@@ -19,7 +21,13 @@ import { HttpClientModule } from 'src/http-client/http-client.module';
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
         token: configService.get<string>('TELEGRAM_BOT_TOKEN') as string,
-        middlewares: [session()],
+        middlewares: [
+          session({
+            initial: () => ({}),
+          }),
+          conversations(),
+          createConversation(buyTopupConversation, 'topup-pay-collection'),
+        ],
       }),
     }),
     CardModule,
@@ -38,6 +46,6 @@ import { HttpClientModule } from 'src/http-client/http-client.module';
     }),
     CartItemModule,
   ],
-  providers: [TelegramController, TelegramService],
+  providers: [TelegramUpdate, TelegramService],
 })
 export class TelegramModule {}
