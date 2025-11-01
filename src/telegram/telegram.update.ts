@@ -50,8 +50,7 @@ export class TelegramUpdate {
     if (!telegramId) return;
 
     await this.telegramService.handleCreateOrFindUser(ctx);
-    // await this.telegramService.sendStartReply(ctx);
-    await ctx.conversation.enter('topup-pay-collection');
+    await this.telegramService.sendStartReply(ctx);
   }
 
   @CallbackQuery(/^catalog:/)
@@ -69,6 +68,18 @@ export class TelegramUpdate {
   async getAdditionalCategories(ctx: Context) {
     await ctx.answerCallbackQuery();
     await this.telegramService.showAdditionalCategories(ctx);
+  }
+
+  @CallbackQuery(/^additionalBuy:/)
+  async handleAdditionalBuy(ctx: Context) {
+    const data = ctx.callbackQuery?.data;
+    if (!data) return;
+    const [_, id, type] = data.split(':');
+    await this.telegramService.handleAdditionalBuy(
+      ctx,
+      id,
+      type as TProductType,
+    );
   }
 
   @CallbackQuery(/^additional:/)
@@ -189,7 +200,7 @@ export class TelegramUpdate {
   @CallbackQuery('checkout')
   async handleCheckout(ctx: Context) {
     await ctx.reply('Введите email, на который отправить ссылку:');
-    ctx.session.waitingForEmail = true;
+    // ctx.session.waitingForEmail = true;
   }
 
   @On('message:text')
@@ -197,19 +208,19 @@ export class TelegramUpdate {
     const text = ctx.message?.text;
     if (!text) return;
 
-    if (ctx.session?.waitingForEmail && ctx.session.email) {
-      const valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(text);
+    // if (ctx.session?.waitingForEmail && ctx.session.email) {
+    //   const valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(text);
 
-      if (!valid) {
-        await ctx.reply('Неверный формат email. Попробуй ещё раз:');
-        return;
-      }
+    //   if (!valid) {
+    //     await ctx.reply('Неверный формат email. Попробуй ещё раз:');
+    //     return;
+    //   }
 
-      ctx.session.waitingForEmail = false;
-      ctx.session.email = text;
-      await this.telegramService.paymentHandler(ctx, ctx.session.email);
-      return;
-    }
+    //   ctx.session.waitingForEmail = false;
+    //   ctx.session.email = text;
+    //   await this.telegramService.paymentHandler(ctx, ctx.session.email);
+    //   return;
+    // }
 
     if (!startButtonNames.has(text as StartButton)) return;
 

@@ -24,6 +24,22 @@ export async function buyTopupConversation(
   const confirmCtx = await conversation.waitFor('message:text');
   if (confirmCtx.message.text.toLowerCase() !== 'да') {
     await ctx.reply('Попробуйте ещё раз');
+    ctx.session.topupData = null;
+    return; // можно выйти или повторить цикл
   }
+
+  // Сохраняем в сессию
+  ctx.session.topupData = {
+    email,
+    password,
+    nickname,
+  };
+
   await ctx.reply('Оплатить заказ по ссылке:');
+
+  return {
+    email,
+    password,
+    nickname,
+  };
 }

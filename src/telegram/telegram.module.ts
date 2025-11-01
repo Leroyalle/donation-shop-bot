@@ -26,7 +26,7 @@ import { buyTopupConversation } from './lib/conversations/buy-topup.conversation
             initial: () => ({}),
           }),
           conversations(),
-          createConversation(buyTopupConversation, 'topup-pay-collection'),
+          createConversation(buyTopupConversation, 'buy-topup'),
         ],
       }),
     }),

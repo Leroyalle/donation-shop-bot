@@ -1,3 +1,5 @@
+import { TProductType } from './product-type.type';
+
 type Option = {
   name?: string;
   value: string | number;
@@ -5,7 +7,7 @@ type Option = {
   price?: number;
   region?: string;
   name_prefix?: string;
-  type?: 'TOPUP' | 'VOUCHER';
+  type?: TProductType;
 };
 
 type Field = {

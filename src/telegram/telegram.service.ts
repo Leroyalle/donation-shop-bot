@@ -14,6 +14,7 @@ import { AdditionalGroup } from 'src/common/types/additional-group.type';
 import { TProductType } from 'src/common/types/product-type.type';
 import { IProductById } from 'src/common/types/product-by-id.type';
 import { Conversation } from '@grammyjs/conversations';
+import { ITopupCheckRequest } from 'src/payment/types/topup-check-request.type';
 
 @Injectable()
 export class TelegramService {
@@ -441,5 +442,34 @@ export class TelegramService {
     //     reply_markup: keyboard,
     //   },
     // );
+  }
+
+  public async handleAdditionalBuy(
+    ctx: Context,
+    id: string,
+    type: TProductType,
+  ) {
+    try {
+      await ctx.answerCallbackQuery();
+      await ctx.conversation.enter('buy-topup');
+      await ctx.conversation.enter('topup-pay-collection');
+      if (ctx.session.topupData) {
+        const data: ITopupCheckRequest = {
+          product_id: id,
+          account: ctx.session.topupData.email,
+          password: ctx.session.topupData.password,
+          nickname: ctx.session.topupData.nickname,
+          region: 'Any',
+        };
+        const response = await this.httpClientService.payDigitalInstance.post(
+          PAY_DIGITAL_PAYMENT_ENDPOINTS.topupCheck,
+          data,
+        );
+
+        console.log(response);
+      }
+    } catch (error) {
+      console.log(error);
+    }
   }
 }
