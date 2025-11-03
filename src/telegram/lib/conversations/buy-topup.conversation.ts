@@ -1,10 +1,15 @@
 import { Conversation } from '@grammyjs/conversations';
-import { Context } from 'grammy';
+import { Context, InlineKeyboard } from 'grammy';
+import { ITopupCheckRequest } from 'src/payment/types/topup-check-request.type';
+import { payDigitalInstance } from 'src/common/api/pay-digital-instance.api';
+import { PAY_DIGITAL_PAYMENT_ENDPOINTS } from 'src/common/constants/api-paths';
+import { ITopupCheckResponse } from 'src/payment/types/topup-check-response.type';
 
 export async function buyTopupConversation(
   conversation: Conversation,
   ctx: Context,
 ) {
+  const session = await conversation.external((ctx) => ctx.session);
   await ctx.reply('Введите email:');
   const emailCtx = await conversation.waitFor('message:text');
   const email = emailCtx.message.text.trim();
@@ -22,24 +27,39 @@ export async function buyTopupConversation(
   );
 
   const confirmCtx = await conversation.waitFor('message:text');
-  if (confirmCtx.message.text.toLowerCase() !== 'да') {
+  if (confirmCtx.message.text.toLowerCase() === 'нет') {
     await ctx.reply('Попробуйте ещё раз');
-    ctx.session.topupData = null;
-    return; // можно выйти или повторить цикл
+    session.topupData = null;
+    return;
   }
 
-  // Сохраняем в сессию
-  ctx.session.topupData = {
-    email,
+  console.log('SESSON', session);
+
+  if (!session.topupData) return;
+
+  const topupReqData: ITopupCheckRequest = {
+    account: email,
     password,
     nickname,
+    region: 'Any',
+    product_id: session.topupData.productId,
   };
+  // await ctx.reply('Оплатить заказ по ссылке:');
+  console.log(ctx.chat?.id);
+  if (!ctx.chat?.id) return;
+  console.log(process.env.PAYDIGITAL_TOKEN);
+  const res = await conversation.external(async () => {
+    const { data } = await payDigitalInstance.post<ITopupCheckResponse>(
+      PAY_DIGITAL_PAYMENT_ENDPOINTS.topupCheck,
+      topupReqData,
+    );
+    return data;
+  });
 
-  await ctx.reply('Оплатить заказ по ссылке:');
-
-  return {
-    email,
-    password,
-    nickname,
-  };
+  console.log('res', res);
+  const keyboard = new InlineKeyboard();
+  keyboard.url('Перейти к оплате', res.sbp_url);
+  await ctx.reply(`Ссылка на оплату ${res.product}:`, {
+    reply_markup: keyboard,
+  });
 }

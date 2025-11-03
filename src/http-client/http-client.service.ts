@@ -1,6 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import axios, { AxiosInstance } from 'axios';
+import {
+  CKASSA_PAYMENT_URL,
+  PAY_DIGITAL_PAYMENT_URL,
+} from 'src/common/constants/api-paths';
 @Injectable()
 export class HttpClientService {
   private readonly ckassa: AxiosInstance;
@@ -8,7 +12,7 @@ export class HttpClientService {
 
   constructor(private readonly configService: ConfigService) {
     this.ckassa = axios.create({
-      baseURL: this.configService.get('CKASSA_URL'),
+      baseURL: CKASSA_PAYMENT_URL,
       headers: {
         'Content-Type': 'application/json',
         ApiLoginAuthorization: configService.get<string>('LOGIN') as string,
@@ -17,7 +21,7 @@ export class HttpClientService {
     });
 
     this.payDigital = axios.create({
-      baseURL: this.configService.get('PAYDIGITAL_URL'),
+      baseURL: PAY_DIGITAL_PAYMENT_URL,
       headers: {
         Authorization: `Bearer ${this.configService.get('PAYDIGITAL_TOKEN')}`,
       },

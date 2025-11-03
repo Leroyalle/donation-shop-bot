@@ -13,8 +13,6 @@ import { PAY_DIGITAL_PAYMENT_ENDPOINTS } from 'src/common/constants/api-paths';
 import { AdditionalGroup } from 'src/common/types/additional-group.type';
 import { TProductType } from 'src/common/types/product-type.type';
 import { IProductById } from 'src/common/types/product-by-id.type';
-import { Conversation } from '@grammyjs/conversations';
-import { ITopupCheckRequest } from 'src/payment/types/topup-check-request.type';
 
 @Injectable()
 export class TelegramService {
@@ -435,13 +433,13 @@ export class TelegramService {
 
     // await this.buyTopupConversation(ctx.conversation, ctx);
 
-    // return await ctx.reply(
-    //   `🛍️ <b>Товар</b>\n\n<b>${data.name}</b>\n\n💰 <b><u>${data.price} ₽</u></b>`,
-    //   {
-    //     parse_mode: 'HTML',
-    //     reply_markup: keyboard,
-    //   },
-    // );
+    return await ctx.reply(
+      `🛍️ <b>Товар</b>\n\n<b>${data.name}</b>\n\n💰 <b><u>${data.price} ₽</u></b>`,
+      {
+        parse_mode: 'HTML',
+        reply_markup: keyboard,
+      },
+    );
   }
 
   public async handleAdditionalBuy(
@@ -449,27 +447,34 @@ export class TelegramService {
     id: string,
     type: TProductType,
   ) {
-    try {
-      await ctx.answerCallbackQuery();
-      await ctx.conversation.enter('buy-topup');
-      await ctx.conversation.enter('topup-pay-collection');
-      if (ctx.session.topupData) {
-        const data: ITopupCheckRequest = {
-          product_id: id,
-          account: ctx.session.topupData.email,
-          password: ctx.session.topupData.password,
-          nickname: ctx.session.topupData.nickname,
-          region: 'Any',
-        };
-        const response = await this.httpClientService.payDigitalInstance.post(
-          PAY_DIGITAL_PAYMENT_ENDPOINTS.topupCheck,
-          data,
-        );
+    // try {
+    await ctx.answerCallbackQuery();
+    ctx.session.topupData = { productId: id };
+    console.log('SESSION BEFORE', ctx.session);
+    await ctx.conversation.enter('buy-topup');
 
-        console.log(response);
-      }
-    } catch (error) {
-      console.log(error);
-    }
+    console.log('after');
+    // await ctx.conversation.enter('topup-pay-collection');
+    // const topupData = ctx.chat && topupStorage.get(ctx.chat.id);
+    // if (topupData) {
+    // const data: ITopupCheckRequest = {
+    //   product_id: id,
+    //   account: topupData.email,
+    //   password: topupData.password,
+    //   nickname: topupData.nickname,
+    //   region: 'Any',
+    // };
+
+    // topupStorage.delete(ctx.chat.id);
+    // const response = await this.httpClientService.payDigitalInstance.post(
+    //   PAY_DIGITAL_PAYMENT_ENDPOINTS.topupCheck,
+    //   data,
+    // );
+
+    // console.log(response);
+    //   }
+    // } catch (error) {
+    //   console.log(error);
+    // }
   }
 }

@@ -8,7 +8,7 @@ import { CartModule } from 'src/cart/cart.module';
 import { PaymentModule } from 'src/payment/payment.module';
 import { CartItemModule } from 'src/cart-item/cart-item.module';
 import { TelegramService } from './telegram.service';
-import { session } from 'grammy';
+import { MemorySessionStorage, session } from 'grammy';
 import { HttpClientModule } from 'src/http-client/http-client.module';
 import { conversations, createConversation } from '@grammyjs/conversations';
 import { buyTopupConversation } from './lib/conversations/buy-topup.conversation';
@@ -24,6 +24,7 @@ import { buyTopupConversation } from './lib/conversations/buy-topup.conversation
         middlewares: [
           session({
             initial: () => ({}),
+            storage: new MemorySessionStorage(),
           }),
           conversations(),
           createConversation(buyTopupConversation, 'buy-topup'),

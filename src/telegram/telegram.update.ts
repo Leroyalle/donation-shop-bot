@@ -75,7 +75,7 @@ export class TelegramUpdate {
     const data = ctx.callbackQuery?.data;
     if (!data) return;
     const [_, id, type] = data.split(':');
-    await this.telegramService.handleAdditionalBuy(
+    return await this.telegramService.handleAdditionalBuy(
       ctx,
       id,
       type as TProductType,
