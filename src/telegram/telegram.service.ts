@@ -52,14 +52,6 @@ export class TelegramService {
         },
       },
     );
-
-    // await ctx.reply('Вы так же можете воспользоваться меню ниже:', {
-    //   reply_markup: {
-    //     keyboard: [['🏠', '📂', '🧺']],
-    //     resize_keyboard: true,
-    //     one_time_keyboard: false,
-    //   },
-    // });
   }
 
   public async showCatalogPage(
@@ -454,27 +446,5 @@ export class TelegramService {
     await ctx.conversation.enter('buy-topup');
 
     console.log('after');
-    // await ctx.conversation.enter('topup-pay-collection');
-    // const topupData = ctx.chat && topupStorage.get(ctx.chat.id);
-    // if (topupData) {
-    // const data: ITopupCheckRequest = {
-    //   product_id: id,
-    //   account: topupData.email,
-    //   password: topupData.password,
-    //   nickname: topupData.nickname,
-    //   region: 'Any',
-    // };
-
-    // topupStorage.delete(ctx.chat.id);
-    // const response = await this.httpClientService.payDigitalInstance.post(
-    //   PAY_DIGITAL_PAYMENT_ENDPOINTS.topupCheck,
-    //   data,
-    // );
-
-    // console.log(response);
-    //   }
-    // } catch (error) {
-    //   console.log(error);
-    // }
   }
 }

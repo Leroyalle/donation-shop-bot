@@ -9,57 +9,62 @@ export async function buyTopupConversation(
   conversation: Conversation,
   ctx: Context,
 ) {
-  const session = await conversation.external((ctx) => ctx.session);
-  await ctx.reply('Введите email:');
-  const emailCtx = await conversation.waitFor('message:text');
-  const email = emailCtx.message.text.trim();
+  try {
+    const session = await conversation.external((ctx) => ctx.session);
+    await ctx.reply('Введите email:');
+    const emailCtx = await conversation.waitFor('message:text');
+    const email = emailCtx.message.text.trim();
 
-  await ctx.reply('Введите пароль:');
-  const passCtx = await conversation.waitFor('message:text');
-  const password = passCtx.message.text.trim();
+    await ctx.reply('Введите пароль:');
+    const passCtx = await conversation.waitFor('message:text');
+    const password = passCtx.message.text.trim();
 
-  await ctx.reply('Введите ник в игре:');
-  const nickCtx = await conversation.waitFor('message:text');
-  const nickname = nickCtx.message.text.trim();
+    await ctx.reply('Введите ник в игре:');
+    const nickCtx = await conversation.waitFor('message:text');
+    const nickname = nickCtx.message.text.trim();
 
-  await ctx.reply(
-    `✅ Email: ${email}\nПароль: ${password}\nНик: ${nickname}\n\nВсе верно? Да/Нет`,
-  );
-
-  const confirmCtx = await conversation.waitFor('message:text');
-  if (confirmCtx.message.text.toLowerCase() === 'нет') {
-    await ctx.reply('Попробуйте ещё раз');
-    session.topupData = null;
-    return;
-  }
-
-  console.log('SESSON', session);
-
-  if (!session.topupData) return;
-
-  const topupReqData: ITopupCheckRequest = {
-    account: email,
-    password,
-    nickname,
-    region: 'Any',
-    product_id: session.topupData.productId,
-  };
-  // await ctx.reply('Оплатить заказ по ссылке:');
-  console.log(ctx.chat?.id);
-  if (!ctx.chat?.id) return;
-  console.log(process.env.PAYDIGITAL_TOKEN);
-  const res = await conversation.external(async () => {
-    const { data } = await payDigitalInstance.post<ITopupCheckResponse>(
-      PAY_DIGITAL_PAYMENT_ENDPOINTS.topupCheck,
-      topupReqData,
+    await ctx.reply(
+      `✅ Email: ${email}\nПароль: ${password}\nНик: ${nickname}\n\nВсе верно? Да/Нет`,
     );
-    return data;
-  });
 
-  console.log('res', res);
-  const keyboard = new InlineKeyboard();
-  keyboard.url('Перейти к оплате', res.sbp_url);
-  await ctx.reply(`Ссылка на оплату ${res.product}:`, {
-    reply_markup: keyboard,
-  });
+    const confirmCtx = await conversation.waitFor('message:text');
+    if (confirmCtx.message.text.toLowerCase() === 'нет') {
+      await ctx.reply('Попробуйте ещё раз');
+      session.topupData = null;
+      return;
+    }
+
+    console.log('SESSON', session);
+
+    if (!session.topupData) return;
+
+    const topupReqData: ITopupCheckRequest = {
+      account: email,
+      password,
+      nickname,
+      region: 'Any',
+      product_id: session.topupData.productId,
+    };
+    // await ctx.reply('Оплатить заказ по ссылке:');
+    console.log(ctx.chat?.id);
+    if (!ctx.chat?.id) return;
+    console.log(process.env.PAYDIGITAL_TOKEN);
+    const res = await conversation.external(async () => {
+      const { data } = await payDigitalInstance.post<ITopupCheckResponse>(
+        PAY_DIGITAL_PAYMENT_ENDPOINTS.topupCheck,
+        topupReqData,
+      );
+      return data;
+    });
+
+    console.log('res', res);
+    const keyboard = new InlineKeyboard();
+    keyboard.url('Перейти к оплате', res.sbp_url);
+    await ctx.reply(`Ссылка на оплату ${res.product}:`, {
+      reply_markup: keyboard,
+    });
+  } catch (error) {
+    console.log('[BUY_POPUP_CONV]', error);
+    await ctx.reply('❌ Произошла ошибка. Попробуйте ещё раз');
+  }
 }
