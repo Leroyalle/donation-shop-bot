@@ -9,7 +9,6 @@ import {
   startButtonNames,
 } from './constants/start-buttons.constants';
 import { TProductType } from 'src/common/types/product-type.type';
-import { createConversation } from '@grammyjs/conversations';
 
 @Update()
 @Injectable()
@@ -31,18 +30,6 @@ export class TelegramUpdate {
 
     console.log('Bot commands set!');
   }
-
-  // @CallbackQuery('start')
-  // async handleStartCallback(ctx: Context) {
-  // }
-
-  // @On('message')
-  // async handleUpdate(ctx: Context) {
-  //   if (ctx.message?.text === '/start') {
-  //     await ctx.reply('Начинаем диалог!');
-  //     await ctx.conversation.enter('greeting');
-  //   }
-  // }
 
   @Start()
   async onStart(ctx: Context) {
@@ -203,24 +190,20 @@ export class TelegramUpdate {
     // ctx.session.waitingForEmail = true;
   }
 
+  @CallbackQuery('steam')
+  async handleSteam(ctx: Context) {
+    await ctx.answerCallbackQuery();
+    const telegramId = ctx.from?.id;
+    if (!telegramId) return;
+    await this.telegramService.handleCreateOrFindUser(ctx);
+    await ctx.reply('Введите email, на которую отправить ссылку:');
+    // ctx.session.waitingForEmail = true;
+  }
+
   @On('message:text')
   async onTextMessage(ctx: Context) {
     const text = ctx.message?.text;
     if (!text) return;
-
-    // if (ctx.session?.waitingForEmail && ctx.session.email) {
-    //   const valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(text);
-
-    //   if (!valid) {
-    //     await ctx.reply('Неверный формат email. Попробуй ещё раз:');
-    //     return;
-    //   }
-
-    //   ctx.session.waitingForEmail = false;
-    //   ctx.session.email = text;
-    //   await this.telegramService.paymentHandler(ctx, ctx.session.email);
-    //   return;
-    // }
 
     if (!startButtonNames.has(text as StartButton)) return;
 
@@ -242,15 +225,5 @@ export class TelegramUpdate {
     if (actionsMap[text]) {
       await actionsMap[text]();
     }
-
-    // if (text === 'Начало') {
-    //   await this.telegramService.sendStartReply(ctx);
-    // }
-    // if (text === '📂') {
-    //   await this.telegramService.showCatalogPage(ctx, 0, false);
-    // }
-    // if (text === '🧺') {
-    //   await this.telegramService.showCartPage(ctx, 0, false);
-    // }
   }
 }

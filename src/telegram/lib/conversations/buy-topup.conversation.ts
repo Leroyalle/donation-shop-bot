@@ -45,8 +45,7 @@ export async function buyTopupConversation(
       region: 'Any',
       product_id: session.topupData.productId,
     };
-    // await ctx.reply('Оплатить заказ по ссылке:');
-    console.log(ctx.chat?.id);
+
     if (!ctx.chat?.id) return;
     console.log(process.env.PAYDIGITAL_TOKEN);
     const res = await conversation.external(async () => {
