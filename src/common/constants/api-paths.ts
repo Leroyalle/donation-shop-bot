@@ -15,4 +15,6 @@ export const PAY_DIGITAL_PAYMENT_ENDPOINTS = {
   getProductsByGroup: `${PAY_DIGITAL_PAYMENT_URL.v2}/get-group-form`,
   getProduct: `${PAY_DIGITAL_PAYMENT_URL.v2}/get-product`,
   topupCheck: `${PAY_DIGITAL_PAYMENT_URL.v2}/topup/check`,
+  steamCheck: `${PAY_DIGITAL_PAYMENT_URL.v1}/steam/check`,
+  steamPay: `${PAY_DIGITAL_PAYMENT_URL.v1}/steam/pay`,
 };

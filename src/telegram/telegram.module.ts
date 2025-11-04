@@ -12,6 +12,7 @@ import { MemorySessionStorage, session } from 'grammy';
 import { HttpClientModule } from 'src/http-client/http-client.module';
 import { conversations, createConversation } from '@grammyjs/conversations';
 import { buyTopupConversation } from './lib/conversations/buy-topup.conversation';
+import { steamPayConversation } from './lib/conversations/steam-pay.conversation';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { buyTopupConversation } from './lib/conversations/buy-topup.conversation
           }),
           conversations(),
           createConversation(buyTopupConversation, 'buy-topup'),
+          createConversation(steamPayConversation, 'steam-pay'),
         ],
       }),
     }),

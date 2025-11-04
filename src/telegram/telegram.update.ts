@@ -196,7 +196,8 @@ export class TelegramUpdate {
     const telegramId = ctx.from?.id;
     if (!telegramId) return;
     await this.telegramService.handleCreateOrFindUser(ctx);
-    await ctx.reply('Введите email, на которую отправить ссылку:');
+    await ctx.conversation.enter('steam-pay');
+    // await ctx.reply('Введите email, на которую отправить ссылку:');
     // ctx.session.waitingForEmail = true;
   }
 

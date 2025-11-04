@@ -21,7 +21,7 @@ export class HttpClientService {
     });
 
     this.payDigital = axios.create({
-      baseURL: PAY_DIGITAL_PAYMENT_URL,
+      baseURL: PAY_DIGITAL_PAYMENT_URL.v2,
       headers: {
         Authorization: `Bearer ${this.configService.get('PAYDIGITAL_TOKEN')}`,
       },
