@@ -7,12 +7,19 @@ import { PaymentWebhookData } from './types/payment-status.type';
 import { CartService } from 'src/cart/cart.service';
 import { OrderService } from 'src/order/order.service';
 import { CartItemService } from 'src/cart-item/cart-item.service';
-import { CKASSA_PAYMENT_ENDPOINTS } from 'src/common/constants/api-paths';
+import {
+  CKASSA_PAYMENT_ENDPOINTS,
+  PAY_DIGITAL_PAYMENT_ENDPOINTS,
+} from 'src/common/constants/api-paths';
 import { generateCkassaNumber } from './lib/generate-ckassa-order-id.lib';
 import { InjectBot } from '@grammyjs/nestjs';
-import { Bot, Context } from 'grammy';
+import { Bot, Context, InlineKeyboard } from 'grammy';
 import { Order } from 'src/order/entities/order.entity';
 import { HttpClientService } from 'src/http-client/http-client.service';
+import { Conversation } from '@grammyjs/conversations';
+import { ITopupCheckRequest } from './types/topup-check-request.type';
+import { payDigitalInstance } from 'src/common/api/pay-digital-instance.api';
+import { ITopupCheckResponse } from './types/topup-check-response.type';
 
 @Injectable()
 export class PaymentService {
@@ -24,9 +31,87 @@ export class PaymentService {
     @InjectBot() private readonly bot: Bot<Context>,
     private readonly httpClientService: HttpClientService,
   ) {}
+
   onModuleInit() {
     console.log('PAYMENT CONF', this.paymentConfig);
   }
+
+  public buyTopupConversation = async (
+    conversation: Conversation,
+    ctx: Context,
+    { user }: { user: User },
+  ) => {
+    try {
+      console.log('user', user);
+      const session = await conversation.external((ctx) => ctx.session);
+      await ctx.reply('Введите email:');
+      const emailCtx = await conversation.waitFor('message:text');
+      const email = emailCtx.message.text.trim();
+
+      await ctx.reply('Введите пароль:');
+      const passCtx = await conversation.waitFor('message:text');
+      const password = passCtx.message.text.trim();
+
+      await ctx.reply('Введите ник в игре:');
+      const nickCtx = await conversation.waitFor('message:text');
+      const nickname = nickCtx.message.text.trim();
+
+      await ctx.reply(
+        `✅ Email: ${email}\nПароль: ${password}\nНик: ${nickname}\n\nВсе верно? Да/Нет`,
+      );
+
+      const confirmCtx = await conversation.waitFor('message:text');
+      if (confirmCtx.message.text.toLowerCase() === 'нет') {
+        await ctx.reply('Попробуйте ещё раз');
+        session.topupData = null;
+        return;
+      }
+
+      console.log('SESSON', session);
+
+      if (!session.topupData) return;
+
+      const topupReqData: ITopupCheckRequest = {
+        account: email,
+        password,
+        nickname,
+        region: 'Any',
+        product_id: session.topupData.productId,
+      };
+
+      if (!ctx.chat?.id) return;
+      console.log(process.env.PAYDIGITAL_TOKEN);
+      const res = await conversation.external(async () => {
+        const { data } = await payDigitalInstance.post<ITopupCheckResponse>(
+          PAY_DIGITAL_PAYMENT_ENDPOINTS.topupCheck,
+          topupReqData,
+        );
+        return data;
+      });
+
+      console.log('res', res);
+      await conversation.external(async () => {
+        await this.orderService.create({
+          type: 'TOPUP',
+          status: 'NEW',
+          amount: res.retail_price_rub,
+          email: email,
+          paymentId: res.sbp_uuid,
+          user,
+          items: '',
+          cart: null,
+        });
+      });
+      const keyboard = new InlineKeyboard();
+      keyboard.url('Перейти к оплате', res.sbp_url);
+      await ctx.reply(`Ссылка на оплату ${res.product}:`, {
+        reply_markup: keyboard,
+      });
+    } catch (error) {
+      console.log('[BUY_POPUP_CONV]', error);
+      await ctx.reply('❌ Произошла ошибка. Попробуйте ещё раз');
+    }
+  };
 
   async createCkassaPayment(cart: Cart, user: User, email: string) {
     try {
@@ -44,6 +129,7 @@ export class PaymentService {
         email,
         user,
         status: 'NEW',
+        type: 'CARD',
       });
 
       const ckassaOrderId = generateCkassaNumber(order);
@@ -109,6 +195,7 @@ export class PaymentService {
   }
 
   async resolveWebhook(order: Order, state: PaymentWebhookData['state']) {
+    if (!order.cart) return;
     if (state === 'PAYED') {
       await this.orderService.update(order.cart.id, {
         status: 'CONFIRMED',

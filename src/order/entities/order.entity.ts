@@ -31,12 +31,15 @@ export class Order {
   @Column('jsonb')
   items: string;
 
-  @ManyToOne(() => Cart, (cart) => cart.orders)
+  @ManyToOne(() => Cart, (cart) => cart.orders, { nullable: true })
   @JoinColumn()
-  cart: Cart;
+  cart: Cart | null;
 
   @Column()
   status: 'NEW' | 'CONFIRMED' | 'REJECTED';
+
+  @Column({ default: 'CARD' })
+  type: 'TOPUP' | 'STEAM' | 'CARD';
 
   @CreateDateColumn()
   createdAt: Date;

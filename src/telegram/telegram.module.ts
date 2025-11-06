@@ -23,13 +23,13 @@ import { steamPayConversation } from './lib/conversations/steam-pay.conversation
       useFactory: (configService: ConfigService) => ({
         token: configService.get<string>('TELEGRAM_BOT_TOKEN') as string,
         middlewares: [
-          session({
-            initial: () => ({}),
-            storage: new MemorySessionStorage(),
-          }),
-          conversations(),
-          createConversation(buyTopupConversation, 'buy-topup'),
-          createConversation(steamPayConversation, 'steam-pay'),
+          // session({
+          //   initial: () => ({}),
+          //   storage: new MemorySessionStorage(),
+          // }),
+          // conversations(),
+          // createConversation(buyTopupConversation, 'buy-topup'),
+          // createConversation(steamPayConversation, 'steam-pay'),
         ],
       }),
     }),

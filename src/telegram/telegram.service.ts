@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Context, InlineKeyboard } from 'grammy';
+import { Bot, Context, InlineKeyboard, session } from 'grammy';
 import { startButtons } from './constants/start-buttons.constants';
 import { CardService } from 'src/card/card.service';
 import { CartItem } from 'src/cart-item/entities/cart-item.entity';
@@ -13,6 +13,11 @@ import { PAY_DIGITAL_PAYMENT_ENDPOINTS } from 'src/common/constants/api-paths';
 import { AdditionalGroup } from 'src/common/types/additional-group.type';
 import { TProductType } from 'src/common/types/product-type.type';
 import { IProductById } from 'src/common/types/product-by-id.type';
+import { InjectBot } from '@grammyjs/nestjs';
+import { conversations, createConversation } from '@grammyjs/conversations';
+import { buyTopupConversation } from './lib/conversations/buy-topup.conversation';
+import { steamPayConversation } from './lib/conversations/steam-pay.conversation';
+import { User } from 'src/user/entities/user.entity';
 
 @Injectable()
 export class TelegramService {
@@ -23,7 +28,17 @@ export class TelegramService {
     private readonly cartItemService: CartItemService,
     private readonly paymentService: PaymentService,
     private readonly httpClientService: HttpClientService,
-  ) {}
+    @InjectBot() private readonly bot: Bot<Context>,
+  ) {
+    this.bot.use(session({ initial: () => ({}) }));
+
+    this.bot.use(conversations());
+
+    this.bot.use(
+      createConversation(this.paymentService.buyTopupConversation, 'buy-topup'),
+    );
+    this.bot.use(createConversation(steamPayConversation, 'steam-pay'));
+  }
 
   public async sendStartReply(ctx: Context) {
     await ctx.reply(
@@ -438,12 +453,13 @@ export class TelegramService {
     ctx: Context,
     id: string,
     type: TProductType,
+    user: User,
   ) {
     // try {
     await ctx.answerCallbackQuery();
     ctx.session.topupData = { productId: id };
     console.log('SESSION BEFORE', ctx.session);
-    await ctx.conversation.enter('buy-topup');
+    await ctx.conversation.enter('buy-topup', { user });
 
     console.log('after');
   }

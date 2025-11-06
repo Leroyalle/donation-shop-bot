@@ -61,11 +61,14 @@ export class TelegramUpdate {
   async handleAdditionalBuy(ctx: Context) {
     const data = ctx.callbackQuery?.data;
     if (!data) return;
+    const user = await this.telegramService.handleCreateOrFindUser(ctx);
+    if (!user) return;
     const [_, id, type] = data.split(':');
     return await this.telegramService.handleAdditionalBuy(
       ctx,
       id,
       type as TProductType,
+      user,
     );
   }
 
