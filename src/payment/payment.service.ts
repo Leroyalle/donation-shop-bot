@@ -144,7 +144,7 @@ export class PaymentService {
           await this.orderService.create({
             user,
             amount: parsedAmount,
-            paymentId: payResult.transactionId,
+            paymentId: null,
             status: 'NEW',
             email: null,
             cart: null,

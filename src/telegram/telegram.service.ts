@@ -18,6 +18,7 @@ import { conversations, createConversation } from '@grammyjs/conversations';
 import { buyTopupConversation } from './lib/conversations/buy-topup.conversation';
 import { steamPayConversation } from './lib/conversations/steam-pay.conversation';
 import { User } from 'src/user/entities/user.entity';
+import { InlineKeyboardButton } from 'grammy/types';
 
 @Injectable()
 export class TelegramService {
@@ -345,7 +346,7 @@ export class TelegramService {
     );
 
     if (!topups || !topups.options) {
-      return await ctx.reply('❌ К сожалению, этот товар отсутствует');
+      return await ctx.reply(`❌ К сожалению, товар ${group} отсутствует`);
     }
 
     const keyboard = new InlineKeyboard();
@@ -379,15 +380,16 @@ export class TelegramService {
       },
     });
 
+    const keyboard = new InlineKeyboard();
+
+    data.forEach((group) => {
+      if (group.category === 'games') {
+        keyboard.text(group.group, `additional:${group.group}`).row();
+      }
+    });
+
     await ctx.reply('Выберите группу:', {
-      reply_markup: new InlineKeyboard(
-        data.map((group) => [
-          {
-            text: group.group,
-            callback_data: `additional:${group.group}`,
-          },
-        ]),
-      ),
+      reply_markup: keyboard,
     });
 
     // const categories: Set<string> = new Set();

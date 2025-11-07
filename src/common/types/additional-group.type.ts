@@ -28,5 +28,5 @@ export type AdditionalGroup = {
   group: string;
   category: string;
   short_info: string;
-  forms: Forms;
+  forms?: Forms;
 };
