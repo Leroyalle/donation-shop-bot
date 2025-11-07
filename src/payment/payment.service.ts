@@ -3,7 +3,7 @@ import { PAYMENT_CONFIG, PaymentConfig } from './types/payment-config.type';
 import { Cart } from 'src/cart/entities/cart.entity';
 import { User } from 'src/user/entities/user.entity';
 import axios from 'axios';
-import { ICkassaPaymentWebhookData } from './types/payment-status.type';
+import { ICkassaPaymentWebhookData } from './types/ckassa-payment-status.type';
 import { CartService } from 'src/cart/cart.service';
 import { OrderService } from 'src/order/order.service';
 import { CartItemService } from 'src/cart-item/cart-item.service';
@@ -17,9 +17,10 @@ import { Bot, Context, InlineKeyboard } from 'grammy';
 import { Order } from 'src/order/entities/order.entity';
 import { HttpClientService } from 'src/http-client/http-client.service';
 import { Conversation } from '@grammyjs/conversations';
-import { ITopupCheckRequest } from './types/topup-check-request.type';
+import { ITopupCheckRequest } from './types/pay-digital/topup-check-request.type';
 import { payDigitalInstance } from 'src/common/api/pay-digital-instance.api';
-import { ITopupCheckResponse } from './types/topup-check-response.type';
+import { ITopupCheckResponse } from './types/pay-digital/topup-check-response.type';
+import { IPayDigitalWebhookData } from './types/pay-digital/pay-digital-webhook-data.type';
 
 @Injectable()
 export class PaymentService {
@@ -34,6 +35,23 @@ export class PaymentService {
 
   onModuleInit() {
     console.log('PAYMENT CONF', this.paymentConfig);
+  }
+
+  public async payDigitalPaymentStatusWebhook(data: IPayDigitalWebhookData) {
+    const order = await this.orderService.findByPaymentId(data.order_id);
+
+    if (!order) return;
+
+    if (data.status === 'Paid') {
+      await this.orderService.update(order.id, {
+        status: 'CONFIRMED',
+        paymentId: data.order_uuid,
+      });
+      await this.bot.api.sendMessage(
+        order.user.telegramId,
+        `✅ Ваш заказ успешно оплачен! Аккаунт будет пополнен в ближайшее время!`,
+      );
+    }
   }
 
   public buyTopupConversation = async (
@@ -157,6 +175,7 @@ export class PaymentService {
       //     },
       //   },
       // );
+
       const response = await this.httpClientService.ckassaInstance.post(
         CKASSA_PAYMENT_ENDPOINTS.invoice,
         data,

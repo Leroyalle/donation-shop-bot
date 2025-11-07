@@ -1,9 +1,9 @@
 import { Conversation } from '@grammyjs/conversations';
 import { Context, InlineKeyboard } from 'grammy';
-import { ITopupCheckRequest } from 'src/payment/types/topup-check-request.type';
+import { ITopupCheckRequest } from 'src/payment/types/pay-digital/topup-check-request.type';
 import { payDigitalInstance } from 'src/common/api/pay-digital-instance.api';
 import { PAY_DIGITAL_PAYMENT_ENDPOINTS } from 'src/common/constants/api-paths';
-import { ITopupCheckResponse } from 'src/payment/types/topup-check-response.type';
+import { ITopupCheckResponse } from 'src/payment/types/pay-digital/topup-check-response.type';
 
 export async function buyTopupConversation(
   conversation: Conversation,

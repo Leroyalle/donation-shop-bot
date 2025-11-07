@@ -3,7 +3,7 @@ interface TinkoffItem {
   Price: number;
   Quantity: number;
   Amount: number;
-  Tax: 'none' | 'vat0' | 'vat10' | 'vat20'; // по доке
+  Tax: 'none' | 'vat0' | 'vat10' | 'vat20';
 }
 
 interface TinkoffReceipt {
@@ -24,5 +24,5 @@ export interface PaymentRequest {
   Description: string;
   Receipt: TinkoffReceipt;
   DATA: TinkoffData;
-  Token?: string; // токен ты добавишь потом
+  Token?: string;
 }

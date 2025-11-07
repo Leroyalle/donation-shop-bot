@@ -2,7 +2,7 @@ import { Conversation } from '@grammyjs/conversations';
 import { Context } from 'grammy';
 import { payDigitalInstance } from 'src/common/api/pay-digital-instance.api';
 import { PAY_DIGITAL_PAYMENT_ENDPOINTS } from 'src/common/constants/api-paths';
-import { ISteamCheckResult } from 'src/payment/types/steam-check-result.type';
+import { ISteamCheckResult } from 'src/payment/types/pay-digital/steam-check-result.type';
 
 export const steamPayConversation = async (
   conversation: Conversation,
