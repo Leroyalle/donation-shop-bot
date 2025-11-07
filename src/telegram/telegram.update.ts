@@ -189,8 +189,11 @@ export class TelegramUpdate {
 
   @CallbackQuery('checkout')
   async handleCheckout(ctx: Context) {
-    await ctx.reply('Введите email, на который отправить ссылку:');
-    // ctx.session.waitingForEmail = true;
+    // await ctx.reply('Введите email, на который отправить ссылку:');
+    const user = await this.telegramService.handleCreateOrFindUser(ctx);
+    if (!user) return;
+    await ctx.conversation.enter('cart-checkout', { user });
+    // ctx.session.cardEmail
   }
 
   @CallbackQuery('steam')

@@ -8,11 +8,7 @@ import { CartModule } from 'src/cart/cart.module';
 import { PaymentModule } from 'src/payment/payment.module';
 import { CartItemModule } from 'src/cart-item/cart-item.module';
 import { TelegramService } from './telegram.service';
-import { MemorySessionStorage, session } from 'grammy';
 import { HttpClientModule } from 'src/http-client/http-client.module';
-import { conversations, createConversation } from '@grammyjs/conversations';
-import { buyTopupConversation } from './lib/conversations/buy-topup.conversation';
-import { steamPayConversation } from './lib/conversations/steam-pay.conversation';
 
 @Module({
   imports: [
@@ -22,15 +18,6 @@ import { steamPayConversation } from './lib/conversations/steam-pay.conversation
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
         token: configService.get<string>('TELEGRAM_BOT_TOKEN') as string,
-        middlewares: [
-          // session({
-          //   initial: () => ({}),
-          //   storage: new MemorySessionStorage(),
-          // }),
-          // conversations(),
-          // createConversation(buyTopupConversation, 'buy-topup'),
-          // createConversation(steamPayConversation, 'steam-pay'),
-        ],
       }),
     }),
     CardModule,

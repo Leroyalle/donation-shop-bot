@@ -54,6 +54,47 @@ export class PaymentService {
     }
   }
 
+  public cartCheckoutConversation = async (
+    conversation: Conversation,
+    ctx: Context,
+    { user }: { user: User },
+  ) => {
+    await ctx.reply('Введите email, на который отправить ссылку:');
+    const emailCtx = await conversation.waitFor(':text');
+    const email = emailCtx.message?.text?.trim();
+    if (!email) return await ctx.reply('Попробуйте ещё раз');
+    await this.paymentHandler(ctx, user, email);
+  };
+
+  public async paymentHandler(ctx: Context, user: User, email: string) {
+    try {
+      const telegramId = ctx.from?.id;
+      if (!telegramId) return;
+
+      const cart = await this.cartService.getUserCart(user.id);
+      await ctx.answerCallbackQuery();
+
+      if (!cart || cart.cartItems.length === 0)
+        return ctx.answerCallbackQuery({
+          text: 'Корзина пуста',
+          show_alert: true,
+        });
+
+      const paymentUrl = await this.createCkassaPayment(cart, user, email);
+      if (!paymentUrl)
+        return await ctx.reply('Не удалось создать платеж. Попробуйте еще раз');
+
+      await ctx.reply('Оплатить заказ по ссылке:', {
+        reply_markup: new InlineKeyboard([
+          [{ text: 'Оплатить', url: paymentUrl }],
+        ]),
+      });
+    } catch (error) {
+      console.log('[paymentHandler]', error);
+      await ctx.reply('❌ Произошла ошибка');
+    }
+  }
+
   public steamPayConversation = async (
     conversation: Conversation,
     ctx: Context,

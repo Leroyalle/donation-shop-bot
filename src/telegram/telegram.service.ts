@@ -15,10 +15,7 @@ import { TProductType } from 'src/common/types/product-type.type';
 import { IProductById } from 'src/common/types/product-by-id.type';
 import { InjectBot } from '@grammyjs/nestjs';
 import { conversations, createConversation } from '@grammyjs/conversations';
-import { buyTopupConversation } from './lib/conversations/buy-topup.conversation';
-import { steamPayConversation } from './lib/conversations/steam-pay.conversation';
 import { User } from 'src/user/entities/user.entity';
-import { InlineKeyboardButton } from 'grammy/types';
 
 @Injectable()
 export class TelegramService {
@@ -40,6 +37,13 @@ export class TelegramService {
     );
     this.bot.use(
       createConversation(this.paymentService.steamPayConversation, 'steam-pay'),
+    );
+
+    this.bot.use(
+      createConversation(
+        this.paymentService.cartCheckoutConversation,
+        'cart-checkout',
+      ),
     );
   }
 
@@ -304,41 +308,6 @@ export class TelegramService {
     }
   }
 
-  public async paymentHandler(ctx: Context, email: string) {
-    try {
-      const telegramId = ctx.from?.id;
-      if (!telegramId) return;
-      const user = await this.handleCreateOrFindUser(ctx);
-      if (!user) return;
-
-      const cart = await this.cartService.getUserCart(user.id);
-      await ctx.answerCallbackQuery();
-
-      if (!cart || cart.cartItems.length === 0)
-        return ctx.answerCallbackQuery({
-          text: 'Корзина пуста',
-          show_alert: true,
-        });
-
-      const paymentUrl = await this.paymentService.createCkassaPayment(
-        cart,
-        user,
-        email,
-      );
-      if (!paymentUrl)
-        return await ctx.reply('Не удалось создать платеж. Попробуйте еще раз');
-
-      await ctx.reply('Оплатить заказ по ссылке:', {
-        reply_markup: new InlineKeyboard([
-          [{ text: 'Оплатить', url: paymentUrl }],
-        ]),
-      });
-    } catch (error) {
-      console.log('[paymentHandler]', error);
-      await ctx.reply('❌ Произошла ошибка');
-    }
-  }
-
   public async showCategories(ctx: Context) {
     try {
       const keyboards = new InlineKeyboard([
@@ -501,7 +470,6 @@ export class TelegramService {
     user: User,
   ) {
     try {
-      // try {
       await ctx.answerCallbackQuery();
       ctx.session.topupData = { productId: id };
       console.log('SESSION BEFORE', ctx.session);
