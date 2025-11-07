@@ -3,7 +3,7 @@ import { PAYMENT_CONFIG, PaymentConfig } from './types/payment-config.type';
 import { Cart } from 'src/cart/entities/cart.entity';
 import { User } from 'src/user/entities/user.entity';
 import axios from 'axios';
-import { PaymentWebhookData } from './types/payment-status.type';
+import { ICkassaPaymentWebhookData } from './types/payment-status.type';
 import { CartService } from 'src/cart/cart.service';
 import { OrderService } from 'src/order/order.service';
 import { CartItemService } from 'src/cart-item/cart-item.service';
@@ -179,7 +179,7 @@ export class PaymentService {
     }
   }
 
-  async paymentStatusWebhook(data: PaymentWebhookData) {
+  async ckassaPaymentStatusWebhook(data: ICkassaPaymentWebhookData) {
     const order = await this.orderService.findByPaymentId(
       data.property.orderId,
     );
@@ -194,10 +194,13 @@ export class PaymentService {
     await this.sendMessageToUser(order, data.state);
   }
 
-  async resolveWebhook(order: Order, state: PaymentWebhookData['state']) {
+  async resolveWebhook(
+    order: Order,
+    state: ICkassaPaymentWebhookData['state'],
+  ) {
     if (!order.cart) return;
     if (state === 'PAYED') {
-      await this.orderService.update(order.cart.id, {
+      await this.orderService.update(order.id, {
         status: 'CONFIRMED',
       });
       await this.cartService.clearCart(order.cart.id);
@@ -210,7 +213,10 @@ export class PaymentService {
 
   async createPayDigitalPayment() {}
 
-  async sendMessageToUser(order: Order, state: PaymentWebhookData['state']) {
+  async sendMessageToUser(
+    order: Order,
+    state: ICkassaPaymentWebhookData['state'],
+  ) {
     if (state === 'PAYED') {
       await this.bot.api.sendMessage(
         order.user.telegramId,

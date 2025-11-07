@@ -1,4 +1,4 @@
-export type PaymentWebhookData = {
+export interface ICkassaPaymentWebhookData {
   regPayNum: number;
   property: {
     orderId: string;
@@ -15,6 +15,6 @@ export type PaymentWebhookData = {
     details: any;
   };
   created: '20-06-2023 17:56:36';
-};
+}
 
 export type PaymentStatus = 'NEW' | 'CONFIRMED' | 'REJECTED';
