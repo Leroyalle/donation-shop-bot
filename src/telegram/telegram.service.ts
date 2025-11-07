@@ -37,7 +37,9 @@ export class TelegramService {
     this.bot.use(
       createConversation(this.paymentService.buyTopupConversation, 'buy-topup'),
     );
-    this.bot.use(createConversation(steamPayConversation, 'steam-pay'));
+    this.bot.use(
+      createConversation(this.paymentService.steamPayConversation, 'steam-pay'),
+    );
   }
 
   public async sendStartReply(ctx: Context) {

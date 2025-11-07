@@ -2,7 +2,6 @@ import { Inject, Injectable } from '@nestjs/common';
 import { PAYMENT_CONFIG, PaymentConfig } from './types/payment-config.type';
 import { Cart } from 'src/cart/entities/cart.entity';
 import { User } from 'src/user/entities/user.entity';
-import axios from 'axios';
 import { ICkassaPaymentWebhookData } from './types/ckassa-payment-status.type';
 import { CartService } from 'src/cart/cart.service';
 import { OrderService } from 'src/order/order.service';
@@ -21,6 +20,7 @@ import { ITopupCheckRequest } from './types/pay-digital/topup-check-request.type
 import { payDigitalInstance } from 'src/common/api/pay-digital-instance.api';
 import { ITopupCheckResponse } from './types/pay-digital/topup-check-response.type';
 import { IPayDigitalWebhookData } from './types/pay-digital/pay-digital-webhook-data.type';
+import { ISteamCheckResult } from './types/pay-digital/steam-check-result.type';
 
 @Injectable()
 export class PaymentService {
@@ -53,6 +53,114 @@ export class PaymentService {
       );
     }
   }
+
+  public steamPayConversation = async (
+    conversation: Conversation,
+    ctx: Context,
+    { user }: { user: User },
+  ) => {
+    try {
+      const session = await conversation.external((ctx) => ctx.session);
+
+      while (true) {
+        await ctx.reply('Напишите имя вашего аккаунта STEAM:');
+        const nicknameCtx = await conversation.waitFor(':text');
+        const nickname = nicknameCtx.message?.text?.trim();
+
+        await ctx.reply('Повторите введённое ранее имя:');
+        const repeatNickCtx = await conversation.waitFor(':text');
+        const repeatNick = repeatNickCtx.message?.text?.trim();
+
+        if (!nickname || !repeatNick || nickname !== repeatNick) {
+          await ctx.reply('Никнеймы не совпадают, попробуем ещё раз.');
+          continue;
+        }
+
+        await ctx.reply('Введите сумму пополнения в рублях:');
+        const amountCtx = await conversation.waitFor(':text');
+        const amount = amountCtx.message?.text?.trim();
+        const parsedAmount = parseInt(amount || '', 10);
+
+        if (!amount || isNaN(parsedAmount)) {
+          await ctx.reply('❌ Введите корректное число.');
+          continue;
+        }
+
+        if (parseInt(amount, 10) <= 0) {
+          await ctx.reply('❌ Сумма должна быть больше 0.');
+          continue;
+        }
+
+        await ctx.reply(`Поиск и создание платежа...`);
+        // const checkResult = await conversation.external(async () => {
+        // const { data: checkResult } =
+        //   await payDigitalInstance.post<ISteamCheckResult>(
+        //     PAY_DIGITAL_PAYMENT_ENDPOINTS.steamCheck,
+        //     {
+        //       steamUsername: nickname,
+        //     },
+        //   );
+
+        const { data: checkResult } =
+          await this.httpClientService.payDigitalInstance.post<ISteamCheckResult>(
+            PAY_DIGITAL_PAYMENT_ENDPOINTS.steamCheck,
+            {
+              steamUsername: nickname,
+            },
+          );
+
+        console.log('steamCheck', checkResult);
+
+        // return data;
+        // });
+
+        if (!checkResult)
+          return await ctx.reply('❌ Произошла ошибка. Аккаунт не найден.');
+
+        // const payResult = await conversation.external(async () => {
+        // const { data } = await payDigitalInstance.post<ISteamCheckResult>(
+        //   PAY_DIGITAL_PAYMENT_ENDPOINTS.steamPay,
+        //   {
+        //     transactionId: checkResult.transactionId,
+        //     net_amount: parsedAmount * 100,
+        //   },
+        // );
+
+        const { data: payResult } =
+          await this.httpClientService.payDigitalInstance.post<ISteamCheckResult>(
+            PAY_DIGITAL_PAYMENT_ENDPOINTS.steamPay,
+            {
+              transactionId: checkResult.transactionId,
+              net_amount: parsedAmount * 100,
+            },
+          );
+
+        console.log('PAY RESULT', payResult);
+
+        if (!payResult)
+          return await ctx.reply('❌ Произошла ошибка. Аккаунт не найден.');
+
+        await conversation.external(async () => {
+          await this.orderService.create({
+            user,
+            amount: parsedAmount,
+            paymentId: payResult.transactionId,
+            status: 'NEW',
+            email: null,
+            cart: null,
+            items: '',
+            type: 'STEAM',
+          });
+        });
+        await ctx.reply('✅ Аккаунт нашелся!');
+
+        break;
+      }
+    } catch (error) {
+      console.log('[STEAM_PAY_CONV]', error);
+      await ctx.reply('❌ Произошла ошибка. Попробуйте еще раз!');
+    }
+  };
 
   public buyTopupConversation = async (
     conversation: Conversation,

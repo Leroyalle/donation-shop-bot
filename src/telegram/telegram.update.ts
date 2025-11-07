@@ -198,10 +198,10 @@ export class TelegramUpdate {
     await ctx.answerCallbackQuery();
     const telegramId = ctx.from?.id;
     if (!telegramId) return;
+    const user = await this.telegramService.handleCreateOrFindUser(ctx);
+    if (!user) return;
     await this.telegramService.handleCreateOrFindUser(ctx);
-    await ctx.conversation.enter('steam-pay');
-    // await ctx.reply('Введите email, на которую отправить ссылку:');
-    // ctx.session.waitingForEmail = true;
+    await ctx.conversation.enter('steam-pay', { user });
   }
 
   @On('message:text')
