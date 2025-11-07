@@ -44,8 +44,9 @@ export class TelegramService {
   }
 
   public async sendStartReply(ctx: Context) {
-    await ctx.reply(
-      `<b>👋 Добро пожаловать в BRO STARS SHOP!</b>\n
+    try {
+      await ctx.reply(
+        `<b>👋 Добро пожаловать в BRO STARS SHOP!</b>\n
     Здесь вы можете:
     • Пополнить баланс в <b>App Store</b>
     • Оплатить любую подписку или приложение
@@ -56,20 +57,24 @@ export class TelegramService {
     🌍 Работает с российскими аккаунтами  
     ⚡ Моментальная доставка\n
     Выберите раздел ниже, чтобы начать 👇`,
-      {
-        parse_mode: 'HTML',
-        reply_markup: {
-          keyboard: [
-            startButtons.map((b) => ({
-              text: b.name,
-              callback_data: b.callback_data,
-            })),
-          ],
-          resize_keyboard: true,
-          one_time_keyboard: false,
+        {
+          parse_mode: 'HTML',
+          reply_markup: {
+            keyboard: [
+              startButtons.map((b) => ({
+                text: b.name,
+                callback_data: b.callback_data,
+              })),
+            ],
+            resize_keyboard: true,
+            one_time_keyboard: false,
+          },
         },
-      },
-    );
+      );
+    } catch (error) {
+      console.log('[START]', error);
+      await ctx.reply('❌ Произошла ошибка');
+    }
   }
 
   public async showCatalogPage(
@@ -77,39 +82,47 @@ export class TelegramService {
     page: number,
     editable: boolean = true,
   ) {
-    const telegramId = ctx.from?.id;
-    if (!telegramId) return;
-    const perPage = 1;
-    const [cards, totalItems] = await this.cardService.getByPage(page, perPage);
-    console.log(cards);
-    if (cards.length === 0)
-      return await ctx.reply('Товаров пока нет! Попробуйте позже');
+    try {
+      const telegramId = ctx.from?.id;
+      if (!telegramId) return;
+      const perPage = 1;
+      const [cards, totalItems] = await this.cardService.getByPage(
+        page,
+        perPage,
+      );
+      console.log(cards);
+      if (cards.length === 0)
+        return await ctx.reply('Товаров пока нет! Попробуйте позже');
 
-    const { message, keyboards } = this.buildCardCatalogKeyboard(
-      cards[0],
-      page,
-      totalItems,
-      perPage,
-    );
+      const { message, keyboards } = this.buildCardCatalogKeyboard(
+        cards[0],
+        page,
+        totalItems,
+        perPage,
+      );
 
-    if (editable) {
-      await ctx.editMessageMedia(
-        {
-          type: 'photo',
-          media: cards[0].imageUrl,
+      if (editable) {
+        await ctx.editMessageMedia(
+          {
+            type: 'photo',
+            media: cards[0].imageUrl,
+            caption: message,
+            parse_mode: 'HTML',
+          },
+          {
+            reply_markup: keyboards,
+          },
+        );
+      } else {
+        await ctx.replyWithPhoto(cards[0].imageUrl, {
           caption: message,
           parse_mode: 'HTML',
-        },
-        {
           reply_markup: keyboards,
-        },
-      );
-    } else {
-      await ctx.replyWithPhoto(cards[0].imageUrl, {
-        caption: message,
-        parse_mode: 'HTML',
-        reply_markup: keyboards,
-      });
+        });
+      }
+    } catch (error) {
+      console.log('[showCatalogPage]', error);
+      await ctx.reply('❌ Произошла ошибка');
     }
   }
 
@@ -189,7 +202,8 @@ export class TelegramService {
       if (!telegramId) return;
       await this.cartService.increment(cartItemId);
       await this.showCartPage(ctx, page);
-    } catch {
+    } catch (error) {
+      console.log('[handleIncrement]', error);
       await ctx.reply('Произошла ошибка при инкременте товара');
     }
   }
@@ -204,7 +218,8 @@ export class TelegramService {
       if (!telegramId) return;
       await this.cartService.decrement(cartItemId);
       await this.showCartPage(ctx, page);
-    } catch {
+    } catch (error) {
+      console.log('[handleDecrement]', error);
       await ctx.reply('Произошла ошибка при декременте элемента корзины');
     }
   }
@@ -214,243 +229,269 @@ export class TelegramService {
     page: number,
     editable: boolean = true,
   ) {
-    const telegramId = ctx.from?.id;
-    if (!telegramId) return;
+    try {
+      const telegramId = ctx.from?.id;
+      if (!telegramId) return;
 
-    const user = await this.handleCreateOrFindUser(ctx);
+      const user = await this.handleCreateOrFindUser(ctx);
 
-    if (!user) return;
+      if (!user) return;
 
-    const pageSize = 1;
-    const { cartItems, totalItems } =
-      await this.cartItemService.getUserCartPage(user.id, page, pageSize);
-    const cart = await this.cartService.getUserCart(user.id);
+      const pageSize = 1;
+      const { cartItems, totalItems } =
+        await this.cartItemService.getUserCartPage(user.id, page, pageSize);
+      const cart = await this.cartService.getUserCart(user.id);
 
-    if (!cartItems || cartItems.length === 0 || !cart) {
+      if (!cartItems || cartItems.length === 0 || !cart) {
+        return await ctx.reply('Вы еще не добавили ни одного товара 🪹');
+      }
+      const amount = cart.cartItems.reduce(
+        (acc, item) => acc + item.card.price * item.quantity,
+        0,
+      );
+      const totalPages = Math.ceil(totalItems / pageSize);
+      const { message, keyboards } = this.buildCartItemKeyboard(
+        cartItems[0],
+        page,
+        totalPages,
+        amount,
+      );
+
       // await ctx.answerCallbackQuery();
-      return await ctx.reply('Вы еще не добавили ни одного товара 🪹');
-    }
-    const amount = cart.cartItems.reduce(
-      (acc, item) => acc + item.card.price * item.quantity,
-      0,
-    );
-    const totalPages = Math.ceil(totalItems / pageSize);
-    const { message, keyboards } = this.buildCartItemKeyboard(
-      cartItems[0],
-      page,
-      totalPages,
-      amount,
-    );
-
-    // await ctx.answerCallbackQuery();
-    if (editable) {
-      await ctx.editMessageMedia(
-        {
-          type: 'photo',
-          media: cartItems[0].card.imageUrl,
+      if (editable) {
+        await ctx.editMessageMedia(
+          {
+            type: 'photo',
+            media: cartItems[0].card.imageUrl,
+            caption: message,
+            parse_mode: 'HTML',
+          },
+          {
+            reply_markup: keyboards,
+          },
+        );
+      } else {
+        await ctx.replyWithPhoto(cartItems[0].card.imageUrl, {
           caption: message,
           parse_mode: 'HTML',
-        },
-        {
           reply_markup: keyboards,
-        },
-      );
-    } else {
-      await ctx.replyWithPhoto(cartItems[0].card.imageUrl, {
-        caption: message,
-        parse_mode: 'HTML',
-        reply_markup: keyboards,
-      });
+        });
+      }
+    } catch (error) {
+      console.log('[showCartPage]', error);
+      await ctx.reply('❌ Произошла ошибка');
     }
   }
 
   public async handleCreateOrFindUser(ctx: Context) {
-    const telegramId = ctx.from?.id;
-    if (!telegramId) return;
+    try {
+      const telegramId = ctx.from?.id;
+      if (!telegramId) return;
 
-    const username = ctx.from?.username;
-    const firstName = ctx.from?.first_name;
+      const username = ctx.from?.username;
+      const firstName = ctx.from?.first_name;
 
-    return await this.userService.createOrFindUser({
-      telegramId,
-      name: firstName,
-      username,
-      cart: null,
-      orders: [],
-    });
+      return await this.userService.createOrFindUser({
+        telegramId,
+        name: firstName,
+        username,
+        cart: null,
+        orders: [],
+      });
+    } catch (error) {
+      console.log('[handleCreateOrFindUser]', error);
+      await ctx.reply('❌ Произошла ошибка');
+    }
   }
 
   public async paymentHandler(ctx: Context, email: string) {
-    const telegramId = ctx.from?.id;
-    if (!telegramId) return;
-    const user = await this.handleCreateOrFindUser(ctx);
-    if (!user) return;
+    try {
+      const telegramId = ctx.from?.id;
+      if (!telegramId) return;
+      const user = await this.handleCreateOrFindUser(ctx);
+      if (!user) return;
 
-    const cart = await this.cartService.getUserCart(user.id);
-    await ctx.answerCallbackQuery();
+      const cart = await this.cartService.getUserCart(user.id);
+      await ctx.answerCallbackQuery();
 
-    if (!cart || cart.cartItems.length === 0)
-      return ctx.answerCallbackQuery({
-        text: 'Корзина пуста',
-        show_alert: true,
+      if (!cart || cart.cartItems.length === 0)
+        return ctx.answerCallbackQuery({
+          text: 'Корзина пуста',
+          show_alert: true,
+        });
+
+      const paymentUrl = await this.paymentService.createCkassaPayment(
+        cart,
+        user,
+        email,
+      );
+      if (!paymentUrl)
+        return await ctx.reply('Не удалось создать платеж. Попробуйте еще раз');
+
+      await ctx.reply('Оплатить заказ по ссылке:', {
+        reply_markup: new InlineKeyboard([
+          [{ text: 'Оплатить', url: paymentUrl }],
+        ]),
       });
-
-    const paymentUrl = await this.paymentService.createCkassaPayment(
-      cart,
-      user,
-      email,
-    );
-    if (!paymentUrl)
-      return await ctx.reply('Не удалось создать платеж. Попробуйте еще раз');
-
-    await ctx.reply('Оплатить заказ по ссылке:', {
-      reply_markup: new InlineKeyboard([
-        [{ text: 'Оплатить', url: paymentUrl }],
-      ]),
-    });
+    } catch (error) {
+      console.log('[paymentHandler]', error);
+      await ctx.reply('❌ Произошла ошибка');
+    }
   }
 
   public async showCategories(ctx: Context) {
-    const keyboards = new InlineKeyboard([
-      [{ text: 'Основные товары', callback_data: 'catalog:0' }],
-      [{ text: 'Пополнение Steam', callback_data: 'steam' }],
-      [
-        {
-          text: 'Дополнительные товары',
-          callback_data: 'additionalCategories',
-        },
-      ],
-    ]);
+    try {
+      const keyboards = new InlineKeyboard([
+        [{ text: 'Основные товары', callback_data: 'catalog:0' }],
+        [{ text: 'Пополнение Steam', callback_data: 'steam' }],
+        [
+          {
+            text: 'Дополнительные товары',
+            callback_data: 'additionalCategories',
+          },
+        ],
+      ]);
 
-    await ctx.reply('Выберите категорию услуг:', {
-      reply_markup: keyboards,
-    });
+      await ctx.reply('Выберите категорию услуг:', {
+        reply_markup: keyboards,
+      });
+    } catch (error) {
+      console.log('[showCategories]', error);
+      await ctx.reply('❌ Произошла ошибка');
+    }
   }
 
   public async showAdditionalGroups(ctx: Context, group: string) {
-    await ctx.answerCallbackQuery();
+    try {
+      await ctx.answerCallbackQuery();
 
-    const { data } =
-      await this.httpClientService.payDigitalInstance.get<AdditionalGroup>(
-        PAY_DIGITAL_PAYMENT_ENDPOINTS.getProductsByGroup,
-        {
-          params: {
-            group,
+      const { data } =
+        await this.httpClientService.payDigitalInstance.get<AdditionalGroup>(
+          PAY_DIGITAL_PAYMENT_ENDPOINTS.getProductsByGroup,
+          {
+            params: {
+              group,
+            },
           },
-        },
+        );
+      console.log('ADDITIONAL,', data);
+
+      const topups = data.forms?.topup_fields?.find(
+        (f) => f.name === 'product_id',
       );
-    console.log('ADDITIONAL,', data);
 
-    const topups = data.forms?.topup_fields?.find(
-      (f) => f.name === 'product_id',
-    );
-
-    if (!topups || !topups.options) {
-      return await ctx.reply(`❌ К сожалению, товар ${group} отсутствует`);
-    }
-
-    const keyboard = new InlineKeyboard();
-    keyboard.row({
-      text: data.short_info,
-      callback_data: `noop`,
-    });
-
-    topups.options.forEach((topup, i) => {
-      if (i % 2 === 0) {
-        keyboard.row();
+      if (!topups || !topups.options) {
+        return await ctx.reply(`❌ К сожалению, товар ${group} отсутствует`);
       }
 
-      keyboard.text(
-        topup.product + ' - ' + topup.price + '₽',
-        `topup:${topup.value}:${topup.type}`,
-      );
-    });
+      const keyboard = new InlineKeyboard();
+      keyboard.row({
+        text: data.short_info,
+        callback_data: `noop`,
+      });
 
-    await ctx.reply('Выбирите товар:', {
-      reply_markup: keyboard,
-    });
+      topups.options.forEach((topup, i) => {
+        if (i % 2 === 0) {
+          keyboard.row();
+        }
+
+        keyboard.text(
+          topup.product + ' - ' + topup.price + '₽',
+          `topup:${topup.value}:${topup.type}`,
+        );
+      });
+
+      await ctx.reply('Выбирите товар:', {
+        reply_markup: keyboard,
+      });
+    } catch (error) {
+      console.log('[showAdditionalGroups]', error);
+      await ctx.reply('❌ Произошла ошибка');
+    }
   }
 
   public async showAdditionalCategories(ctx: Context) {
-    const { data } = await this.httpClientService.payDigitalInstance.get<
-      AdditionalGroup[]
-    >(PAY_DIGITAL_PAYMENT_ENDPOINTS.getGroups, {
-      params: {
-        category: 'games',
-      },
-    });
+    try {
+      const { data } = await this.httpClientService.payDigitalInstance.get<
+        AdditionalGroup[]
+      >(PAY_DIGITAL_PAYMENT_ENDPOINTS.getGroups, {
+        params: {
+          category: 'games',
+        },
+      });
 
-    const keyboard = new InlineKeyboard();
+      const keyboard = new InlineKeyboard();
 
-    data.forEach((group) => {
-      if (group.category === 'games') {
-        keyboard.text(group.group, `additional:${group.group}`).row();
-      }
-    });
+      data.forEach((group) => {
+        if (group.category === 'games') {
+          keyboard.text(group.group, `additional:${group.group}`).row();
+        }
+      });
 
-    await ctx.reply('Выберите группу:', {
-      reply_markup: keyboard,
-    });
+      await ctx.reply('Выберите группу:', {
+        reply_markup: keyboard,
+      });
 
-    // const categories: Set<string> = new Set();
-    // data.forEach((group) => categories.add(group.category));
+      // const categories: Set<string> = new Set();
+      // data.forEach((group) => categories.add(group.category));
 
-    // await ctx.reply('Выберите категорию:', {
-    //   reply_markup: new InlineKeyboard(
-    //     Array.from(categories).map((category) => [
-    //       {
-    //         text: category,
-    //         callback_data: `additional:${category}`,
-    //       },
-    //     ]),
-    //   ),
-    // });
-  }
-
-  public async showAdditionalPage(ctx: Context) {
-    const products = await this.httpClientService.payDigitalInstance.get(
-      PAY_DIGITAL_PAYMENT_ENDPOINTS.getGroups,
-    );
-
-    console.log(products);
+      // await ctx.reply('Выберите категорию:', {
+      //   reply_markup: new InlineKeyboard(
+      //     Array.from(categories).map((category) => [
+      //       {
+      //         text: category,
+      //         callback_data: `additional:${category}`,
+      //       },
+      //     ]),
+      //   ),
+      // });
+    } catch (error) {
+      console.log('[showAdditionalCategories]', error);
+      await ctx.reply('❌ Произошла ошибка');
+    }
   }
 
   public async showTopup(ctx: Context, id: string, type: TProductType) {
-    const { data } =
-      await this.httpClientService.payDigitalInstance.get<IProductById>(
-        PAY_DIGITAL_PAYMENT_ENDPOINTS.getProduct,
-        {
-          params: {
-            product_id: id,
-            type,
+    try {
+      const { data } =
+        await this.httpClientService.payDigitalInstance.get<IProductById>(
+          PAY_DIGITAL_PAYMENT_ENDPOINTS.getProduct,
+          {
+            params: {
+              product_id: id,
+              type,
+            },
           },
+        );
+
+      if (!data) {
+        return await ctx.reply('❌ Произошла ошибка');
+      }
+
+      if (!data.in_stock) {
+        return await ctx.reply(`Товара ${data.name} нет в наличии`);
+      }
+
+      const keyboard = new InlineKeyboard();
+
+      keyboard.row({
+        text: 'Купить сейчас',
+        callback_data: `additionalBuy:${id}:${type}`,
+      });
+
+      // await this.buyTopupConversation(ctx.conversation, ctx);
+
+      return await ctx.reply(
+        `🛍️ <b>Товар</b>\n\n<b>${data.name}</b>\n\n💰 <b><u>${data.price} ₽</u></b>`,
+        {
+          parse_mode: 'HTML',
+          reply_markup: keyboard,
         },
       );
-
-    if (!data) {
-      return await ctx.reply('❌ Произошла ошибка');
+    } catch (error) {
+      console.log('[showTopup]', error);
+      await ctx.reply('❌ Произошла ошибка');
     }
-
-    if (!data.in_stock) {
-      return await ctx.reply(`Товара ${data.name} нет в наличии`);
-    }
-
-    const keyboard = new InlineKeyboard();
-
-    keyboard.row({
-      text: 'Купить сейчас',
-      callback_data: `additionalBuy:${id}:${type}`,
-    });
-
-    // await this.buyTopupConversation(ctx.conversation, ctx);
-
-    return await ctx.reply(
-      `🛍️ <b>Товар</b>\n\n<b>${data.name}</b>\n\n💰 <b><u>${data.price} ₽</u></b>`,
-      {
-        parse_mode: 'HTML',
-        reply_markup: keyboard,
-      },
-    );
   }
 
   public async handleAdditionalBuy(
@@ -459,12 +500,17 @@ export class TelegramService {
     type: TProductType,
     user: User,
   ) {
-    // try {
-    await ctx.answerCallbackQuery();
-    ctx.session.topupData = { productId: id };
-    console.log('SESSION BEFORE', ctx.session);
-    await ctx.conversation.enter('buy-topup', { user });
+    try {
+      // try {
+      await ctx.answerCallbackQuery();
+      ctx.session.topupData = { productId: id };
+      console.log('SESSION BEFORE', ctx.session);
+      await ctx.conversation.enter('buy-topup', { user });
 
-    console.log('after');
+      console.log('after');
+    } catch (error) {
+      console.log('[handleAdditionalBuy]', error);
+      await ctx.reply('❌ Произошла ошибка');
+    }
   }
 }
