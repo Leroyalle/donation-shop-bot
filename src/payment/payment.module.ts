@@ -31,6 +31,7 @@ export class PaymentModule {
         },
         PaymentService,
         PaymentConversationService,
+        PaymentWebhookService,
       ],
       controllers: [PaymentController],
       exports: [

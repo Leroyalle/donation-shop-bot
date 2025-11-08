@@ -17,6 +17,8 @@ import { StartUpdate } from './updates/start.update';
 import { AdditionalProductsUpdate } from './updates/additional-products.update';
 import { CartUpdate } from './updates/cart.update';
 import { CatalogUpdate } from './updates/catalog.update';
+import { SteamUpdate } from './updates/steam.update';
+import { TopupUpdate } from './updates/topup.update';
 
 @Module({
   imports: [
@@ -50,6 +52,8 @@ import { CatalogUpdate } from './updates/catalog.update';
     AdditionalProductsUpdate,
     CartUpdate,
     CatalogUpdate,
+    SteamUpdate,
+    TopupUpdate,
     TelegramService,
     UiBuilderService,
     TelegramCartService,
