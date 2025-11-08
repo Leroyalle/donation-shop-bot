@@ -6,7 +6,7 @@ import { UserModule } from 'src/domain/user/user.module';
 import { OrderModule } from 'src/domain/order/order.module';
 import { CartItemModule } from 'src/domain/cart-item/cart-item.module';
 import { CartModule } from 'src/domain/cart/cart.module';
-import { HttpClientModule } from 'src/http-client/http-client.module';
+import { HttpClientModule } from 'src/infrastructure/http-client/http-client.module';
 import { PaymentConversationService } from './services/payment-conversation.service';
 import { PaymentWebhookService } from './services/payment-webhook.service';
 

@@ -8,7 +8,7 @@ import { CartModule } from 'src/domain/cart/cart.module';
 import { PaymentModule } from 'src/domain/payment/payment.module';
 import { CartItemModule } from 'src/domain/cart-item/cart-item.module';
 import { TelegramService } from './services/telegram.service';
-import { HttpClientModule } from 'src/http-client/http-client.module';
+import { HttpClientModule } from 'src/infrastructure/http-client/http-client.module';
 import { UiBuilderService } from './services/ui-builder.service';
 import { TelegramCartService } from './services/telegram-cart.service';
 import { AdditionalProductsService } from './services/additional-products.service';

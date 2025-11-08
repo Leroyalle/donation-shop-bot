@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PaymentService } from './payment.service';
 import { OrderService } from 'src/domain/order/order.service';
-import { HttpClientService } from 'src/http-client/http-client.service';
+import { HttpClientService } from 'src/infrastructure/http-client/http-client.service';
 import { Bot, Context, InlineKeyboard } from 'grammy';
 import { InjectBot } from '@grammyjs/nestjs';
 import { Conversation } from '@grammyjs/conversations';

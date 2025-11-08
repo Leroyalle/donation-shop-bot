@@ -9,7 +9,7 @@ import { CKASSA_PAYMENT_ENDPOINTS } from 'src/common/constants/api-paths';
 import { generateCkassaNumber } from '../lib/generate-ckassa-order-id.lib';
 import { InjectBot } from '@grammyjs/nestjs';
 import { Bot, Context, InlineKeyboard } from 'grammy';
-import { HttpClientService } from 'src/http-client/http-client.service';
+import { HttpClientService } from 'src/infrastructure/http-client/http-client.service';
 
 @Injectable()
 export class PaymentService {

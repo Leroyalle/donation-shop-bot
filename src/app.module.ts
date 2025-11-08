@@ -2,18 +2,11 @@ import { Module } from '@nestjs/common';
 import { TelegramModule } from './telegram/telegram.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { CardModule } from './domain/card/card.module';
-import { CartModule } from './domain/cart/cart.module';
-import { UserModule } from './domain/user/user.module';
-import { CartItemModule } from './domain/cart-item/cart-item.module';
-import { PaymentModule } from './domain/payment/payment.module';
-import { OrderModule } from './domain/order/order.module';
-import { HttpClientModule } from './http-client/http-client.module';
 import { DomainModule } from './domain/domain.module';
+import { InfrastructureModule } from './infrastructure/infrastructure.module';
 
 @Module({
   imports: [
-    TelegramModule,
     ConfigModule.forRoot({
       isGlobal: true,
     }),
@@ -35,14 +28,9 @@ import { DomainModule } from './domain/domain.module';
         synchronize: true,
       }),
     }),
-    // CardModule,
-    // CartModule,
-    // UserModule,
-    // CartItemModule,
-    // PaymentModule,
-    // OrderModule,
     DomainModule,
-    HttpClientModule,
+    InfrastructureModule,
+    TelegramModule,
   ],
   providers: [],
 })
