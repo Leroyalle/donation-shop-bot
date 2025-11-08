@@ -42,22 +42,6 @@ export class AdditionalProductsUpdate {
     await this.additionalProductsService.showAdditionalGroups(ctx, group);
   }
 
-  @CallbackQuery(/^topup:/)
-  async getTopup(ctx: Context) {
-    await ctx.answerCallbackQuery();
-    const data = ctx.callbackQuery?.data;
-    if (!data) return;
-    const [_, productId, type] = data.split(':');
-    if (!productId || !type) {
-      return await ctx.reply('❌ Произошла ошибка');
-    }
-    await this.additionalProductsService.showAdditionalTopup(
-      ctx,
-      productId,
-      type as TProductType,
-    );
-  }
-
   @CallbackQuery('steam')
   async handleSteam(ctx: Context) {
     await ctx.answerCallbackQuery();
