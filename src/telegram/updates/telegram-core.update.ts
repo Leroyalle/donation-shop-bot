@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { InjectBot, Update, CallbackQuery, On } from '@grammyjs/nestjs';
+import { InjectBot, Update, CallbackQuery, On, Start } from '@grammyjs/nestjs';
 import { Bot, Context } from 'grammy';
 import { TelegramService } from '../services/telegram.service';
 import {
@@ -25,6 +25,16 @@ export class TelegramCoreUpdate {
     ]);
 
     console.log('Bot commands set!');
+  }
+
+  @Start()
+  async onStart(ctx: Context) {
+    console.log('start update triggered');
+    const telegramId = ctx.from?.id;
+    if (!telegramId) return;
+
+    await this.telegramService.handleCreateOrFindUser(ctx);
+    await this.telegramService.sendStartReply(ctx);
   }
 
   @CallbackQuery('noop')

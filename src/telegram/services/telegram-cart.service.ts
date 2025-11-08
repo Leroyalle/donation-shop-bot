@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { Context } from 'grammy';
-import { CartService } from 'src/cart/cart.service';
+import { CartService } from 'src/domain/cart/cart.service';
 import { TelegramService } from './telegram.service';
-import { CartItemService } from 'src/cart-item/cart-item.service';
+import { CartItemService } from 'src/domain/cart-item/cart-item.service';
 import { UiBuilderService } from './ui-builder.service';
 
 @Injectable()

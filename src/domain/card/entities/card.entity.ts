@@ -1,4 +1,4 @@
-import { CartItem } from 'src/cart-item/entities/cart-item.entity';
+import { CartItem } from 'src/domain/cart-item/entities/cart-item.entity';
 import {
   Column,
   CreateDateColumn,

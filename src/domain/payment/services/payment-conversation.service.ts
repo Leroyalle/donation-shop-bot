@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { PaymentService } from './payment.service';
-import { OrderService } from 'src/order/order.service';
+import { OrderService } from 'src/domain/order/order.service';
 import { HttpClientService } from 'src/http-client/http-client.service';
 import { Bot, Context, InlineKeyboard } from 'grammy';
 import { InjectBot } from '@grammyjs/nestjs';
 import { Conversation } from '@grammyjs/conversations';
-import { User } from 'src/user/entities/user.entity';
+import { User } from 'src/domain/user/entities/user.entity';
 import { ISteamCheckResult } from '../types/pay-digital/steam-check-result.type';
 import { PAY_DIGITAL_PAYMENT_ENDPOINTS } from 'src/common/constants/api-paths';
 import { ITopupCheckRequest } from '../types/pay-digital/topup-check-request.type';

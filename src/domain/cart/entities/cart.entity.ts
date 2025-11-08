@@ -1,6 +1,6 @@
-import { CartItem } from 'src/cart-item/entities/cart-item.entity';
-import { Order } from 'src/order/entities/order.entity';
-import { User } from 'src/user/entities/user.entity';
+import { CartItem } from 'src/domain/cart-item/entities/cart-item.entity';
+import { Order } from 'src/domain/order/entities/order.entity';
+import { User } from 'src/domain/user/entities/user.entity';
 import { Entity, OneToMany, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()

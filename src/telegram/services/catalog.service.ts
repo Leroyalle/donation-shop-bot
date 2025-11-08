@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Context } from 'grammy';
-import { CardService } from 'src/card/card.service';
+import { CardService } from 'src/domain/card/card.service';
 import { UiBuilderService } from './ui-builder.service';
 
 @Injectable()

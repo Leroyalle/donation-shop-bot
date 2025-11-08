@@ -1,5 +1,5 @@
-import { Card } from 'src/card/entities/card.entity';
-import { Cart } from 'src/cart/entities/cart.entity';
+import { Card } from 'src/domain/card/entities/card.entity';
+import { Cart } from 'src/domain/cart/entities/cart.entity';
 import {
   Column,
   CreateDateColumn,

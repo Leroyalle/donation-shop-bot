@@ -1,8 +1,8 @@
 import { CallbackQuery, Update } from '@grammyjs/nestjs';
 import { Injectable } from '@nestjs/common';
 import { Context } from 'grammy';
-import { CardService } from 'src/card/card.service';
-import { CartService } from 'src/cart/cart.service';
+import { CardService } from 'src/domain/card/card.service';
+import { CartService } from 'src/domain/cart/cart.service';
 import { TelegramService } from '../services/telegram.service';
 import { TelegramCartService } from '../services/telegram-cart.service';
 

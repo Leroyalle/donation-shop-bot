@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InlineKeyboard } from 'grammy';
-import { Card } from 'src/card/entities/card.entity';
-import { CartItem } from 'src/cart-item/entities/cart-item.entity';
+import { Card } from 'src/domain/card/entities/card.entity';
+import { CartItem } from 'src/domain/cart-item/entities/cart-item.entity';
 
 @Injectable()
 export class UiBuilderService {

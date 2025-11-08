@@ -1,5 +1,5 @@
-import { Cart } from 'src/cart/entities/cart.entity';
-import { Order } from 'src/order/entities/order.entity';
+import { Cart } from 'src/domain/cart/entities/cart.entity';
+import { Order } from 'src/domain/order/entities/order.entity';
 import {
   Column,
   Entity,

@@ -2,18 +2,17 @@ import { Module } from '@nestjs/common';
 import { TelegramCoreUpdate } from './updates/telegram-core.update';
 import { NestjsGrammyModule } from '@grammyjs/nestjs';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { CardModule } from '../card/card.module';
-import { UserModule } from 'src/user/user.module';
-import { CartModule } from 'src/cart/cart.module';
-import { PaymentModule } from 'src/payment/payment.module';
-import { CartItemModule } from 'src/cart-item/cart-item.module';
+import { CardModule } from '../domain/card/card.module';
+import { UserModule } from 'src/domain/user/user.module';
+import { CartModule } from 'src/domain/cart/cart.module';
+import { PaymentModule } from 'src/domain/payment/payment.module';
+import { CartItemModule } from 'src/domain/cart-item/cart-item.module';
 import { TelegramService } from './services/telegram.service';
 import { HttpClientModule } from 'src/http-client/http-client.module';
 import { UiBuilderService } from './services/ui-builder.service';
 import { TelegramCartService } from './services/telegram-cart.service';
 import { AdditionalProductsService } from './services/additional-products.service';
 import { CatalogService } from './services/catalog.service';
-import { StartUpdate } from './updates/start.update';
 import { AdditionalProductsUpdate } from './updates/additional-products.update';
 import { CartUpdate } from './updates/cart.update';
 import { CatalogUpdate } from './updates/catalog.update';
@@ -48,11 +47,10 @@ import { TopupUpdate } from './updates/topup.update';
   ],
   providers: [
     TelegramCoreUpdate,
-    StartUpdate,
+    SteamUpdate,
     AdditionalProductsUpdate,
     CartUpdate,
     CatalogUpdate,
-    SteamUpdate,
     TopupUpdate,
     TelegramService,
     UiBuilderService,
