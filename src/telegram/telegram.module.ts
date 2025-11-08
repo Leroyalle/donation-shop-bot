@@ -12,6 +12,7 @@ import { HttpClientModule } from 'src/http-client/http-client.module';
 import { UiBuilderService } from './services/ui-builder.service';
 import { TelegramCartService } from './services/telegram-cart.service';
 import { AdditionalProductsService } from './services/additional-products.service';
+import { CatalogService } from './services/catalog.service';
 
 @Module({
   imports: [
@@ -45,6 +46,7 @@ import { AdditionalProductsService } from './services/additional-products.servic
     UiBuilderService,
     TelegramCartService,
     AdditionalProductsService,
+    CatalogService,
   ],
 })
 export class TelegramModule {}
