@@ -1,13 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Bot, Context, InlineKeyboard, session } from 'grammy';
 import { startButtons } from '../constants/start-buttons.constants';
-import { CardService } from 'src/card/card.service';
-import { CartItem } from 'src/cart-item/entities/cart-item.entity';
-import { Card } from 'src/card/entities/card.entity';
-import { CartService } from 'src/cart/cart.service';
 import { UserService } from 'src/user/user.service';
-import { CartItemService } from 'src/cart-item/cart-item.service';
-import { PaymentService } from 'src/payment/services/payment.service';
 import { HttpClientService } from 'src/http-client/http-client.service';
 import { PAY_DIGITAL_PAYMENT_ENDPOINTS } from 'src/common/constants/api-paths';
 import { AdditionalGroup } from 'src/common/types/additional-group.type';
@@ -17,18 +11,13 @@ import { InjectBot } from '@grammyjs/nestjs';
 import { conversations, createConversation } from '@grammyjs/conversations';
 import { User } from 'src/user/entities/user.entity';
 import { PaymentConversationService } from 'src/payment/services/payment-conversation.service';
-import { UiBuilderService } from './ui-builder.service';
 
 @Injectable()
 export class TelegramService {
   constructor(
-    private readonly cardService: CardService,
-    private readonly cartService: CartService,
     private readonly userService: UserService,
-    private readonly cartItemService: CartItemService,
     private readonly httpClientService: HttpClientService,
     private readonly paymentConversationService: PaymentConversationService,
-    private readonly uiBuilderService: UiBuilderService,
     @InjectBot() private readonly bot: Bot<Context>,
   ) {
     this.bot.use(session({ initial: () => ({}) }));
@@ -86,148 +75,6 @@ export class TelegramService {
       );
     } catch (error) {
       console.log('[START]', error);
-      await ctx.reply('❌ Произошла ошибка');
-    }
-  }
-
-  public async showCatalogPage(
-    ctx: Context,
-    page: number,
-    editable: boolean = true,
-  ) {
-    try {
-      const telegramId = ctx.from?.id;
-      if (!telegramId) return;
-      const perPage = 1;
-      const [cards, totalItems] = await this.cardService.getByPage(
-        page,
-        perPage,
-      );
-      console.log(cards);
-      if (cards.length === 0)
-        return await ctx.reply('Товаров пока нет! Попробуйте позже');
-
-      const { message, keyboards } =
-        this.uiBuilderService.buildCardCatalogKeyboard(
-          cards[0],
-          page,
-          totalItems,
-          perPage,
-        );
-
-      if (editable) {
-        await ctx.editMessageMedia(
-          {
-            type: 'photo',
-            media: cards[0].imageUrl,
-            caption: message,
-            parse_mode: 'HTML',
-          },
-          {
-            reply_markup: keyboards,
-          },
-        );
-      } else {
-        await ctx.replyWithPhoto(cards[0].imageUrl, {
-          caption: message,
-          parse_mode: 'HTML',
-          reply_markup: keyboards,
-        });
-      }
-    } catch (error) {
-      console.log('[showCatalogPage]', error);
-      await ctx.reply('❌ Произошла ошибка');
-    }
-  }
-
-  public async handleIncrement(ctx: Context) {
-    try {
-      const data = ctx.callbackQuery?.data;
-      if (!data) return;
-      const [_, cartItemId, pageStr] = data.split(':');
-      const page = Number(pageStr) || 0;
-      const telegramId = ctx.from?.id;
-      if (!telegramId) return;
-      await this.cartService.increment(cartItemId);
-      await this.showCartPage(ctx, page);
-    } catch (error) {
-      console.log('[handleIncrement]', error);
-      await ctx.reply('Произошла ошибка при инкременте товара');
-    }
-  }
-
-  public async handleDecrement(ctx: Context) {
-    try {
-      const data = ctx.callbackQuery?.data;
-      if (!data) return;
-      const [_, cartItemId, pageStr] = data.split(':');
-      const page = Number(pageStr) || 0;
-      const telegramId = ctx.from?.id;
-      if (!telegramId) return;
-      await this.cartService.decrement(cartItemId);
-      await this.showCartPage(ctx, page);
-    } catch (error) {
-      console.log('[handleDecrement]', error);
-      await ctx.reply('Произошла ошибка при декременте элемента корзины');
-    }
-  }
-
-  public async showCartPage(
-    ctx: Context,
-    page: number,
-    editable: boolean = true,
-  ) {
-    try {
-      const telegramId = ctx.from?.id;
-      if (!telegramId) return;
-
-      const user = await this.handleCreateOrFindUser(ctx);
-
-      if (!user) return;
-
-      const pageSize = 1;
-      const { cartItems, totalItems } =
-        await this.cartItemService.getUserCartPage(user.id, page, pageSize);
-      const cart = await this.cartService.getUserCart(user.id);
-
-      if (!cartItems || cartItems.length === 0 || !cart) {
-        return await ctx.reply('Вы еще не добавили ни одного товара 🪹');
-      }
-      const amount = cart.cartItems.reduce(
-        (acc, item) => acc + item.card.price * item.quantity,
-        0,
-      );
-      const totalPages = Math.ceil(totalItems / pageSize);
-      const { message, keyboards } =
-        this.uiBuilderService.buildCartItemKeyboard(
-          cartItems[0],
-          page,
-          totalPages,
-          amount,
-        );
-
-      // await ctx.answerCallbackQuery();
-      if (editable) {
-        await ctx.editMessageMedia(
-          {
-            type: 'photo',
-            media: cartItems[0].card.imageUrl,
-            caption: message,
-            parse_mode: 'HTML',
-          },
-          {
-            reply_markup: keyboards,
-          },
-        );
-      } else {
-        await ctx.replyWithPhoto(cartItems[0].card.imageUrl, {
-          caption: message,
-          parse_mode: 'HTML',
-          reply_markup: keyboards,
-        });
-      }
-    } catch (error) {
-      console.log('[showCartPage]', error);
       await ctx.reply('❌ Произошла ошибка');
     }
   }

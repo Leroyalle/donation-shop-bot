@@ -10,6 +10,7 @@ import {
 } from './constants/start-buttons.constants';
 import { TProductType } from 'src/common/types/product-type.type';
 import { CatalogService } from './services/catalog.service';
+import { TelegramCartService } from './services/telegram-cart.service';
 
 @Update()
 @Injectable()
@@ -20,6 +21,7 @@ export class TelegramUpdate {
     private readonly cartService: CartService,
     private readonly telegramService: TelegramService,
     private readonly catalogService: CatalogService,
+    private readonly telegramCartService: TelegramCartService,
   ) {}
 
   async onModuleInit() {
@@ -140,7 +142,7 @@ export class TelegramUpdate {
       if (!user) return;
 
       await this.cartService.deleteFromCart(id);
-      await this.telegramService.showCartPage(ctx, Number(page));
+      await this.telegramCartService.showCartPage(ctx, Number(page));
 
       await ctx.answerCallbackQuery({
         text: '✅ Товар удален из корзины',
@@ -154,7 +156,7 @@ export class TelegramUpdate {
 
   @CallbackQuery('cart')
   async getCart(ctx: Context) {
-    await this.telegramService.showCartPage(ctx, 0);
+    await this.telegramCartService.showCartPage(ctx, 0);
   }
 
   @CallbackQuery(/^cartPage:/)
@@ -164,17 +166,17 @@ export class TelegramUpdate {
     const page = Number(data.split(':')[1]);
     if (isNaN(page)) return;
 
-    await this.telegramService.showCartPage(ctx, page);
+    await this.telegramCartService.showCartPage(ctx, page);
   }
 
   @CallbackQuery(/^increment:/)
   async increment(ctx: Context) {
-    await this.telegramService.handleIncrement(ctx);
+    await this.telegramCartService.handleIncrement(ctx);
   }
 
   @CallbackQuery(/^decrement:/)
   async decrement(ctx: Context) {
-    await this.telegramService.handleDecrement(ctx);
+    await this.telegramCartService.handleDecrement(ctx);
   }
 
   @CallbackQuery('noop')
@@ -224,7 +226,7 @@ export class TelegramUpdate {
         await ctx.reply('Вот ваши заказы');
       },
       '🧺 Корзина': async () => {
-        await this.telegramService.showCartPage(ctx, 0, false);
+        await this.telegramCartService.showCartPage(ctx, 0, false);
       },
       '🏠 Начало': async () => {
         await this.telegramService.sendStartReply(ctx);
