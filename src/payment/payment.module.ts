@@ -8,6 +8,7 @@ import { CartItemModule } from 'src/cart-item/cart-item.module';
 import { CartModule } from 'src/cart/cart.module';
 import { HttpClientModule } from 'src/http-client/http-client.module';
 import { PaymentConversationService } from './services/payment-conversation.service';
+import { PaymentWebhookService } from './services/payment-webhook.service';
 
 @Module({})
 export class PaymentModule {
@@ -32,7 +33,11 @@ export class PaymentModule {
         PaymentConversationService,
       ],
       controllers: [PaymentController],
-      exports: [PaymentService, PaymentConversationService],
+      exports: [
+        PaymentService,
+        PaymentConversationService,
+        PaymentWebhookService,
+      ],
     };
   }
 }
