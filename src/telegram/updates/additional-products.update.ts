@@ -41,15 +41,4 @@ export class AdditionalProductsUpdate {
     const [_, group] = data.split(':');
     await this.additionalProductsService.showAdditionalGroups(ctx, group);
   }
-
-  @CallbackQuery('steam')
-  async handleSteam(ctx: Context) {
-    await ctx.answerCallbackQuery();
-    const telegramId = ctx.from?.id;
-    if (!telegramId) return;
-    const user = await this.telegramService.handleCreateOrFindUser(ctx);
-    if (!user) return;
-    await this.telegramService.handleCreateOrFindUser(ctx);
-    await ctx.conversation.enter('steam-pay', { user });
-  }
 }
