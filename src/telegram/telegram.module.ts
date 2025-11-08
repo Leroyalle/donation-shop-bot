@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { TelegramUpdate } from './updates/telegram.update';
+import { TelegramCoreUpdate } from './updates/telegram-core.update';
 import { NestjsGrammyModule } from '@grammyjs/nestjs';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { CardModule } from '../card/card.module';
@@ -45,7 +45,7 @@ import { CatalogUpdate } from './updates/catalog.update';
     CartItemModule,
   ],
   providers: [
-    TelegramUpdate,
+    TelegramCoreUpdate,
     StartUpdate,
     AdditionalProductsUpdate,
     CartUpdate,

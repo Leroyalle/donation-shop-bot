@@ -1,0 +1,61 @@
+import { Injectable } from '@nestjs/common';
+import { InjectBot, Update, CallbackQuery, On } from '@grammyjs/nestjs';
+import { Bot, Context } from 'grammy';
+import { TelegramService } from '../services/telegram.service';
+import {
+  StartButton,
+  startButtonNames,
+} from '../constants/start-buttons.constants';
+import { TelegramCartService } from '../services/telegram-cart.service';
+
+@Update()
+@Injectable()
+export class TelegramCoreUpdate {
+  constructor(
+    @InjectBot() private readonly bot: Bot<Context>,
+    private readonly telegramService: TelegramService,
+    private readonly telegramCartService: TelegramCartService,
+  ) {}
+  async onModuleInit() {
+    await this.bot.api.setMyCommands([
+      { command: 'start', description: 'Запуск бота' },
+      { command: 'categories', description: 'Посмотреть каталог товаров' },
+      { command: 'cart', description: 'Корзина' },
+      { command: 'orders', description: 'Мои заказы' },
+    ]);
+
+    console.log('Bot commands set!');
+  }
+
+  @CallbackQuery('noop')
+  async noop(ctx: Context) {
+    await ctx.answerCallbackQuery();
+  }
+
+  @On('message:text')
+  async onTextMessage(ctx: Context) {
+    const text = ctx.message?.text;
+    if (!text) return;
+
+    if (!startButtonNames.has(text as StartButton)) return;
+
+    const actionsMap: Record<StartButton, () => Promise<void>> = {
+      '🛍️ Наши услуги': async () => {
+        await this.telegramService.showCategories(ctx);
+      },
+      '🧾 Заказы': async () => {
+        await ctx.reply('Вот ваши заказы');
+      },
+      '🧺 Корзина': async () => {
+        await this.telegramCartService.showCartPage(ctx, 0, false);
+      },
+      '🏠 Начало': async () => {
+        await this.telegramService.sendStartReply(ctx);
+      },
+    };
+
+    if (actionsMap[text]) {
+      await actionsMap[text]();
+    }
+  }
+}

@@ -92,4 +92,13 @@ export class CartUpdate {
   async decrement(ctx: Context) {
     await this.telegramCartService.handleDecrement(ctx);
   }
+
+  @CallbackQuery('checkout')
+  async handleCheckout(ctx: Context) {
+    // await ctx.reply('Введите email, на который отправить ссылку:');
+    const user = await this.telegramService.handleCreateOrFindUser(ctx);
+    if (!user) return;
+    await ctx.conversation.enter('cart-checkout', { user });
+    // ctx.session.cardEmail
+  }
 }
