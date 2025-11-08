@@ -7,7 +7,7 @@ import { Card } from 'src/card/entities/card.entity';
 import { CartService } from 'src/cart/cart.service';
 import { UserService } from 'src/user/user.service';
 import { CartItemService } from 'src/cart-item/cart-item.service';
-import { PaymentService } from 'src/payment/payment.service';
+import { PaymentService } from 'src/payment/services/payment.service';
 import { HttpClientService } from 'src/http-client/http-client.service';
 import { PAY_DIGITAL_PAYMENT_ENDPOINTS } from 'src/common/constants/api-paths';
 import { AdditionalGroup } from 'src/common/types/additional-group.type';
@@ -16,6 +16,7 @@ import { IProductById } from 'src/common/types/product-by-id.type';
 import { InjectBot } from '@grammyjs/nestjs';
 import { conversations, createConversation } from '@grammyjs/conversations';
 import { User } from 'src/user/entities/user.entity';
+import { PaymentConversationService } from 'src/payment/services/payment-conversation.service';
 
 @Injectable()
 export class TelegramService {
@@ -24,8 +25,8 @@ export class TelegramService {
     private readonly cartService: CartService,
     private readonly userService: UserService,
     private readonly cartItemService: CartItemService,
-    private readonly paymentService: PaymentService,
     private readonly httpClientService: HttpClientService,
+    private readonly paymentConversationService: PaymentConversationService,
     @InjectBot() private readonly bot: Bot<Context>,
   ) {
     this.bot.use(session({ initial: () => ({}) }));
@@ -33,15 +34,21 @@ export class TelegramService {
     this.bot.use(conversations());
 
     this.bot.use(
-      createConversation(this.paymentService.buyTopupConversation, 'buy-topup'),
+      createConversation(
+        this.paymentConversationService.buyTopupConversation,
+        'buy-topup',
+      ),
     );
     this.bot.use(
-      createConversation(this.paymentService.steamPayConversation, 'steam-pay'),
+      createConversation(
+        this.paymentConversationService.steamPayConversation,
+        'steam-pay',
+      ),
     );
 
     this.bot.use(
       createConversation(
-        this.paymentService.cartCheckoutConversation,
+        this.paymentConversationService.cartCheckoutConversation,
         'cart-checkout',
       ),
     );

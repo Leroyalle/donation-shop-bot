@@ -1,5 +1,5 @@
 import { DynamicModule, Module } from '@nestjs/common';
-import { PaymentService } from './payment.service';
+import { PaymentService } from './services/payment.service';
 import { PaymentController } from './payment.controller';
 import { PAYMENT_CONFIG, TypeAsyncOptions } from './types/payment-config.type';
 import { UserModule } from 'src/user/user.module';
@@ -7,6 +7,7 @@ import { OrderModule } from 'src/order/order.module';
 import { CartItemModule } from 'src/cart-item/cart-item.module';
 import { CartModule } from 'src/cart/cart.module';
 import { HttpClientModule } from 'src/http-client/http-client.module';
+import { PaymentConversationService } from './services/payment-conversation.service';
 
 @Module({})
 export class PaymentModule {
@@ -28,9 +29,10 @@ export class PaymentModule {
           inject: options.inject,
         },
         PaymentService,
+        PaymentConversationService,
       ],
       controllers: [PaymentController],
-      exports: [PaymentService],
+      exports: [PaymentService, PaymentConversationService],
     };
   }
 }

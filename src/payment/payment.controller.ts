@@ -1,5 +1,5 @@
 import { Body, Controller, Post } from '@nestjs/common';
-import { PaymentService } from './payment.service';
+import { PaymentService } from './services/payment.service';
 import { ICkassaPaymentWebhookData } from './types/ckassa-payment-status.type';
 import { IPayDigitalWebhookData } from './types/pay-digital/pay-digital-webhook-data.type';
 
