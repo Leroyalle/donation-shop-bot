@@ -9,6 +9,7 @@ import {
   startButtonNames,
 } from './constants/start-buttons.constants';
 import { TProductType } from 'src/common/types/product-type.type';
+import { CatalogService } from './services/catalog.service';
 
 @Update()
 @Injectable()
@@ -18,6 +19,7 @@ export class TelegramUpdate {
     private readonly cardService: CardService,
     private readonly cartService: CartService,
     private readonly telegramService: TelegramService,
+    private readonly catalogService: CatalogService,
   ) {}
 
   async onModuleInit() {
@@ -48,7 +50,7 @@ export class TelegramUpdate {
     const page = Number(data.split(':')[1]);
     if (isNaN(page)) return;
     await ctx.answerCallbackQuery();
-    await this.telegramService.showCatalogPage(ctx, page);
+    await this.catalogService.showCatalogPage(ctx, page);
   }
 
   @CallbackQuery('additionalCategories')
