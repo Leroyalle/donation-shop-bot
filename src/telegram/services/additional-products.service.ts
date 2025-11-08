@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { Context, InlineKeyboard } from 'grammy';
-import { PAY_DIGITAL_PAYMENT_ENDPOINTS } from 'src/common/constants/api-paths';
-import { AdditionalGroup } from 'src/common/types/additional-group.type';
-import { IProductById } from 'src/common/types/product-by-id.type';
-import { TProductType } from 'src/common/types/product-type.type';
+import { PAY_DIGITAL_PAYMENT_ENDPOINTS } from 'src/shared/constants/api-paths';
+import { AdditionalGroup } from 'src/shared/types/additional-group.type';
+import { IProductById } from 'src/shared/types/product-by-id.type';
+import { TProductType } from 'src/shared/types/product-type.type';
 import { HttpClientService } from 'src/infrastructure/http-client/http-client.service';
 import { User } from 'src/domain/user/entities/user.entity';
 

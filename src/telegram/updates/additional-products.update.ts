@@ -3,7 +3,7 @@ import { Injectable } from '@nestjs/common';
 import { TelegramService } from '../services/telegram.service';
 import { AdditionalProductsService } from '../services/additional-products.service';
 import { Context } from 'grammy';
-import { TProductType } from 'src/common/types/product-type.type';
+import { TProductType } from 'src/shared/types/product-type.type';
 
 @Update()
 @Injectable()

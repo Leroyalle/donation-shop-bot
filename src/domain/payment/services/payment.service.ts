@@ -5,7 +5,7 @@ import { User } from 'src/domain/user/entities/user.entity';
 import { CartService } from 'src/domain/cart/cart.service';
 import { OrderService } from 'src/domain/order/order.service';
 import { CartItemService } from 'src/domain/cart-item/cart-item.service';
-import { CKASSA_PAYMENT_ENDPOINTS } from 'src/common/constants/api-paths';
+import { CKASSA_PAYMENT_ENDPOINTS } from 'src/shared/constants/api-paths';
 import { generateCkassaNumber } from '../lib/generate-ckassa-order-id.lib';
 import { InjectBot } from '@grammyjs/nestjs';
 import { Bot, Context, InlineKeyboard } from 'grammy';

@@ -4,7 +4,7 @@ import axios, { AxiosInstance } from 'axios';
 import {
   CKASSA_PAYMENT_URL,
   PAY_DIGITAL_PAYMENT_URL,
-} from 'src/common/constants/api-paths';
+} from 'src/shared/constants/api-paths';
 @Injectable()
 export class HttpClientService {
   private readonly ckassa: AxiosInstance;

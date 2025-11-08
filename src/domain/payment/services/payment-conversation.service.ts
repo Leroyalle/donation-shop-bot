@@ -7,7 +7,7 @@ import { InjectBot } from '@grammyjs/nestjs';
 import { Conversation } from '@grammyjs/conversations';
 import { User } from 'src/domain/user/entities/user.entity';
 import { ISteamCheckResult } from '../types/pay-digital/steam-check-result.type';
-import { PAY_DIGITAL_PAYMENT_ENDPOINTS } from 'src/common/constants/api-paths';
+import { PAY_DIGITAL_PAYMENT_ENDPOINTS } from 'src/shared/constants/api-paths';
 import { ITopupCheckRequest } from '../types/pay-digital/topup-check-request.type';
 import { ITopupCheckResponse } from '../types/pay-digital/topup-check-response.type';
 import { payDigitalInstance } from 'src/common/api/pay-digital-instance.api';
