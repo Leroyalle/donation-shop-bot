@@ -11,6 +11,7 @@ import {
 import { TProductType } from 'src/common/types/product-type.type';
 import { CatalogService } from './services/catalog.service';
 import { TelegramCartService } from './services/telegram-cart.service';
+import { AdditionalProductsService } from './services/additional-products.service';
 
 @Update()
 @Injectable()
@@ -22,6 +23,7 @@ export class TelegramUpdate {
     private readonly telegramService: TelegramService,
     private readonly catalogService: CatalogService,
     private readonly telegramCartService: TelegramCartService,
+    private readonly additionalProductsService: AdditionalProductsService,
   ) {}
 
   async onModuleInit() {
@@ -58,7 +60,7 @@ export class TelegramUpdate {
   @CallbackQuery('additionalCategories')
   async getAdditionalCategories(ctx: Context) {
     await ctx.answerCallbackQuery();
-    await this.telegramService.showAdditionalCategories(ctx);
+    await this.additionalProductsService.showAdditionalCategories(ctx);
   }
 
   @CallbackQuery(/^additionalBuy:/)
@@ -68,7 +70,7 @@ export class TelegramUpdate {
     const user = await this.telegramService.handleCreateOrFindUser(ctx);
     if (!user) return;
     const [_, id, type] = data.split(':');
-    return await this.telegramService.handleAdditionalBuy(
+    return await this.additionalProductsService.handleAdditionalBuy(
       ctx,
       id,
       type as TProductType,
@@ -81,7 +83,7 @@ export class TelegramUpdate {
     const data = ctx.callbackQuery?.data;
     if (!data) return;
     const [_, group] = data.split(':');
-    await this.telegramService.showAdditionalGroups(ctx, group);
+    await this.additionalProductsService.showAdditionalGroups(ctx, group);
   }
 
   @CallbackQuery(/^topup:/)
@@ -93,7 +95,11 @@ export class TelegramUpdate {
     if (!productId || !type) {
       return await ctx.reply('❌ Произошла ошибка');
     }
-    await this.telegramService.showTopup(ctx, productId, type as TProductType);
+    await this.additionalProductsService.showAdditionalTopup(
+      ctx,
+      productId,
+      type as TProductType,
+    );
   }
 
   @CallbackQuery('categories')
