@@ -3,7 +3,7 @@ import { InjectBot, Start, Update, CallbackQuery, On } from '@grammyjs/nestjs';
 import { Bot, Context } from 'grammy';
 import { CardService } from 'src/card/card.service';
 import { CartService } from 'src/cart/cart.service';
-import { TelegramService } from './telegram.service';
+import { TelegramService } from './services/telegram.service';
 import {
   StartButton,
   startButtonNames,

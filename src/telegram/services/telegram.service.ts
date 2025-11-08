@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Bot, Context, InlineKeyboard, session } from 'grammy';
-import { startButtons } from './constants/start-buttons.constants';
+import { startButtons } from '../constants/start-buttons.constants';
 import { CardService } from 'src/card/card.service';
 import { CartItem } from 'src/cart-item/entities/cart-item.entity';
 import { Card } from 'src/card/entities/card.entity';
@@ -17,6 +17,7 @@ import { InjectBot } from '@grammyjs/nestjs';
 import { conversations, createConversation } from '@grammyjs/conversations';
 import { User } from 'src/user/entities/user.entity';
 import { PaymentConversationService } from 'src/payment/services/payment-conversation.service';
+import { UiBuilderService } from './ui-builder.service';
 
 @Injectable()
 export class TelegramService {
@@ -27,6 +28,7 @@ export class TelegramService {
     private readonly cartItemService: CartItemService,
     private readonly httpClientService: HttpClientService,
     private readonly paymentConversationService: PaymentConversationService,
+    private readonly uiBuilderService: UiBuilderService,
     @InjectBot() private readonly bot: Bot<Context>,
   ) {
     this.bot.use(session({ initial: () => ({}) }));
@@ -105,12 +107,13 @@ export class TelegramService {
       if (cards.length === 0)
         return await ctx.reply('Товаров пока нет! Попробуйте позже');
 
-      const { message, keyboards } = this.buildCardCatalogKeyboard(
-        cards[0],
-        page,
-        totalItems,
-        perPage,
-      );
+      const { message, keyboards } =
+        this.uiBuilderService.buildCardCatalogKeyboard(
+          cards[0],
+          page,
+          totalItems,
+          perPage,
+        );
 
       if (editable) {
         await ctx.editMessageMedia(
@@ -135,72 +138,6 @@ export class TelegramService {
       console.log('[showCatalogPage]', error);
       await ctx.reply('❌ Произошла ошибка');
     }
-  }
-
-  public buildCardCatalogKeyboard(
-    card: Card,
-    page: number,
-    totalItems: number,
-    perPage: number = 1,
-  ) {
-    const message = `<b>${card.name}</b>\n${card.description}`;
-    const keyboards = new InlineKeyboard().row({
-      text: `Добавить в корзину - ${card.price} ₽`,
-      callback_data: `addToCart:${card.id}:${page}`,
-    });
-
-    const totalPages = Math.ceil(totalItems / perPage);
-
-    const navKeyboard: { text: string; callback_data: string }[] = [];
-    if (page > 0) {
-      navKeyboard.push({ text: '←', callback_data: `catalog:${page - 1}` });
-    }
-    navKeyboard.push({
-      text: `${page + 1}/${totalPages}`,
-      callback_data: 'noop',
-    });
-    if (page < totalPages - 1) {
-      navKeyboard.push({ text: '→', callback_data: `catalog:${page + 1}` });
-    }
-    keyboards.row(...navKeyboard);
-    return { message, keyboards };
-  }
-
-  public buildCartItemKeyboard(
-    cartItem: CartItem,
-    page: number,
-    totalPages: number,
-    amount: number,
-  ) {
-    const message = `<b>${cartItem.card.name}</b>\n${cartItem.card.description}`;
-    const keyboards = new InlineKeyboard()
-      .text(
-        `${cartItem.quantity} шт - ${cartItem.card.price * cartItem.quantity} ₽`,
-        'noop',
-      )
-      .row()
-      .text('+', `increment:${cartItem.id}:${page}`)
-      .text('Удалить', `deleteFromCart:${cartItem.id}:${page}`)
-      .text('-', `decrement:${cartItem.id}:${page}`)
-      .row()
-      .text(`✅ Заказ на ${amount} ₽ Оформить?`, 'checkout')
-      .row()
-      .text('🛒 Продолжить покупки', 'catalog:0');
-
-    const navKeyboard: { text: string; callback_data: string }[] = [];
-    if (page > 0)
-      navKeyboard.push({ text: '←', callback_data: `cartPage:${page - 1}` });
-    navKeyboard.push({
-      text: `${page + 1}/${totalPages}`,
-      callback_data: 'noop',
-    });
-    if (page < totalPages - 1)
-      navKeyboard.push({ text: '→', callback_data: `cartPage:${page + 1}` });
-    keyboards.row(...navKeyboard);
-
-    console.log('after reply');
-
-    return { message, keyboards };
   }
 
   public async handleIncrement(ctx: Context) {
@@ -261,12 +198,13 @@ export class TelegramService {
         0,
       );
       const totalPages = Math.ceil(totalItems / pageSize);
-      const { message, keyboards } = this.buildCartItemKeyboard(
-        cartItems[0],
-        page,
-        totalPages,
-        amount,
-      );
+      const { message, keyboards } =
+        this.uiBuilderService.buildCartItemKeyboard(
+          cartItems[0],
+          page,
+          totalPages,
+          amount,
+        );
 
       // await ctx.answerCallbackQuery();
       if (editable) {

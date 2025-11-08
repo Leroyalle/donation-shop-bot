@@ -7,8 +7,9 @@ import { UserModule } from 'src/user/user.module';
 import { CartModule } from 'src/cart/cart.module';
 import { PaymentModule } from 'src/payment/payment.module';
 import { CartItemModule } from 'src/cart-item/cart-item.module';
-import { TelegramService } from './telegram.service';
+import { TelegramService } from './services/telegram.service';
 import { HttpClientModule } from 'src/http-client/http-client.module';
+import { UiBuilderService } from './services/ui-builder.service';
 
 @Module({
   imports: [
@@ -36,6 +37,6 @@ import { HttpClientModule } from 'src/http-client/http-client.module';
     }),
     CartItemModule,
   ],
-  providers: [TelegramUpdate, TelegramService],
+  providers: [TelegramUpdate, TelegramService, UiBuilderService],
 })
 export class TelegramModule {}
