@@ -3,15 +3,15 @@ import { InjectBot, Start, Update, CallbackQuery, On } from '@grammyjs/nestjs';
 import { Bot, Context } from 'grammy';
 import { CardService } from 'src/card/card.service';
 import { CartService } from 'src/cart/cart.service';
-import { TelegramService } from './services/telegram.service';
+import { TelegramService } from '../services/telegram.service';
 import {
   StartButton,
   startButtonNames,
-} from './constants/start-buttons.constants';
+} from '../constants/start-buttons.constants';
 import { TProductType } from 'src/common/types/product-type.type';
-import { CatalogService } from './services/catalog.service';
-import { TelegramCartService } from './services/telegram-cart.service';
-import { AdditionalProductsService } from './services/additional-products.service';
+import { CatalogService } from '../services/catalog.service';
+import { TelegramCartService } from '../services/telegram-cart.service';
+import { AdditionalProductsService } from '../services/additional-products.service';
 
 @Update()
 @Injectable()
@@ -26,81 +26,81 @@ export class TelegramUpdate {
     private readonly additionalProductsService: AdditionalProductsService,
   ) {}
 
-  async onModuleInit() {
-    await this.bot.api.setMyCommands([
-      { command: 'start', description: 'Запуск бота' },
-      { command: 'categories', description: 'Посмотреть каталог товаров' },
-      { command: 'cart', description: 'Корзина' },
-      { command: 'orders', description: 'Мои заказы' },
-    ]);
+  // async onModuleInit() {
+  //   await this.bot.api.setMyCommands([
+  //     { command: 'start', description: 'Запуск бота' },
+  //     { command: 'categories', description: 'Посмотреть каталог товаров' },
+  //     { command: 'cart', description: 'Корзина' },
+  //     { command: 'orders', description: 'Мои заказы' },
+  //   ]);
 
-    console.log('Bot commands set!');
-  }
+  //   console.log('Bot commands set!');
+  // }
 
-  @Start()
-  async onStart(ctx: Context) {
-    const telegramId = ctx.from?.id;
-    if (!telegramId) return;
+  // @Start()
+  // async onStart(ctx: Context) {
+  //   const telegramId = ctx.from?.id;
+  //   if (!telegramId) return;
 
-    await this.telegramService.handleCreateOrFindUser(ctx);
-    await this.telegramService.sendStartReply(ctx);
-  }
+  //   await this.telegramService.handleCreateOrFindUser(ctx);
+  //   await this.telegramService.sendStartReply(ctx);
+  // }
 
-  @CallbackQuery(/^catalog:/)
-  async getCatalog(ctx: Context) {
-    const data = ctx.callbackQuery?.data;
-    console.log(data);
-    if (!data) return;
-    const page = Number(data.split(':')[1]);
-    if (isNaN(page)) return;
-    await ctx.answerCallbackQuery();
-    await this.catalogService.showCatalogPage(ctx, page);
-  }
+  // @CallbackQuery(/^catalog:/)
+  // async getCatalog(ctx: Context) {
+  //   const data = ctx.callbackQuery?.data;
+  //   console.log(data);
+  //   if (!data) return;
+  //   const page = Number(data.split(':')[1]);
+  //   if (isNaN(page)) return;
+  //   await ctx.answerCallbackQuery();
+  //   await this.catalogService.showCatalogPage(ctx, page);
+  // }
 
-  @CallbackQuery('additionalCategories')
-  async getAdditionalCategories(ctx: Context) {
-    await ctx.answerCallbackQuery();
-    await this.additionalProductsService.showAdditionalCategories(ctx);
-  }
+  // @CallbackQuery('additionalCategories')
+  // async getAdditionalCategories(ctx: Context) {
+  //   await ctx.answerCallbackQuery();
+  //   await this.additionalProductsService.showAdditionalCategories(ctx);
+  // }
 
-  @CallbackQuery(/^additionalBuy:/)
-  async handleAdditionalBuy(ctx: Context) {
-    const data = ctx.callbackQuery?.data;
-    if (!data) return;
-    const user = await this.telegramService.handleCreateOrFindUser(ctx);
-    if (!user) return;
-    const [_, id, type] = data.split(':');
-    return await this.additionalProductsService.handleAdditionalBuy(
-      ctx,
-      id,
-      type as TProductType,
-      user,
-    );
-  }
+  // @CallbackQuery(/^additionalBuy:/)
+  // async handleAdditionalBuy(ctx: Context) {
+  //   const data = ctx.callbackQuery?.data;
+  //   if (!data) return;
+  //   const user = await this.telegramService.handleCreateOrFindUser(ctx);
+  //   if (!user) return;
+  //   const [_, id, type] = data.split(':');
+  //   return await this.additionalProductsService.handleAdditionalBuy(
+  //     ctx,
+  //     id,
+  //     type as TProductType,
+  //     user,
+  //   );
+  // }
 
-  @CallbackQuery(/^additional:/)
-  async getAdditionalServices(ctx: Context) {
-    const data = ctx.callbackQuery?.data;
-    if (!data) return;
-    const [_, group] = data.split(':');
-    await this.additionalProductsService.showAdditionalGroups(ctx, group);
-  }
+  // @CallbackQuery(/^additional:/)
+  // async getAdditionalServices(ctx: Context) {
+  //   const data = ctx.callbackQuery?.data;
+  //   if (!data) return;
+  //   const [_, group] = data.split(':');
+  //   await this.additionalProductsService.showAdditionalGroups(ctx, group);
+  // }
 
-  @CallbackQuery(/^topup:/)
-  async getTopup(ctx: Context) {
-    await ctx.answerCallbackQuery();
-    const data = ctx.callbackQuery?.data;
-    if (!data) return;
-    const [_, productId, type] = data.split(':');
-    if (!productId || !type) {
-      return await ctx.reply('❌ Произошла ошибка');
-    }
-    await this.additionalProductsService.showAdditionalTopup(
-      ctx,
-      productId,
-      type as TProductType,
-    );
-  }
+  // @CallbackQuery(/^topup:/)
+  // async getTopup(ctx: Context) {
+  //   await ctx.answerCallbackQuery();
+  //   const data = ctx.callbackQuery?.data;
+  //   if (!data) return;
+  //   const [_, productId, type] = data.split(':');
+  //   if (!productId || !type) {
+  //     return await ctx.reply('❌ Произошла ошибка');
+  //   }
+  //   await this.additionalProductsService.showAdditionalTopup(
+  //     ctx,
+  //     productId,
+  //     type as TProductType,
+  //   );
+  // }
 
   @CallbackQuery('categories')
   async getCategories(ctx: Context) {

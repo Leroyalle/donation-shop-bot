@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { TelegramUpdate } from './telegram.update';
+import { TelegramUpdate } from './updates/telegram.update';
 import { NestjsGrammyModule } from '@grammyjs/nestjs';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { CardModule } from '../card/card.module';
@@ -13,6 +13,10 @@ import { UiBuilderService } from './services/ui-builder.service';
 import { TelegramCartService } from './services/telegram-cart.service';
 import { AdditionalProductsService } from './services/additional-products.service';
 import { CatalogService } from './services/catalog.service';
+import { StartUpdate } from './updates/start.update';
+import { AdditionalProductsUpdate } from './updates/additional-products.update';
+import { CartUpdate } from './updates/cart.update';
+import { CatalogUpdate } from './updates/catalog.update';
 
 @Module({
   imports: [
@@ -42,6 +46,10 @@ import { CatalogService } from './services/catalog.service';
   ],
   providers: [
     TelegramUpdate,
+    StartUpdate,
+    AdditionalProductsUpdate,
+    CartUpdate,
+    CatalogUpdate,
     TelegramService,
     UiBuilderService,
     TelegramCartService,
