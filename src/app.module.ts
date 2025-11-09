@@ -1,9 +1,9 @@
 import { Module } from '@nestjs/common';
-import { TelegramModule } from './telegram/telegram.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { DomainModule } from './domain/domain.module';
 import { InfrastructureModule } from './infrastructure/infrastructure.module';
+import { InterfacesModule } from './interfaces/interfaces.module';
 
 @Module({
   imports: [
@@ -30,7 +30,7 @@ import { InfrastructureModule } from './infrastructure/infrastructure.module';
     }),
     DomainModule,
     InfrastructureModule,
-    TelegramModule,
+    InterfacesModule,
   ],
   providers: [],
 })

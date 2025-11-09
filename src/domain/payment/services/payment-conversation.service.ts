@@ -2,15 +2,13 @@ import { Injectable } from '@nestjs/common';
 import { PaymentService } from './payment.service';
 import { OrderService } from 'src/domain/order/order.service';
 import { HttpClientService } from 'src/infrastructure/http-client/http-client.service';
-import { Bot, Context, InlineKeyboard } from 'grammy';
-import { InjectBot } from '@grammyjs/nestjs';
+import { Context, InlineKeyboard } from 'grammy';
 import { Conversation } from '@grammyjs/conversations';
 import { User } from 'src/domain/user/entities/user.entity';
 import { ISteamCheckResult } from '../types/pay-digital/steam-check-result.type';
 import { PAY_DIGITAL_PAYMENT_ENDPOINTS } from 'src/shared/constants/api-paths';
 import { ITopupCheckRequest } from '../types/pay-digital/topup-check-request.type';
 import { ITopupCheckResponse } from '../types/pay-digital/topup-check-response.type';
-import { payDigitalInstance } from 'src/common/api/pay-digital-instance.api';
 
 @Injectable()
 export class PaymentConversationService {
@@ -18,7 +16,6 @@ export class PaymentConversationService {
     private readonly paymentService: PaymentService,
     private readonly orderService: OrderService,
     private readonly httpClientService: HttpClientService,
-    @InjectBot() private readonly bot: Bot<Context>,
   ) {}
 
   public cartCheckoutConversation = async (
@@ -151,10 +148,11 @@ export class PaymentConversationService {
       };
 
       const res = await conversation.external(async () => {
-        const { data } = await payDigitalInstance.post<ITopupCheckResponse>(
-          PAY_DIGITAL_PAYMENT_ENDPOINTS.topupCheck,
-          topupReqData,
-        );
+        const { data } =
+          await this.httpClientService.payDigitalInstance.post<ITopupCheckResponse>(
+            PAY_DIGITAL_PAYMENT_ENDPOINTS.topupCheck,
+            topupReqData,
+          );
         return data;
       });
 
