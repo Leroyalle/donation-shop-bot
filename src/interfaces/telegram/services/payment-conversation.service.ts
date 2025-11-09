@@ -1,14 +1,14 @@
 import { Injectable } from '@nestjs/common';
-import { PaymentService } from './payment.service';
 import { OrderService } from 'src/domain/order/order.service';
 import { HttpClientService } from 'src/infrastructure/http-client/http-client.service';
 import { Context, InlineKeyboard } from 'grammy';
 import { Conversation } from '@grammyjs/conversations';
 import { User } from 'src/domain/user/entities/user.entity';
-import { ISteamCheckResult } from '../types/pay-digital/steam-check-result.type';
 import { PAY_DIGITAL_PAYMENT_ENDPOINTS } from 'src/shared/constants/api-paths';
-import { ITopupCheckRequest } from '../types/pay-digital/topup-check-request.type';
-import { ITopupCheckResponse } from '../types/pay-digital/topup-check-response.type';
+import { PaymentService } from 'src/domain/payment/services/payment.service';
+import { ISteamCheckResult } from 'src/domain/payment/types/pay-digital/steam-check-result.type';
+import { ITopupCheckRequest } from 'src/domain/payment/types/pay-digital/topup-check-request.type';
+import { ITopupCheckResponse } from 'src/domain/payment/types/pay-digital/topup-check-response.type';
 
 @Injectable()
 export class PaymentConversationService {

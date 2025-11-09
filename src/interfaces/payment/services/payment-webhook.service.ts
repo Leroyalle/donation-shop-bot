@@ -1,12 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { ICkassaPaymentWebhookData } from '../types/ckassa-payment-status.type';
 import { OrderService } from 'src/domain/order/order.service';
 import { CartService } from 'src/domain/cart/cart.service';
 import { CartItemService } from 'src/domain/cart-item/cart-item.service';
 import { Order } from 'src/domain/order/entities/order.entity';
 import { InjectBot } from '@grammyjs/nestjs';
 import { Bot, Context } from 'grammy';
-import { IPayDigitalWebhookData } from '../types/pay-digital/pay-digital-webhook-data.type';
+import { ICkassaPaymentWebhookData } from 'src/domain/payment/types/ckassa-payment-status.type';
+import { IPayDigitalWebhookData } from 'src/domain/payment/types/pay-digital/pay-digital-webhook-data.type';
 
 @Injectable()
 export class PaymentWebhookService {

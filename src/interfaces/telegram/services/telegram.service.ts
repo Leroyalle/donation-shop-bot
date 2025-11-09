@@ -2,16 +2,14 @@ import { Injectable } from '@nestjs/common';
 import { Bot, Context, InlineKeyboard, session } from 'grammy';
 import { startButtons } from '../constants/start-buttons.constants';
 import { UserService } from 'src/domain/user/user.service';
-import { HttpClientService } from 'src/infrastructure/http-client/http-client.service';
 import { InjectBot } from '@grammyjs/nestjs';
 import { conversations, createConversation } from '@grammyjs/conversations';
-import { PaymentConversationService } from 'src/domain/payment/services/payment-conversation.service';
+import { PaymentConversationService } from './payment-conversation.service';
 
 @Injectable()
 export class TelegramService {
   constructor(
     private readonly userService: UserService,
-    private readonly httpClientService: HttpClientService,
     private readonly paymentConversationService: PaymentConversationService,
     @InjectBot() private readonly bot: Bot<Context>,
   ) {

@@ -18,6 +18,8 @@ import { CartUpdate } from './updates/cart.update';
 import { CatalogUpdate } from './updates/catalog.update';
 import { SteamUpdate } from './updates/steam.update';
 import { TopupUpdate } from './updates/topup.update';
+import { PaymentConversationService } from './services/payment-conversation.service';
+import { OrderModule } from 'src/domain/order/order.module';
 
 @Module({
   imports: [
@@ -31,6 +33,7 @@ import { TopupUpdate } from './updates/topup.update';
     }),
     CardModule,
     UserModule,
+    OrderModule,
     HttpClientModule,
     CartModule,
     PaymentModule.registerAsync({
@@ -50,6 +53,7 @@ import { TopupUpdate } from './updates/topup.update';
     SteamUpdate,
     AdditionalProductsUpdate,
     CartUpdate,
+    PaymentConversationService,
     CatalogUpdate,
     TopupUpdate,
     TelegramService,
