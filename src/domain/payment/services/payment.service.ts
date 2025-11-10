@@ -28,11 +28,12 @@ export class PaymentService {
 
   public async paymentHandler(ctx: Context, user: User, email: string) {
     try {
+      // await ctx.answerCallbackQuery();
+      console.log('PAYMENT HANDLER');
       const telegramId = ctx.from?.id;
       if (!telegramId) return;
 
       const cart = await this.cartService.getUserCart(user.id);
-      await ctx.answerCallbackQuery();
 
       if (!cart || cart.cartItems.length === 0)
         return ctx.answerCallbackQuery({

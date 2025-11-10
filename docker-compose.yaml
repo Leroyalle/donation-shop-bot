@@ -3,11 +3,13 @@ version: '3.8'
 services:
   bot:
     build: .
-    image: telegram-bot:latest # замени на имя твоего образа
+    image: telegram-bot:latest
     container_name: telegram-bot
     restart: unless-stopped
     expose:
-      - '3000' # порт, который слушает твой бот
+      - '3000'
+    env_file:
+      - .env
     networks:
       - web
 

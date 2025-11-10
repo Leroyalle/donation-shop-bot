@@ -27,6 +27,7 @@ export class PaymentConversationService {
     const emailCtx = await conversation.waitFor(':text');
     const email = emailCtx.message?.text?.trim();
     if (!email) return await ctx.reply('Попробуйте ещё раз');
+    console.log('AFTER SENDING EMAIL', email);
     await this.paymentService.paymentHandler(ctx, user, email);
   };
 
