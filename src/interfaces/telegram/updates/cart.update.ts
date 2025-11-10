@@ -96,6 +96,7 @@ export class CartUpdate {
   @CallbackQuery('checkout')
   async handleCheckout(ctx: Context) {
     // await ctx.reply('Введите email, на который отправить ссылку:');
+    await ctx.answerCallbackQuery();
     const user = await this.telegramService.handleCreateOrFindUser(ctx);
     if (!user) return;
     await ctx.conversation.enter('cart-checkout', { user });

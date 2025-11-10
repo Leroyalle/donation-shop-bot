@@ -24,8 +24,11 @@ export class PaymentConversationService {
     { user }: { user: User },
   ) => {
     await ctx.reply('Введите email, на который отправить ссылку:');
+    console.log('AFTER REPLY GET EMAIL TEXT');
     const emailCtx = await conversation.waitFor(':text');
+    console.log('AFTER GET CONTEXT', emailCtx);
     const email = emailCtx.message?.text?.trim();
+    console.log('AFTER SENDING EMAIL', email);
     if (!email) return await ctx.reply('Попробуйте ещё раз');
     console.log('AFTER SENDING EMAIL', email);
     await this.paymentService.paymentHandler(ctx, user, email);

@@ -45,7 +45,7 @@ export class PaymentService {
       if (!paymentUrl)
         return await ctx.reply('Не удалось создать платеж. Попробуйте еще раз');
 
-      await ctx.reply('Оплатить заказ по ссылке:', {
+      await ctx.reply('Все готово. Осталось оплатить заказ 👇:', {
         reply_markup: new InlineKeyboard([
           [{ text: 'Оплатить', url: paymentUrl }],
         ]),
