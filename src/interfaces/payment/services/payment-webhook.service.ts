@@ -25,7 +25,7 @@ export class PaymentWebhookService {
     res: Response,
   ) {
     try {
-      const orderId = data.property?.orderId;
+      const orderId = data.property?.['НОМЕР ЗАКАЗА'];
       if (!orderId) {
         console.warn('⚠️ Нет orderId в property');
         return res
