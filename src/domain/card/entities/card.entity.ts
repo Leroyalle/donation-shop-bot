@@ -6,6 +6,7 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+import { Region } from '../types/region.enum';
 
 @Entity()
 export class Card {
@@ -20,6 +21,9 @@ export class Card {
 
   @Column()
   price: number;
+
+  @Column({ type: 'enum', enum: Region })
+  region: Region;
 
   @Column()
   imageUrl: string;

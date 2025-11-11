@@ -1,7 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { InlineKeyboard } from 'grammy';
 import { Card } from 'src/domain/card/entities/card.entity';
+import { Region } from 'src/domain/card/types/region.enum';
 import { CartItem } from 'src/domain/cart-item/entities/cart-item.entity';
+import { appleRegionTranslater } from '../constants/apple-regions-translater.constants';
 
 @Injectable()
 export class UiBuilderService {
@@ -9,6 +11,7 @@ export class UiBuilderService {
     card: Card,
     page: number,
     totalItems: number,
+    region: Region,
     perPage: number = 1,
   ) {
     const message = `<b>${card.name}</b>\n${card.description}`;
@@ -21,14 +24,20 @@ export class UiBuilderService {
 
     const navKeyboard: { text: string; callback_data: string }[] = [];
     if (page > 0) {
-      navKeyboard.push({ text: '←', callback_data: `catalog:${page - 1}` });
+      navKeyboard.push({
+        text: '←',
+        callback_data: `catalog:${page - 1}:${region}`,
+      });
     }
     navKeyboard.push({
       text: `${page + 1}/${totalPages}`,
       callback_data: 'noop',
     });
     if (page < totalPages - 1) {
-      navKeyboard.push({ text: '→', callback_data: `catalog:${page + 1}` });
+      navKeyboard.push({
+        text: '→',
+        callback_data: `catalog:${page + 1}:${region}`,
+      });
     }
     keyboards.row(...navKeyboard);
     return { message, keyboards };
@@ -53,7 +62,7 @@ export class UiBuilderService {
       .row()
       .text(`✅ Заказ на ${amount} ₽ Оформить?`, 'checkout')
       .row()
-      .text('🛒 Продолжить покупки', 'catalog:0');
+      .text('🛒 Продолжить покупки', 'apple_cards');
 
     const navKeyboard: { text: string; callback_data: string }[] = [];
     if (page > 0)
@@ -69,5 +78,24 @@ export class UiBuilderService {
     console.log('after reply');
 
     return { message, keyboards };
+  }
+
+  public buildCardsRegionsList(regions: typeof Region) {
+    const keyboard = new InlineKeyboard();
+    // keyboard.row(
+    //   ...Object.values(regions).map((r) => ({
+    //     text: appleRegionTranslater[r],
+    //     callback_data: `catalog:0:${r}:false`,
+    //   })),
+    // );
+
+    Object.values(regions).map((r) => {
+      keyboard.row({
+        text: appleRegionTranslater[r],
+        callback_data: `catalog:0:${r}:false`,
+      });
+    });
+
+    return keyboard;
   }
 }

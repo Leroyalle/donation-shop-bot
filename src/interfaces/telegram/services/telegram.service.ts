@@ -96,7 +96,7 @@ export class TelegramService {
   public async showCategories(ctx: Context) {
     try {
       const keyboards = new InlineKeyboard([
-        [{ text: 'Карты пополнения APP STORE', callback_data: 'catalog:0' }],
+        [{ text: 'Карты пополнения APP STORE', callback_data: 'apple_cards' }],
         [{ text: 'Пополнение Steam', callback_data: 'steam' }],
         [
           {
