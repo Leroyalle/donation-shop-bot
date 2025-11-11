@@ -25,7 +25,7 @@ export class PaymentWebhookService {
     res: Response,
   ) {
     try {
-      const orderId = data.property?.['НОМЕР ЗАКАЗА'];
+      const orderId = data.property?.['НОМЕР ЗАКАЗА'] as string;
       if (!orderId) {
         console.warn('⚠️ Нет orderId в property');
         return res
@@ -33,9 +33,7 @@ export class PaymentWebhookService {
           .json({ error: 'missing_order_id' });
       }
 
-      const order = await this.orderService.findByPaymentId(
-        data.property.orderId,
-      );
+      const order = await this.orderService.findByPaymentId(orderId);
       console.log('CKASSA_WEBHOOK finded order', order);
 
       if (!order || !order.cart || !order.user.id) {
