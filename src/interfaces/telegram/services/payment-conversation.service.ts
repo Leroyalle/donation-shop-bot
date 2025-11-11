@@ -23,15 +23,19 @@ export class PaymentConversationService {
     ctx: Context,
     { user }: { user: User },
   ) => {
-    await ctx.reply('Введите email, на который отправить ссылку:');
-    console.log('AFTER REPLY GET EMAIL TEXT');
-    const emailCtx = await conversation.waitFor(':text');
-    console.log('AFTER GET CONTEXT', emailCtx);
-    const email = emailCtx.message?.text?.trim();
-    console.log('AFTER SENDING EMAIL', email);
-    if (!email) return await ctx.reply('Попробуйте ещё раз');
-    console.log('AFTER SENDING EMAIL', email);
-    await this.paymentService.paymentHandler(ctx, user, email);
+    try {
+      await ctx.reply(
+        'Вы можете прервать диалог в любой момент, отправив /cancel.',
+      );
+      await ctx.reply('Введите email, на который отправить ссылку:');
+      const email = await this.waitForText(conversation);
+      if (!email) return await ctx.reply('Попробуйте ещё раз');
+      await this.paymentService.paymentHandler(ctx, user, email);
+    } catch (error) {
+      console.log('[CART_CHECKOUT_CONV]', error);
+      if (error.message === 'Conversation cancelled') return;
+      await ctx.reply('❌ Ошибка. Попробуйте ещё раз.');
+    }
   };
 
   public steamPayConversation = async (
@@ -40,16 +44,16 @@ export class PaymentConversationService {
     { user }: { user: User },
   ) => {
     try {
-      const session = await conversation.external((ctx) => ctx.session);
+      await ctx.reply(
+        'Вы можете прервать диалог в любой момент, отправив /cancel.',
+      );
 
       while (true) {
         await ctx.reply('Напишите имя вашего аккаунта STEAM:');
-        const nicknameCtx = await conversation.waitFor(':text');
-        const nickname = nicknameCtx.message?.text?.trim();
+        const nickname = await this.waitForText(conversation);
 
         await ctx.reply('Повторите введённое ранее имя:');
-        const repeatNickCtx = await conversation.waitFor(':text');
-        const repeatNick = repeatNickCtx.message?.text?.trim();
+        const repeatNick = await this.waitForText(conversation);
 
         if (!nickname || !repeatNick || nickname !== repeatNick) {
           await ctx.reply('Никнеймы не совпадают, попробуем ещё раз.');
@@ -57,8 +61,7 @@ export class PaymentConversationService {
         }
 
         await ctx.reply('Введите сумму пополнения в рублях:');
-        const amountCtx = await conversation.waitFor(':text');
-        const amount = amountCtx.message?.text?.trim();
+        const amount = await this.waitForText(conversation);
         const parsedAmount = parseInt(amount || '', 10);
 
         if (!amount || isNaN(parsedAmount) || parsedAmount <= 0) {
@@ -107,6 +110,7 @@ export class PaymentConversationService {
       }
     } catch (error) {
       console.log('[STEAM_PAY_CONV]', error);
+      if (error.message === 'Conversation cancelled') return;
       await ctx.reply('❌ Ошибка. Попробуйте ещё раз.');
     }
   };
@@ -119,23 +123,24 @@ export class PaymentConversationService {
     try {
       const session = await conversation.external((ctx) => ctx.session);
       await ctx.reply('Введите email:');
-      const emailCtx = await conversation.waitFor('message:text');
-      const email = emailCtx.message.text.trim();
+      const email = await this.waitForText(conversation);
+      // const email = emailCtx.message.text.trim();
 
       await ctx.reply('Введите пароль:');
-      const passCtx = await conversation.waitFor('message:text');
-      const password = passCtx.message.text.trim();
+      const password = await this.waitForText(conversation);
+      // const password = passCtx.message.text.trim();
 
       await ctx.reply('Введите ник в игре:');
-      const nickCtx = await conversation.waitFor('message:text');
-      const nickname = nickCtx.message.text.trim();
+      const nickname = await this.waitForText(conversation);
+
+      const backupAnswer = await this.ask2FAStep(conversation, ctx);
 
       await ctx.reply(
-        `✅ Email: ${email}\nПароль: ${password}\nНик: ${nickname}\n\nВсе верно? Да/Нет`,
+        `✅ Email: ${email}\nПароль: ${password}\nНик: ${nickname}\n Backup code: ${backupAnswer.has2FA ? backupAnswer.backupCode : 'Нет'}\n\nВсе верно? Да/Нет`,
       );
 
-      const confirmCtx = await conversation.waitFor('message:text');
-      if (confirmCtx.message.text.toLowerCase() === 'нет') {
+      const confirmText = await this.waitForText(conversation);
+      if (confirmText.toLowerCase() !== 'да') {
         await ctx.reply('Попробуйте ещё раз');
         session.topupData = null;
         return;
@@ -180,7 +185,49 @@ export class PaymentConversationService {
       });
     } catch (error) {
       console.log('[BUY_TOPUP_CONV]', error);
+      if (error.message === 'Conversation cancelled') return;
       await ctx.reply('❌ Ошибка. Попробуйте ещё раз.');
     }
   };
+
+  public async ask2FAStep(
+    conversation: Conversation,
+    ctx: Context,
+  ): Promise<{ has2FA: boolean; backupCode?: string }> {
+    while (true) {
+      await ctx.reply(
+        'У вас включена двухфакторная аутентификация (2FA)?\n\nОтветьте: <b>Да</b> или <b>Нет</b>.',
+        { parse_mode: 'HTML' },
+      );
+
+      const answer = (await this.waitForText(conversation)).toLowerCase();
+
+      if (answer === 'да') {
+        await ctx.reply(
+          '🧩 Введите ваш <b>backup-код</b> — одноразовый код для входа',
+          { parse_mode: 'HTML' },
+        );
+        const backupCode = await this.waitForText(conversation);
+        return { has2FA: true, backupCode };
+      }
+
+      if (answer === 'нет') {
+        return { has2FA: false };
+      }
+
+      await ctx.reply('⚠️ Пожалуйста, ответьте только “Да” или “Нет”.');
+    }
+  }
+
+  private async waitForText(conversation: Conversation) {
+    const msgCtx = await conversation.waitFor('message:text');
+    const text = msgCtx.message.text.trim();
+
+    if (text?.toLowerCase() === '/cancel' || text?.toLowerCase() === 'отмена') {
+      await msgCtx.reply('❌ Диалог отменён.');
+      throw new Error('Conversation cancelled');
+    }
+
+    return text;
+  }
 }

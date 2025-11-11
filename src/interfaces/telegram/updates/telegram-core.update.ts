@@ -21,7 +21,7 @@ export class TelegramCoreUpdate {
       { command: 'start', description: 'Запуск бота' },
       { command: 'categories', description: 'Посмотреть каталог товаров' },
       { command: 'cart', description: 'Корзина' },
-      { command: 'orders', description: 'Мои заказы' },
+      // { command: 'orders', description: 'Мои заказы' },
     ]);
 
     console.log('Bot commands set!');
@@ -56,9 +56,9 @@ export class TelegramCoreUpdate {
       '🛍️ Наши услуги': async () => {
         await this.telegramService.showCategories(ctx);
       },
-      '🧾 Заказы': async () => {
-        await ctx.reply('Вот ваши заказы');
-      },
+      // '🧾 Заказы': async () => {
+      //   await ctx.reply('Вот ваши заказы');
+      // },
       '🧺 Корзина': async () => {
         await this.telegramCartService.showCartPage(ctx, 0, false);
       },
