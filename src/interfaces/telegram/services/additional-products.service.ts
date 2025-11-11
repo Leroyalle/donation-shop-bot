@@ -6,6 +6,7 @@ import { IProductById } from 'src/shared/types/product-by-id.type';
 import { TProductType } from 'src/shared/types/product-type.type';
 import { HttpClientService } from 'src/infrastructure/http-client/http-client.service';
 import { User } from 'src/domain/user/entities/user.entity';
+import { productsWithoutTopup } from '../constants/additional-products-without-topup.constants';
 
 @Injectable()
 export class AdditionalProductsService {
@@ -90,7 +91,11 @@ export class AdditionalProductsService {
       const keyboard = new InlineKeyboard();
 
       data.forEach((group) => {
-        if (group.category === 'games') {
+        const withoutTopup = productsWithoutTopup.find(
+          (g) => g === group.group,
+        );
+
+        if (group.category === 'games' && !withoutTopup) {
           keyboard.text(group.group, `additional:${group.group}`).row();
         }
       });
