@@ -65,7 +65,9 @@ export class PaymentConversationService {
         const parsedAmount = parseInt(amount || '', 10);
 
         if (!amount || isNaN(parsedAmount) || parsedAmount <= 0) {
-          await ctx.reply('❌ Введите корректное число больше 0.');
+          await ctx.reply(
+            '❌ Введите корректное число больше 0. Диалог перезапускается.',
+          );
           continue;
         }
 
@@ -121,6 +123,9 @@ export class PaymentConversationService {
     { user }: { user: User },
   ) => {
     try {
+      await ctx.reply(
+        'Вы можете прервать диалог в любой момент, отправив /cancel.',
+      );
       const session = await conversation.external((ctx) => ctx.session);
       await ctx.reply('Введите email:');
       const email = await this.waitForText(conversation);
