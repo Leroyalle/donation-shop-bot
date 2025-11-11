@@ -22,10 +22,6 @@ export class PaymentService {
     private readonly httpClientService: HttpClientService,
   ) {}
 
-  onModuleInit() {
-    console.log('PAYMENT CONF', this.paymentConfig);
-  }
-
   public async paymentHandler(ctx: Context, user: User, email: string) {
     try {
       // await ctx.answerCallbackQuery();
@@ -96,8 +92,9 @@ export class PaymentService {
 
       console.log('payRes', response);
       const paymentId = response.data.split('/').pop();
-      if (paymentId && typeof response.data === 'string') {
-        await this.orderService.update(order.id, { paymentId });
+      if (typeof response.data === 'string') {
+        // FIXME: мб устанавливать сразу + больше статусов Pay и тд
+        await this.orderService.update(order.id, { paymentId: ckassaOrderId });
       }
 
       if (response.data) {

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { OrderService } from 'src/domain/order/order.service';
 import { CartService } from 'src/domain/cart/cart.service';
 import { CartItemService } from 'src/domain/cart-item/cart-item.service';
@@ -8,6 +8,7 @@ import { Bot, Context } from 'grammy';
 import { ICkassaPaymentWebhookData } from 'src/domain/payment/types/ckassa-payment-status.type';
 import { IPayDigitalWebhookData } from 'src/domain/payment/types/pay-digital/pay-digital-webhook-data.type';
 import { PaymentNotificationsService } from './payment-notification.service';
+import { Response } from 'express';
 
 @Injectable()
 export class PaymentWebhookService {
@@ -19,26 +20,53 @@ export class PaymentWebhookService {
     @InjectBot() private readonly bot: Bot<Context>,
   ) {}
 
-  async ckassaPaymentStatusWebhook(data: ICkassaPaymentWebhookData) {
+  async ckassaPaymentStatusWebhook(
+    data: ICkassaPaymentWebhookData,
+    res: Response,
+  ) {
     try {
+      const orderId = data.property?.orderId;
+      if (!orderId) {
+        console.warn('⚠️ Нет orderId в property');
+        return res
+          .status(HttpStatus.BAD_REQUEST)
+          .json({ error: 'missing_order_id' });
+      }
+
       const order = await this.orderService.findByPaymentId(
         data.property.orderId,
       );
-
       console.log('CKASSA_WEBHOOK finded order', order);
-      if (!order || !order.cart || !order.user.id) return;
+
+      if (!order || !order.cart || !order.user.id) {
+        console.warn(
+          '⚠️ Заказ или корзина и юзер в нем не найден по paymentId',
+          orderId,
+        );
+        return res
+          .status(HttpStatus.NOT_FOUND)
+          .json({ status: 'order_not_found' });
+      }
 
       const cartItems = await this.cartItemService.findAllByCart(order.cart.id);
 
-      if (cartItems.length === 0) return;
+      if (cartItems.length === 0) {
+        console.warn('⚠️ Пустая корзина у заказа', order.id);
+        return res.status(HttpStatus.OK).json({ status: 'empty_cart' });
+      }
 
       await this.resolveCkassaWebhook(order, data.state);
       await this.sendMessageToUser(order, data.state);
 
       await this.paymentNotificationsService.notifyAdminNewOrder(order);
-      console.log('CKASSA_WEBHOOK after user and adming notify');
+
+      console.log('✅ [CKASSA_WEBHOOK_PROCESSED] Заказ подтверждён:', order.id);
+      return res.status(HttpStatus.OK).json({ status: 'ok' });
     } catch (error) {
       console.log('CKASSA_PAYMENT_WEBHOOK', error);
+      return res
+        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .json({ status: 'error' });
     }
   }
 
