@@ -20,22 +20,26 @@ export class PaymentWebhookService {
   ) {}
 
   async ckassaPaymentStatusWebhook(data: ICkassaPaymentWebhookData) {
-    const order = await this.orderService.findByPaymentId(
-      data.property.orderId,
-    );
+    try {
+      const order = await this.orderService.findByPaymentId(
+        data.property.orderId,
+      );
 
-    console.log('CKASSA_WEBHOOK finded order', order);
-    if (!order || !order.cart || !order.user.id) return;
+      console.log('CKASSA_WEBHOOK finded order', order);
+      if (!order || !order.cart || !order.user.id) return;
 
-    const cartItems = await this.cartItemService.findAllByCart(order.cart.id);
+      const cartItems = await this.cartItemService.findAllByCart(order.cart.id);
 
-    if (cartItems.length === 0) return;
+      if (cartItems.length === 0) return;
 
-    await this.resolveCkassaWebhook(order, data.state);
-    await this.sendMessageToUser(order, data.state);
+      await this.resolveCkassaWebhook(order, data.state);
+      await this.sendMessageToUser(order, data.state);
 
-    await this.paymentNotificationsService.notifyAdminNewOrder(order);
-    console.log('CKASSA_WEBHOOK after user and adming notify');
+      await this.paymentNotificationsService.notifyAdminNewOrder(order);
+      console.log('CKASSA_WEBHOOK after user and adming notify');
+    } catch (error) {
+      console.log('CKASSA_PAYMENT_WEBHOOK', error);
+    }
   }
 
   async resolveCkassaWebhook(
@@ -57,17 +61,21 @@ export class PaymentWebhookService {
   }
 
   public async payDigitalPaymentStatusWebhook(data: IPayDigitalWebhookData) {
-    const order = await this.orderService.findByPaymentId(data.order_id);
+    try {
+      const order = await this.orderService.findByPaymentId(data.order_id);
 
-    if (!order) return;
+      if (!order) return;
 
-    if (data.status === 'Paid') {
-      await this.orderService.update(order.id, {
-        status: 'CONFIRMED',
-        paymentId: data.order_uuid,
-      });
-      await this.paymentNotificationsService.notifyUserOrderPaid(order);
-      await this.paymentNotificationsService.notifyAdminNewOrder(order);
+      if (data.status === 'Paid') {
+        await this.orderService.update(order.id, {
+          status: 'CONFIRMED',
+          paymentId: data.order_uuid,
+        });
+        await this.paymentNotificationsService.notifyUserOrderPaid(order);
+        await this.paymentNotificationsService.notifyAdminNewOrder(order);
+      }
+    } catch (error) {
+      console.log('PAY_DIGITAL_WEBHOOK', error);
     }
   }
 
