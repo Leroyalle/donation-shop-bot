@@ -90,7 +90,7 @@ export class PaymentWebhookService {
       await this.orderService.update(order.id, {
         status: 'CONFIRMED',
       });
-      await this.cartService.clearCart(order.cart.id);
+      await this.cartService.clearCart(order.user.id);
       console.log('[RESOLVE_CKASSA_WEBHOOK after order update');
     }
     return {
