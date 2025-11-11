@@ -82,12 +82,6 @@ export class UiBuilderService {
 
   public buildCardsRegionsList(regions: typeof Region) {
     const keyboard = new InlineKeyboard();
-    // keyboard.row(
-    //   ...Object.values(regions).map((r) => ({
-    //     text: appleRegionTranslater[r],
-    //     callback_data: `catalog:0:${r}:false`,
-    //   })),
-    // );
 
     Object.values(regions).map((r) => {
       keyboard.row({

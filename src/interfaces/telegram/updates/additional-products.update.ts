@@ -25,12 +25,14 @@ export class AdditionalProductsUpdate {
     if (!data) return;
     const user = await this.telegramService.handleCreateOrFindUser(ctx);
     if (!user) return;
-    const [_, id, type] = data.split(':');
+    const [_, id, type, retailPrice] = data.split(':');
+    const price = Number(retailPrice);
     return await this.additionalProductsService.handleAdditionalBuy(
       ctx,
       id,
       type as TProductType,
       user,
+      price,
     );
   }
 

@@ -155,6 +155,7 @@ export class PaymentConversationService {
         account: email,
         password,
         nickname,
+        retail_price: session.topupData.retailPrice,
         backupcode: backupAnswer.has2FA ? backupAnswer.backupCode : undefined,
         region: 'Any',
         product_id: session.topupData.productId,

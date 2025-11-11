@@ -4,7 +4,7 @@ import type { ITopupDataCollection } from './topup-data-collection.type';
 
 declare module 'grammy' {
   interface SessionData {
-    topupData?: { productId: string } | null;
+    topupData?: { productId: string; retailPrice: number } | null;
     cardEmail?: string | null;
   }
 

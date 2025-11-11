@@ -7,6 +7,7 @@ import { TProductType } from 'src/shared/types/product-type.type';
 import { HttpClientService } from 'src/infrastructure/http-client/http-client.service';
 import { User } from 'src/domain/user/entities/user.entity';
 import { productsWithoutTopup } from '../constants/additional-products-without-topup.constants';
+import { increasePriceByPercent } from 'src/shared/lib/increase-price-by-percent.lib';
 
 @Injectable()
 export class AdditionalProductsService {
@@ -37,17 +38,18 @@ export class AdditionalProductsService {
         return await ctx.reply(`Товара ${data.name} нет в наличии`);
       }
 
+      const retailPrice = increasePriceByPercent(data.price);
       const keyboard = new InlineKeyboard();
 
       keyboard.row({
         text: 'Купить сейчас',
-        callback_data: `additionalBuy:${id}:${type}`,
+        callback_data: `additionalBuy:${id}:${type}:${retailPrice}`,
       });
 
       // await this.buyTopupConversation(ctx.conversation, ctx);
 
       return await ctx.reply(
-        `🛍️ <b>Товар</b>\n\n<b>${data.name}</b>\n\n💰 <b><u>${data.price} ₽</u></b>`,
+        `🛍️ <b>Товар</b>\n\n<b>${data.name}</b>\n\n💰 <b><u>${retailPrice} ₽</u></b>`,
         {
           parse_mode: 'HTML',
           reply_markup: keyboard,
@@ -64,12 +66,15 @@ export class AdditionalProductsService {
     id: string,
     type: TProductType,
     user: User,
+    retailPrice: number,
   ) {
     try {
       await ctx.answerCallbackQuery();
-      ctx.session.topupData = { productId: id };
-      console.log('SESSION BEFORE', ctx.session);
-      await ctx.conversation.enter('buy-topup', { user });
+      if (type === 'TOPUP') {
+        ctx.session.topupData = { productId: id, retailPrice };
+        console.log('SESSION BEFORE', ctx.session);
+        await ctx.conversation.enter('buy-topup', { user });
+      }
 
       console.log('after');
     } catch (error) {
@@ -139,12 +144,14 @@ export class AdditionalProductsService {
       });
 
       topups.options.forEach((topup, i) => {
+        if (!topup.price) return;
+
         if (i % 2 === 0) {
           keyboard.row();
         }
 
         keyboard.text(
-          topup.product + ' - ' + topup.price + '₽',
+          topup.product + ' - ' + increasePriceByPercent(topup.price) + '₽',
           `topup:${topup.value}:${topup.type}`,
         );
       });
