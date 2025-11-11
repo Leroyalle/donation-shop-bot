@@ -62,7 +62,6 @@ export class PaymentWebhookService {
       }
 
       await this.resolveCkassaWebhook(order, data.state);
-      await this.sendMessageToUser(order, data.state);
 
       if (data.state === 'PAYED') {
         await this.paymentNotificationsService.notifyUserOrderPaid(order);
