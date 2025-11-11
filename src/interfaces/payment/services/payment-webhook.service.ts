@@ -63,10 +63,8 @@ export class PaymentWebhookService {
         status: 'CONFIRMED',
         paymentId: data.order_uuid,
       });
-      await this.bot.api.sendMessage(
-        order.user.telegramId,
-        `✅ Ваш заказ успешно оплачен! Аккаунт будет пополнен в ближайшее время!`,
-      );
+      await this.paymentNotificationsService.notifyUserOrderPaid(order);
+      await this.paymentNotificationsService.notifyAdminNewOrder(order);
     }
   }
 
