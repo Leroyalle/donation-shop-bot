@@ -1,5 +1,5 @@
 export const TELEGRAM_API_URL = 'https://api.telegram.org';
-export const CKASSA_PAYMENT_URL = 'https://demo-api2.ckassa.ru/api-shop/rs/bot';
+export const CKASSA_PAYMENT_URL = 'https://api2.ckassa.ru/api-shop/rs/open';
 export enum PAY_DIGITAL_PAYMENT_URL {
   v1 = 'https://keys.foreignpay.ru/webhook/proxy-request-post',
   v2 = 'https://keys.foreignpay.ru/webhook/v2/merchant',
