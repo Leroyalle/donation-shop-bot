@@ -26,7 +26,9 @@ export class PaymentNotificationsService {
 💰 <b>Сумма:</b> ${order.amount / 100} ₽
 📋 <b>Тип: ${order.type}</b>
 ${order.type === 'CARD' ? `🛫 <b>Отправить на: ${order.email}</b>` : ''}
-🕒 <b>Дата:</b> ${new Date(order.createdAt).toLocaleString('ru-RU')}
+🕒 <b>Дата:</b> ${new Date(order.createdAt).toLocaleString('ru-RU', {
+        timeZone: 'Europe/Moscow',
+      })}
       `,
       { parse_mode: 'HTML' },
     );
