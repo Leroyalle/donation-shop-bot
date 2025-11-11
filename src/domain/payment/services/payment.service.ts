@@ -91,7 +91,6 @@ export class PaymentService {
       );
 
       console.log('payRes', response);
-      const paymentId = response.data.split('/').pop();
       if (typeof response.data === 'string') {
         // FIXME: мб устанавливать сразу + больше статусов Pay и тд
         await this.orderService.update(order.id, { paymentId: ckassaOrderId });

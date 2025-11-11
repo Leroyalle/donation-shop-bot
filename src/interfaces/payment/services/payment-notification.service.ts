@@ -23,7 +23,7 @@ export class PaymentNotificationsService {
 📦 <b>Новый заказ!</b>
 🧾 <b>ID заказа:</b> <code>${order.id}</code>
 👤 <b>Покупатель:</b> ${order.user.name ?? 'Неизвестен'}
-💰 <b>Сумма:</b> ${order.amount} ₽
+💰 <b>Сумма:</b> ${order.amount / 100} ₽
 📋 <b>Тип: ${order.type}</b>
 ${order.type === 'CARD' ? `🛫 <b>Отправить на: ${order.email}</b>` : ''}
 🕒 <b>Дата:</b> ${new Date(order.createdAt).toLocaleString('ru-RU')}
@@ -34,7 +34,7 @@ ${order.type === 'CARD' ? `🛫 <b>Отправить на: ${order.email}</b>` 
 
   async notifyUserOrderPaid(order: Order) {
     const notificationManager = {
-      CARD: `Заказ #${order.id} на сумму ${order.amount} успешно оплачен.\n\nДанные будут отправлены на вашу электронную почту в течение 20 минут!`,
+      CARD: `Заказ #${order.id} на сумму ${order.amount / 100} успешно оплачен.\n\nДанные будут отправлены на вашу электронную почту в течение 20 минут!`,
       TOPUP: `✅ Ваш заказ успешно оплачен! Аккаунт будет пополнен в ближайшее время!`,
       STEAM: `✅ Ваш заказ успешно оплачен! Аккаунт будет пополнен в ближайшее время!`,
     };
