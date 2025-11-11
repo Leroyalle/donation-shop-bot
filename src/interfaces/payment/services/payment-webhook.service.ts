@@ -7,6 +7,7 @@ import { InjectBot } from '@grammyjs/nestjs';
 import { Bot, Context } from 'grammy';
 import { ICkassaPaymentWebhookData } from 'src/domain/payment/types/ckassa-payment-status.type';
 import { IPayDigitalWebhookData } from 'src/domain/payment/types/pay-digital/pay-digital-webhook-data.type';
+import { PaymentNotificationsService } from './payment-notification.service';
 
 @Injectable()
 export class PaymentWebhookService {
@@ -14,6 +15,7 @@ export class PaymentWebhookService {
     private readonly orderService: OrderService,
     private readonly cartService: CartService,
     private readonly cartItemService: CartItemService,
+    private readonly paymentNotificationsService: PaymentNotificationsService,
     @InjectBot() private readonly bot: Bot<Context>,
   ) {}
 
@@ -30,6 +32,8 @@ export class PaymentWebhookService {
 
     await this.resolveWebhook(order, data.state);
     await this.sendMessageToUser(order, data.state);
+
+    await this.paymentNotificationsService.notifyAdminNewOrder(order);
   }
 
   async resolveWebhook(
@@ -71,15 +75,7 @@ export class PaymentWebhookService {
     state: ICkassaPaymentWebhookData['state'],
   ) {
     if (state === 'PAYED') {
-      await this.bot.api.sendMessage(
-        order.user.telegramId,
-        'Заказ #' +
-          order.id +
-          ' на сумму ' +
-          order.amount +
-          ' успешно оплачен \n\nДанные будут отправлены на вашу электронную почту в течении 20 минут!',
-        // TODO: высылать заказ
-      );
+      await this.paymentNotificationsService.notifyUserOrderPaid(order);
     }
   }
 }

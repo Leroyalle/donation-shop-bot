@@ -44,6 +44,9 @@ export class TelegramCoreUpdate {
 
   @On('message:text')
   async onTextMessage(ctx: Context) {
+    console.log(ctx.chat?.id);
+    if (ctx.chat?.type !== 'private') return;
+
     const text = ctx.message?.text;
     if (!text) return;
 
