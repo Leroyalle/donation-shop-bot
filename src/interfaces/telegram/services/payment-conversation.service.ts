@@ -124,11 +124,9 @@ export class PaymentConversationService {
       const session = await conversation.external((ctx) => ctx.session);
       await ctx.reply('Введите email:');
       const email = await this.waitForText(conversation);
-      // const email = emailCtx.message.text.trim();
 
       await ctx.reply('Введите пароль:');
       const password = await this.waitForText(conversation);
-      // const password = passCtx.message.text.trim();
 
       await ctx.reply('Введите ник в игре:');
       const nickname = await this.waitForText(conversation);
@@ -152,6 +150,7 @@ export class PaymentConversationService {
         account: email,
         password,
         nickname,
+        backupcode: backupAnswer.has2FA ? backupAnswer.backupCode : undefined,
         region: 'Any',
         product_id: session.topupData.productId,
       };

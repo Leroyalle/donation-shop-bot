@@ -2,7 +2,7 @@ export interface ITopupCheckRequest {
   account: string;
   password: string;
   nickname: string;
-  backupcode?: number;
+  backupcode?: string;
   region: string;
   product_id: string;
   success_url?: string;
