@@ -24,19 +24,21 @@ export class PaymentWebhookService {
       data.property.orderId,
     );
 
+    console.log('CKASSA_WEBHOOK finded order', order);
     if (!order || !order.cart || !order.user.id) return;
 
     const cartItems = await this.cartItemService.findAllByCart(order.cart.id);
 
     if (cartItems.length === 0) return;
 
-    await this.resolveWebhook(order, data.state);
+    await this.resolveCkassaWebhook(order, data.state);
     await this.sendMessageToUser(order, data.state);
 
     await this.paymentNotificationsService.notifyAdminNewOrder(order);
+    console.log('CKASSA_WEBHOOK after user and adming notify');
   }
 
-  async resolveWebhook(
+  async resolveCkassaWebhook(
     order: Order,
     state: ICkassaPaymentWebhookData['state'],
   ) {
@@ -46,6 +48,7 @@ export class PaymentWebhookService {
         status: 'CONFIRMED',
       });
       await this.cartService.clearCart(order.cart.id);
+      console.log('[RESOLVE_CKASSA_WEBHOOK after order update');
     }
     return {
       user: order.user,
