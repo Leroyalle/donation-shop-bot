@@ -8,7 +8,7 @@ export interface ICkassaPaymentWebhookData {
   approvalCode: number;
   cardPan: number;
   amount: number;
-  state: 'PAYED';
+  state: 'PAYED' | 'REFUNDED';
   result: {
     code: string;
     message: string | null;

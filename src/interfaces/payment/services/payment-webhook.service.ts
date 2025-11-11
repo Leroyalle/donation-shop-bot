@@ -33,6 +33,14 @@ export class PaymentWebhookService {
           .json({ error: 'missing_order_id' });
       }
 
+      if (data.state === 'REFUNDED') {
+        console.log(
+          '🔙 [CKASSA_WEBHOOK_PROCESSED] Сделан возврат paymentId:',
+          orderId,
+        );
+        return res.status(HttpStatus.OK).json({ status: 'ok' });
+      }
+
       const order = await this.orderService.findByPaymentId(orderId);
       console.log('CKASSA_WEBHOOK finded order', order);
 
@@ -56,10 +64,15 @@ export class PaymentWebhookService {
       await this.resolveCkassaWebhook(order, data.state);
       await this.sendMessageToUser(order, data.state);
 
-      await this.paymentNotificationsService.notifyAdminNewOrder(order);
-
-      console.log('✅ [CKASSA_WEBHOOK_PROCESSED] Заказ подтверждён:', order.id);
-      return res.status(HttpStatus.OK).json({ status: 'ok' });
+      if (data.state === 'PAYED') {
+        await this.paymentNotificationsService.notifyUserOrderPaid(order);
+        await this.paymentNotificationsService.notifyAdminNewOrder(order);
+        console.log(
+          '✅ [CKASSA_WEBHOOK_PROCESSED] Заказ подтверждён:',
+          order.id,
+        );
+        return res.status(HttpStatus.OK).json({ status: 'ok' });
+      }
     } catch (error) {
       console.log('CKASSA_PAYMENT_WEBHOOK', error);
       return res
