@@ -106,7 +106,6 @@ export class PaymentWebhookService {
       if (data.status === 'Paid') {
         await this.orderService.update(order.id, {
           status: 'CONFIRMED',
-          // paymentId: data.order_uuid,
         });
         await this.paymentNotificationsService.notifyUserOrderPaid(order);
         await this.paymentNotificationsService.notifyAdminNewOrder(order);

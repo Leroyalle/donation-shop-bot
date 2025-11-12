@@ -17,13 +17,22 @@ export class PaymentNotificationsService {
     );
     if (!adminChatId) return;
 
+    const username = order.user?.username?.trim();
+    const name = order.user?.name?.trim();
+
+    const displayUser = username
+      ? username.startsWith('@')
+        ? username
+        : `@${username}`
+      : name || 'Неизвестен';
+
     await this.bot.api.sendMessage(
       adminChatId,
       `
 📦 <b>Новый заказ!</b>
 🧾 <b>ID заказа:</b> <code>${order.id}</code>
-👤 <b>Покупатель:</b> ${order.user.name ?? 'Неизвестен'}
-💰 <b>Сумма:</b> ${order.amount / 100} ₽
+👤 <b>Покупатель:</b> ${displayUser}
+💰 <b>Сумма:</b> ${order.type === 'CARD' ? order.amount / 100 : order.amount} ₽
 📋 <b>Тип: ${order.type}</b>
 ${order.type === 'CARD' ? `🛫 <b>Отправить на: ${order.email}</b>` : ''}
 🕒 <b>Дата:</b> ${new Date(order.createdAt).toLocaleString('ru-RU', {
