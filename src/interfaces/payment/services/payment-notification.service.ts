@@ -62,6 +62,7 @@ ${order.type === 'CARD' ? `🛫 <b>Отправить на: ${order.email}</b>` 
     await this.bot.api.sendMessage(
       order.user.telegramId,
       notificationManager[order.type],
+      { parse_mode: 'HTML' },
     );
   }
 
