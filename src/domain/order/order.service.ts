@@ -32,6 +32,12 @@ export class OrderService {
   }
 
   public async findById(id: string) {
-    return await this.orderRepository.findOne({ where: { id } });
+    return await this.orderRepository.findOne({
+      where: { id },
+      relations: {
+        cart: true,
+        user: true,
+      },
+    });
   }
 }
