@@ -1,14 +1,18 @@
 import { Injectable } from '@nestjs/common';
 import { OrderService } from 'src/domain/order/order.service';
 import { HttpClientService } from 'src/infrastructure/http-client/http-client.service';
-import { Context, InlineKeyboard } from 'grammy';
+import { Context, InlineKeyboard, Keyboard } from 'grammy';
 import { Conversation } from '@grammyjs/conversations';
 import { User } from 'src/domain/user/entities/user.entity';
 import { PAY_DIGITAL_PAYMENT_ENDPOINTS } from 'src/shared/constants/api-paths';
 import { PaymentService } from 'src/domain/payment/services/payment.service';
-import { ISteamCheckResult } from 'src/domain/payment/types/pay-digital/steam-check-result.type';
-import { ITopupCheckRequest } from 'src/domain/payment/types/pay-digital/topup-check-request.type';
-import { ITopupCheckResponse } from 'src/domain/payment/types/pay-digital/topup-check-response.type';
+import { TSteamCheckResult } from 'src/interfaces/telegram/services/payment-conversation/types/steam/steam-check-result.type';
+import { ITopupCheckRequest } from 'src/interfaces/telegram/services/payment-conversation/types/topup-check-request.type';
+import { ITopupCheckResponse } from 'src/interfaces/telegram/services/payment-conversation/types/topup-check-response.type';
+import { TSteamPayResult } from './types/steam/steam-pay-result.type';
+import { ISteamPayRequest } from './types/steam/steam-pay-request.type';
+import { increasePriceByPercent } from 'src/shared/lib/increase-price-by-percent.lib';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class PaymentConversationService {
@@ -50,6 +54,7 @@ export class PaymentConversationService {
 
       while (true) {
         await ctx.reply('Напишите имя вашего аккаунта STEAM:');
+
         const nickname = await this.waitForText(conversation);
 
         await ctx.reply('Повторите введённое ранее имя:');
@@ -71,31 +76,42 @@ export class PaymentConversationService {
           continue;
         }
 
-        await ctx.reply(`Поиск и создание платежа...`);
+        await ctx.reply(
+          'К оплате: ' +
+            increasePriceByPercent(parsedAmount) +
+            ' руб. Оформить?',
+          {
+            reply_markup: new Keyboard()
+              .text('Да')
+              .text('Закрыть диалог')
+              .resized()
+              .oneTime(),
+          },
+        );
+
+        const confirm = await this.waitForText(conversation);
+
+        if (confirm !== 'Да') {
+          await ctx.reply('❌ Диалог отменён.');
+          throw new Error('Conversation cancelled');
+        }
+
+        await ctx.reply(`⌛ Поиск и проверка аккаунта...`);
 
         const { data: checkResult } =
-          await this.httpClientService.payDigitalInstance.post<ISteamCheckResult>(
+          await this.httpClientService.payDigitalInstance.post<TSteamCheckResult>(
             PAY_DIGITAL_PAYMENT_ENDPOINTS.steamCheck,
             { steamUsername: nickname },
           );
 
-        if (!checkResult)
-          return await ctx.reply('❌ Произошла ошибка. Аккаунт не найден.');
+        if (checkResult.status === 'error') {
+          return await ctx.reply(`❌ Произошла ошибка. ${checkResult.message}`);
+        }
 
-        const { data: payResult } =
-          await this.httpClientService.payDigitalInstance.post<ISteamCheckResult>(
-            PAY_DIGITAL_PAYMENT_ENDPOINTS.steamPay,
-            {
-              transactionId: checkResult.transactionId,
-              net_amount: parsedAmount * 100,
-            },
-          );
+        await ctx.reply('✅ Аккаунт найден! Создание оплаты...');
 
-        if (!payResult)
-          return await ctx.reply('❌ Произошла ошибка. Попробуйте позже.');
-
-        await conversation.external(async () => {
-          await this.orderService.create({
+        const order = await conversation.external(async () => {
+          return await this.orderService.create({
             user,
             amount: parsedAmount,
             paymentId: null,
@@ -107,7 +123,37 @@ export class PaymentConversationService {
           });
         });
 
-        await ctx.reply('✅ Аккаунт найден и оплата создана!');
+        const payData: ISteamPayRequest = {
+          transactionId: checkResult.transactionId,
+          netAmount: parsedAmount,
+          amount: increasePriceByPercent(parsedAmount),
+          currency: 'RUB',
+          directSuccess: false,
+          orderId: order.id,
+          steamUsername: nickname,
+        };
+
+        const { data: payResult } =
+          await this.httpClientService.payDigitalInstance.post<TSteamPayResult>(
+            PAY_DIGITAL_PAYMENT_ENDPOINTS.steamPay,
+            payData,
+          );
+
+        if (payResult?.status === 'error') {
+          return await ctx.reply(`❌ Произошла ошибка. ${payResult.message}`);
+        }
+
+        await conversation.external(async () => {
+          await this.orderService.update(order.id, {
+            paymentId: payResult.sbpTransactionUuid,
+          });
+        });
+
+        await ctx.reply('Все готово! Осталось оплатить заказ 👇', {
+          reply_markup: new InlineKeyboard([
+            [{ text: 'Оплатить', url: payResult.payUrl }],
+          ]),
+        });
         break;
       }
     } catch (error) {

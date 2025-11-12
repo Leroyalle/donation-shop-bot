@@ -4,7 +4,7 @@ import { startButtons } from '../constants/start-buttons.constants';
 import { UserService } from 'src/domain/user/user.service';
 import { InjectBot } from '@grammyjs/nestjs';
 import { conversations, createConversation } from '@grammyjs/conversations';
-import { PaymentConversationService } from './payment-conversation.service';
+import { PaymentConversationService } from './payment-conversation/payment-conversation.service';
 
 @Injectable()
 export class TelegramService {

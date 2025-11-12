@@ -6,7 +6,7 @@ import { Order } from 'src/domain/order/entities/order.entity';
 import { InjectBot } from '@grammyjs/nestjs';
 import { Bot, Context } from 'grammy';
 import { ICkassaPaymentWebhookData } from 'src/domain/payment/types/ckassa-payment-status.type';
-import { IPayDigitalWebhookData } from 'src/domain/payment/types/pay-digital/pay-digital-webhook-data.type';
+import { IPayDigitalWebhookData } from 'src/domain/payment/types/pay-digital-webhook-data.type';
 import { PaymentNotificationsService } from './payment-notification.service';
 import { Response } from 'express';
 
@@ -102,12 +102,14 @@ export class PaymentWebhookService {
     try {
       const order = await this.orderService.findByPaymentId(data.order_id);
 
+      console.log('payDigitalPaymentStatusWebhook order', order);
+
       if (!order) return;
 
       if (data.status === 'Paid') {
         await this.orderService.update(order.id, {
           status: 'CONFIRMED',
-          paymentId: data.order_uuid,
+          // paymentId: data.order_uuid,
         });
         await this.paymentNotificationsService.notifyUserOrderPaid(order);
         await this.paymentNotificationsService.notifyAdminNewOrder(order);
