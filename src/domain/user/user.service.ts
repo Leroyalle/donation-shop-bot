@@ -10,22 +10,32 @@ export class UserService {
     private readonly userRepository: Repository<User>,
   ) {}
 
-  async create(user: Omit<User, 'id'>) {
+  public async create(user: Omit<User, 'id'>) {
     return await this.userRepository.save(user);
   }
 
-  async findById(id: string) {
+  public async findById(id: string) {
     return await this.userRepository.findOne({ where: { id } });
   }
 
-  async findByTgId(telegramId: number) {
+  public async findByTgId(telegramId: number) {
     return await this.userRepository.findOne({
       where: {
         telegramId,
       },
     });
   }
-  async createOrFindUser(userData: Omit<User, 'id'>) {
+
+  public async findUserByUsername(username: string) {
+    return await this.userRepository.findOne({
+      where: {
+        username,
+      },
+    });
+  }
+
+  public async createOrFindUser(userData: Omit<User, 'id'>) {
+    if (!userData.telegramId) return;
     const user = await this.findByTgId(userData.telegramId);
 
     if (!user) {

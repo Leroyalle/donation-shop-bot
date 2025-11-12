@@ -5,6 +5,7 @@ import { UserService } from 'src/domain/user/user.service';
 import { InjectBot } from '@grammyjs/nestjs';
 import { conversations, createConversation } from '@grammyjs/conversations';
 import { PaymentConversationService } from './payment-conversation/payment-conversation.service';
+import { UserSource } from 'src/shared/types/user/user-sourse.enum';
 
 @Injectable()
 export class TelegramService {
@@ -86,6 +87,7 @@ export class TelegramService {
         username,
         cart: null,
         orders: [],
+        source: UserSource.TELEGRAM,
       });
     } catch (error) {
       console.log('[handleCreateOrFindUser]', error);

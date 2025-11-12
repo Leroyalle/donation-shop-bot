@@ -3,13 +3,18 @@ import { PaymentWebhookService } from './services/payment-webhook.service';
 import { ICkassaPaymentWebhookData } from 'src/domain/payment/types/ckassa-payment-status.type';
 import { IPayDigitalWebhookData } from 'src/domain/payment/types/pay-digital-webhook-data.type';
 import { Response } from 'express';
+import { CreateSteamPaymentDto } from './dto/create-steam-payment.dto';
+import { SteamPaymentService } from './services/steam-payment.service';
 
 @Controller('payment')
 export class PaymentController {
-  constructor(private readonly paymentWebhookService: PaymentWebhookService) {}
+  constructor(
+    private readonly paymentWebhookService: PaymentWebhookService,
+    private readonly steamPaymentService: SteamPaymentService,
+  ) {}
 
   @Post('ckassa-payment-status')
-  async ckassaPaymentStatusWebhook(
+  public async ckassaPaymentStatusWebhook(
     @Body() data: ICkassaPaymentWebhookData,
     @Res() res: Response,
   ) {
@@ -21,10 +26,21 @@ export class PaymentController {
   }
 
   @Post('pay-digital-payment-status')
-  async payDigitalPaymentStatusWebhook(@Body() data: IPayDigitalWebhookData) {
+  public async payDigitalPaymentStatusWebhook(
+    @Body() data: IPayDigitalWebhookData,
+  ) {
     console.log('PAYDIGITAL WEBHOOK:', data);
     return await this.paymentWebhookService.payDigitalPaymentStatusWebhook(
       data,
     );
+  }
+
+  @Post('create-steam-pay')
+  public async createSteamPay(
+    @Body() input: CreateSteamPaymentDto,
+    @Res() res: Response,
+  ) {
+    console.log('input', input);
+    return await this.steamPaymentService.handleSteamPay(input, res);
   }
 }

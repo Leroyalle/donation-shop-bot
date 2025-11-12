@@ -44,6 +44,8 @@ ${order.type === 'CARD' ? `🛫 <b>Отправить на: ${order.email}</b>` 
   }
 
   public async notifyUserOrderPaid(order: Order) {
+    if (!order.user?.telegramId) return;
+
     const notificationManager: Record<string, string> = {
       CARD: `✅ <b>Платеж успешно выполнен</b>
           🧾 Заказ <b>#${order.id}</b>

@@ -6,11 +6,11 @@ import { Conversation } from '@grammyjs/conversations';
 import { User } from 'src/domain/user/entities/user.entity';
 import { PAY_DIGITAL_PAYMENT_ENDPOINTS } from 'src/shared/constants/api-paths';
 import { PaymentService } from 'src/domain/payment/services/payment.service';
-import { TSteamCheckResult } from 'src/interfaces/telegram/services/payment-conversation/types/steam/steam-check-result.type';
+import { TSteamCheckResult } from 'src/shared/types/steam/steam-check-result.type';
 import { ITopupCheckRequest } from 'src/interfaces/telegram/services/payment-conversation/types/topup-check-request.type';
 import { ITopupCheckResponse } from 'src/interfaces/telegram/services/payment-conversation/types/topup-check-response.type';
-import { TSteamPayResult } from './types/steam/steam-pay-result.type';
-import { ISteamPayRequest } from './types/steam/steam-pay-request.type';
+import { TSteamPayResult } from '../../../../shared/types/steam/steam-pay-result.type';
+import { ISteamPayRequest } from '../../../../shared/types/steam/steam-pay-request.type';
 import { increasePriceByPercent } from 'src/shared/lib/increase-price-by-percent.lib';
 
 @Injectable()
