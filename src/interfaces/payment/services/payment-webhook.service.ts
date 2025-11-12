@@ -3,8 +3,6 @@ import { OrderService } from 'src/domain/order/order.service';
 import { CartService } from 'src/domain/cart/cart.service';
 import { CartItemService } from 'src/domain/cart-item/cart-item.service';
 import { Order } from 'src/domain/order/entities/order.entity';
-import { InjectBot } from '@grammyjs/nestjs';
-import { Bot, Context } from 'grammy';
 import { ICkassaPaymentWebhookData } from 'src/domain/payment/types/ckassa-payment-status.type';
 import { IPayDigitalWebhookData } from 'src/domain/payment/types/pay-digital-webhook-data.type';
 import { PaymentNotificationsService } from './payment-notification.service';
@@ -17,7 +15,6 @@ export class PaymentWebhookService {
     private readonly cartService: CartService,
     private readonly cartItemService: CartItemService,
     private readonly paymentNotificationsService: PaymentNotificationsService,
-    @InjectBot() private readonly bot: Bot<Context>,
   ) {}
 
   async ckassaPaymentStatusWebhook(
@@ -100,7 +97,7 @@ export class PaymentWebhookService {
 
   public async payDigitalPaymentStatusWebhook(data: IPayDigitalWebhookData) {
     try {
-      const order = await this.orderService.findByPaymentId(data.order_id);
+      const order = await this.orderService.findById(data.order_id);
 
       console.log('payDigitalPaymentStatusWebhook order', order);
 
@@ -116,15 +113,6 @@ export class PaymentWebhookService {
       }
     } catch (error) {
       console.log('PAY_DIGITAL_WEBHOOK', error);
-    }
-  }
-
-  async sendMessageToUser(
-    order: Order,
-    state: ICkassaPaymentWebhookData['state'],
-  ) {
-    if (state === 'PAYED') {
-      await this.paymentNotificationsService.notifyUserOrderPaid(order);
     }
   }
 }

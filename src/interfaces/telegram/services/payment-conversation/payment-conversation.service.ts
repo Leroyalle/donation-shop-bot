@@ -12,7 +12,6 @@ import { ITopupCheckResponse } from 'src/interfaces/telegram/services/payment-co
 import { TSteamPayResult } from './types/steam/steam-pay-result.type';
 import { ISteamPayRequest } from './types/steam/steam-pay-request.type';
 import { increasePriceByPercent } from 'src/shared/lib/increase-price-by-percent.lib';
-import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class PaymentConversationService {

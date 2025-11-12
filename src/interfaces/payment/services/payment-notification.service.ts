@@ -11,7 +11,7 @@ export class PaymentNotificationsService {
     private readonly configService: ConfigService,
   ) {}
 
-  async notifyAdminNewOrder(order: Order) {
+  public async notifyAdminNewOrder(order: Order) {
     const adminChatId = this.configService.get<string>(
       'ADMIN_CHAT_NOTIFICATIONS',
     );
@@ -34,7 +34,7 @@ ${order.type === 'CARD' ? `🛫 <b>Отправить на: ${order.email}</b>` 
     );
   }
 
-  async notifyUserOrderPaid(order: Order) {
+  public async notifyUserOrderPaid(order: Order) {
     const notificationManager = {
       CARD: `Заказ #${order.id} на сумму ${order.amount / 100} успешно оплачен.\n\nДанные будут отправлены на вашу электронную почту в течение 20 минут!`,
       TOPUP: `✅ Ваш заказ успешно оплачен! Аккаунт будет пополнен в ближайшее время!`,
@@ -43,6 +43,13 @@ ${order.type === 'CARD' ? `🛫 <b>Отправить на: ${order.email}</b>` 
     await this.bot.api.sendMessage(
       order.user.telegramId,
       notificationManager[order.type],
+    );
+  }
+
+  public async notifyUserError(telegramId: number) {
+    await this.bot.api.sendMessage(
+      telegramId,
+      '❌ Произошла ошибка. Обратитесь в службу поддержки.',
     );
   }
 }

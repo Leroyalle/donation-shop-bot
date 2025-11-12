@@ -10,18 +10,18 @@ export class OrderService {
     private readonly orderRepository: Repository<Order>,
   ) {}
 
-  async create(order: Omit<Order, 'id' | 'createdAt' | 'updatedAt'>) {
+  public async create(order: Omit<Order, 'id' | 'createdAt' | 'updatedAt'>) {
     return await this.orderRepository.save(order);
   }
 
-  async update(
+  public async update(
     id: string,
     order: Partial<Omit<Order, 'id' | 'createdAt' | 'updatedAt'>>,
   ) {
     return await this.orderRepository.update(id, order);
   }
 
-  async findByPaymentId(paymentId: string) {
+  public async findByPaymentId(paymentId: string) {
     return await this.orderRepository.findOne({
       where: { paymentId },
       relations: {
@@ -29,5 +29,9 @@ export class OrderService {
         user: true,
       },
     });
+  }
+
+  public async findById(id: string) {
+    return await this.orderRepository.findOne({ where: { id } });
   }
 }
