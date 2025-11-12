@@ -44,11 +44,21 @@ ${order.type === 'CARD' ? `🛫 <b>Отправить на: ${order.email}</b>` 
   }
 
   public async notifyUserOrderPaid(order: Order) {
-    const notificationManager = {
-      CARD: `Заказ #${order.id} на сумму ${order.amount / 100} успешно оплачен.\n\nДанные будут отправлены на вашу электронную почту в течение 20 минут!`,
-      TOPUP: `✅ Ваш заказ успешно оплачен! Аккаунт будет пополнен в ближайшее время!`,
-      STEAM: `✅ Ваш заказ успешно оплачен! Аккаунт будет пополнен в ближайшее время!`,
+    const notificationManager: Record<string, string> = {
+      CARD: `✅ <b>Платеж успешно выполнен</b>
+          🧾 Заказ <b>#${order.id}</b>
+          💳 Сумма: <b>${order.amount / 100} ₽</b>
+          ⏳ <i>Данные будут отправлены на вашу почту в течение 20 минут.</i>`,
+
+      TOPUP: `✅ <b>Оплата прошла успешно</b>
+          🧾 Заказ <b>#${order.id}</b>
+          💰 Пополнение аккаунта будет выполнено в ближайшее время.`,
+
+      STEAM: `✅ <b>Оплата прошла успешно</b>
+          🧾 Заказ <b>#${order.id}</b>
+          🎮 Пополнение Steam-аккаунта будет выполнено в ближайшее время.`,
     };
+
     await this.bot.api.sendMessage(
       order.user.telegramId,
       notificationManager[order.type],

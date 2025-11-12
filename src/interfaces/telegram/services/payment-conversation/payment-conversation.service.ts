@@ -112,7 +112,7 @@ export class PaymentConversationService {
         const order = await conversation.external(async () => {
           return await this.orderService.create({
             user,
-            amount: parsedAmount,
+            amount: increasePriceByPercent(parsedAmount),
             paymentId: null,
             status: 'NEW',
             email: null,
