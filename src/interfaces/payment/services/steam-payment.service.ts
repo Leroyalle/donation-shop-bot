@@ -57,7 +57,7 @@ export class SteamPaymentService {
         items: '',
       });
 
-      console.log('handleSteamPay order', order);
+      console.log('handleSteamPay created order', order);
 
       const payData: ISteamPayRequest = {
         transactionId: checkResult.transactionId,
@@ -87,6 +87,11 @@ export class SteamPaymentService {
       await this.orderService.update(order.id, {
         paymentId: payResult.sbpTransactionUuid,
       });
+
+      console.log(
+        'handleSteamPay sbp id after update',
+        payResult.sbpTransactionUuid,
+      );
 
       return res.status(HttpStatus.OK).json({ success: true, data: payResult });
     } catch (error) {
