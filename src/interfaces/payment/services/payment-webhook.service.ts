@@ -97,7 +97,7 @@ export class PaymentWebhookService {
 
   public async payDigitalPaymentStatusWebhook(data: IPayDigitalWebhookData) {
     try {
-      const order = await this.orderService.findById(data.order_id);
+      const order = await this.orderService.findByPaymentId(data.order_uuid);
 
       console.log('payDigitalPaymentStatusWebhook order', order);
 
