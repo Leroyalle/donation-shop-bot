@@ -18,7 +18,8 @@ export class User {
   @Column({ nullable: true })
   name?: string;
 
-  @Column({ nullable: true })
+  // TODO: мб убрать unique потому что тг ник можно поменять
+  @Column({ nullable: true, unique: true })
   username?: string;
 
   @Column({ type: 'bigint', unique: true, nullable: true })

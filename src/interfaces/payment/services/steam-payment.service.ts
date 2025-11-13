@@ -57,6 +57,8 @@ export class SteamPaymentService {
         items: '',
       });
 
+      console.log('handleSteamPay order', order);
+
       const payData: ISteamPayRequest = {
         transactionId: checkResult.transactionId,
         netAmount: dto.amount,
@@ -88,7 +90,7 @@ export class SteamPaymentService {
 
       return res.status(HttpStatus.OK).json({ success: true, data: payResult });
     } catch (error) {
-      console.log('STEAM PAYMENT', error);
+      console.log('handleSteamPay', error);
       return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
         success: false,
         error: 'internal_error',
