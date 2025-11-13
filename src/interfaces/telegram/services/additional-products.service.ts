@@ -156,7 +156,7 @@ export class AdditionalProductsService {
         );
       });
 
-      await ctx.reply('Выбирите товар:', {
+      await ctx.reply('Выберите товар:', {
         reply_markup: keyboard,
       });
     } catch (error) {
