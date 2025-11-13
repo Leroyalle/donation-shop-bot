@@ -1,12 +1,12 @@
 import { CallbackQuery, Update } from '@grammyjs/nestjs';
 import { Injectable } from '@nestjs/common';
 import { Context } from 'grammy';
-import { TelegramService } from '../services/telegram.service';
+import { TelegramCoreService } from '../services/telegram-core.service';
 
 @Update()
 @Injectable()
 export class SteamUpdate {
-  constructor(private readonly telegramService: TelegramService) {}
+  constructor(private readonly telegramService: TelegramCoreService) {}
 
   @CallbackQuery('steam')
   async handleSteam(ctx: Context) {

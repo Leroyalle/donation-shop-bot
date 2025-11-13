@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Context } from 'grammy';
 import { CartService } from 'src/domain/cart/cart.service';
-import { TelegramService } from './telegram.service';
+import { TelegramCoreService } from './telegram-core.service';
 import { CartItemService } from 'src/domain/cart-item/cart-item.service';
 import { UiBuilderService } from './ui-builder.service';
 
@@ -10,7 +10,7 @@ export class TelegramCartService {
   constructor(
     private readonly cartService: CartService,
     private readonly cartItemService: CartItemService,
-    private readonly telegramService: TelegramService,
+    private readonly telegramService: TelegramCoreService,
     private readonly uiBuilderService: UiBuilderService,
   ) {}
 

@@ -1,6 +1,6 @@
 import { CallbackQuery, Update } from '@grammyjs/nestjs';
 import { Injectable } from '@nestjs/common';
-import { TelegramService } from '../services/telegram.service';
+import { TelegramCoreService } from '../services/telegram-core.service';
 import { AdditionalProductsService } from '../services/additional-products.service';
 import { Context } from 'grammy';
 import { TProductType } from 'src/shared/types/product-type.type';
@@ -10,7 +10,7 @@ import { TProductType } from 'src/shared/types/product-type.type';
 export class AdditionalProductsUpdate {
   constructor(
     private readonly additionalProductsService: AdditionalProductsService,
-    private readonly telegramService: TelegramService,
+    private readonly telegramService: TelegramCoreService,
   ) {}
 
   @CallbackQuery('additionalCategories')

@@ -7,7 +7,7 @@ import { UserModule } from 'src/domain/user/user.module';
 import { CartModule } from 'src/domain/cart/cart.module';
 import { PaymentModule } from 'src/domain/payment/payment.module';
 import { CartItemModule } from 'src/domain/cart-item/cart-item.module';
-import { TelegramService } from './services/telegram.service';
+import { TelegramCoreService } from './services/telegram-core.service';
 import { HttpClientModule } from 'src/infrastructure/http-client/http-client.module';
 import { UiBuilderService } from './services/ui-builder.service';
 import { TelegramCartService } from './services/telegram-cart.service';
@@ -20,6 +20,8 @@ import { SteamUpdate } from './updates/steam.update';
 import { TopupUpdate } from './updates/topup.update';
 import { PaymentConversationService } from './services/payment-conversation/payment-conversation.service';
 import { OrderModule } from 'src/domain/order/order.module';
+import { SupportUpdate } from './updates/support.update';
+import { SupportService } from './services/support.service';
 
 @Module({
   imports: [
@@ -56,8 +58,10 @@ import { OrderModule } from 'src/domain/order/order.module';
     PaymentConversationService,
     CatalogUpdate,
     TopupUpdate,
-    TelegramService,
+    TelegramCoreService,
     UiBuilderService,
+    SupportUpdate,
+    SupportService,
     TelegramCartService,
     AdditionalProductsService,
     CatalogService,

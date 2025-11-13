@@ -1,26 +1,32 @@
 import { Injectable } from '@nestjs/common';
 import { InjectBot, Update, CallbackQuery, On, Start } from '@grammyjs/nestjs';
 import { Bot, Context } from 'grammy';
-import { TelegramService } from '../services/telegram.service';
+import { TelegramCoreService } from '../services/telegram-core.service';
 import {
   StartButton,
   startButtonNames,
 } from '../constants/start-buttons.constants';
 import { TelegramCartService } from '../services/telegram-cart.service';
+import { SupportService } from '../services/support.service';
 
 @Update()
 @Injectable()
 export class TelegramCoreUpdate {
   constructor(
     @InjectBot() private readonly bot: Bot<Context>,
-    private readonly telegramService: TelegramService,
+    private readonly telegramService: TelegramCoreService,
     private readonly telegramCartService: TelegramCartService,
+    private readonly supportService: SupportService,
   ) {}
   async onModuleInit() {
     await this.bot.api.setMyCommands([
       { command: 'start', description: 'Запуск бота' },
       { command: 'categories', description: 'Посмотреть каталог товаров' },
       { command: 'cart', description: 'Корзина' },
+      {
+        command: 'support',
+        description: 'Помощь',
+      },
       // { command: 'orders', description: 'Мои заказы' },
     ]);
 
@@ -64,6 +70,9 @@ export class TelegramCoreUpdate {
       },
       '🏠 Начало': async () => {
         await this.telegramService.sendStartReply(ctx);
+      },
+      '❓ Помощь': async () => {
+        await this.supportService.sendSupportReply(ctx);
       },
     };
 

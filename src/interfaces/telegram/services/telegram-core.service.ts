@@ -8,7 +8,7 @@ import { PaymentConversationService } from './payment-conversation/payment-conve
 import { UserSource } from 'src/shared/types/user/user-sourse.enum';
 
 @Injectable()
-export class TelegramService {
+export class TelegramCoreService {
   constructor(
     private readonly userService: UserService,
     private readonly paymentConversationService: PaymentConversationService,

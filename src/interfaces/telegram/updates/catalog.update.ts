@@ -2,7 +2,7 @@ import { CallbackQuery, Update } from '@grammyjs/nestjs';
 import { Context } from 'grammy';
 import { CatalogService } from '../services/catalog.service';
 import { Injectable } from '@nestjs/common';
-import { TelegramService } from '../services/telegram.service';
+import { TelegramCoreService } from '../services/telegram-core.service';
 import { Region } from 'src/domain/card/types/region.enum';
 
 @Update()
@@ -10,7 +10,7 @@ import { Region } from 'src/domain/card/types/region.enum';
 export class CatalogUpdate {
   constructor(
     private readonly catalogService: CatalogService,
-    private readonly telegramService: TelegramService,
+    private readonly telegramService: TelegramCoreService,
   ) {}
 
   @CallbackQuery(/^catalog:/)

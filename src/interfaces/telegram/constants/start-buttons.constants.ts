@@ -3,6 +3,7 @@ export const startButtons = [
   // { name: '🧾 Заказы', callback_data: 'orders' },
   { name: '🧺 Корзина', callback_data: 'cart' },
   { name: '🏠 Начало', callback_data: 'start' },
+  { name: '❓ Помощь', callback_data: 'support' },
 ] as const;
 
 export type StartButton = (typeof startButtons)[number]['name'];
