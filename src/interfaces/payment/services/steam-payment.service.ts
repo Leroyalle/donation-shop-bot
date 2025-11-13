@@ -64,6 +64,7 @@ export class SteamPaymentService {
         currency: 'RUB',
         directSuccess: false,
         orderId: order.id,
+        // successUrl: '',
         steamUsername: dto.nickname,
       };
 
@@ -86,7 +87,8 @@ export class SteamPaymentService {
       });
 
       return res.status(HttpStatus.OK).json({ success: true, data: payResult });
-    } catch {
+    } catch (error) {
+      console.log('STEAM PAYMENT', error);
       return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
         success: false,
         error: 'internal_error',
