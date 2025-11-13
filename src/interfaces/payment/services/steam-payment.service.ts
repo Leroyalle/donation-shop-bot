@@ -68,7 +68,7 @@ export class SteamPaymentService {
         currency: 'RUB',
         directSuccess: false,
         orderId: order.id,
-        // successUrl: '',
+        successUrl: 'https://brosshop.ru/popolnenie-steam/success.php',
         steamUsername: dto.nickname,
       };
 
