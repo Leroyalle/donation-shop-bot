@@ -2,12 +2,12 @@ export type TSteamCheckResult = TSteamCheckError | TSteamCheckSuccess;
 
 type TSteamCheckError = {
   status: 'error';
-  message: 'Аккаунт Steam не найден';
+  message: string;
 };
 
 type TSteamCheckSuccess = {
   status: 'success';
-  message: 'Аккаунт Steam успешно найден';
+  message: string;
   steamUsername: string;
   transactionId: string;
 };

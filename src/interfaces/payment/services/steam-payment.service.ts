@@ -53,7 +53,7 @@ export class SteamPaymentService {
         type: 'STEAM',
         status: 'NEW',
         email: dto.email,
-        paymentId: checkResult.transactionId,
+        paymentId: null,
         items: '',
       });
 
