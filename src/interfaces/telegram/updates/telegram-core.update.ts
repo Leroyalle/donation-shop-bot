@@ -21,13 +21,6 @@ export class TelegramCoreUpdate {
   async onModuleInit() {
     await this.bot.api.setMyCommands([
       { command: 'start', description: 'Запуск бота' },
-      { command: 'categories', description: 'Посмотреть каталог товаров' },
-      { command: 'cart', description: 'Корзина' },
-      {
-        command: 'support',
-        description: 'Помощь',
-      },
-      // { command: 'orders', description: 'Мои заказы' },
     ]);
 
     console.log('Bot commands set!');

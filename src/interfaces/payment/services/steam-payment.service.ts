@@ -35,12 +35,14 @@ export class SteamPaymentService {
         });
       }
 
-      let user = await this.userService.findUserByUsername(dto.tgUserName);
+      const clearedUserName = dto.tgUserName.replace(/^@/, '').trim();
+
+      let user = await this.userService.findUserByUsername(clearedUserName);
       if (!user) {
         user = await this.userService.create({
           cart: null,
           name: dto.name,
-          username: dto.tgUserName,
+          username: clearedUserName,
           source: UserSource.WEB,
           orders: [],
         });
