@@ -8,10 +8,12 @@ import { PAY_DIGITAL_PAYMENT_ENDPOINTS } from 'src/shared/constants/api-paths';
 import { PaymentService } from 'src/domain/payment/services/payment.service';
 import { TSteamCheckResult } from 'src/shared/types/steam/steam-check-result.type';
 import { ITopupCheckRequest } from 'src/interfaces/telegram/services/payment-conversation/types/topup-check-request.type';
-import { ITopupCheckResponse } from 'src/interfaces/telegram/services/payment-conversation/types/topup-check-response.type';
+import { TTopupCheckResponse } from 'src/interfaces/telegram/services/payment-conversation/types/topup-check-response.type';
 import { TSteamPayResult } from '../../../../shared/types/steam/steam-pay-result.type';
 import { ISteamPayRequest } from '../../../../shared/types/steam/steam-pay-request.type';
 import { increasePriceByPercent } from 'src/shared/lib/increase-price-by-percent.lib';
+import { AdditionalGroup } from 'src/shared/types/additional-group.type';
+import { getOptionText } from './lib/get-option-text';
 
 @Injectable()
 export class PaymentConversationService {
@@ -28,7 +30,7 @@ export class PaymentConversationService {
   ) => {
     try {
       await ctx.reply(
-        'Вы можете прервать диалог в любой момент, отправив /cancel.',
+        '‼️ Вы можете прервать диалог в любой момент, отправив /cancel.',
       );
       await ctx.reply('Введите email, на который отправить ссылку:');
       const email = await this.waitForText(conversation);
@@ -48,7 +50,7 @@ export class PaymentConversationService {
   ) => {
     try {
       await ctx.reply(
-        'Вы можете прервать диалог в любой момент, отправив /cancel.',
+        '‼️ Вы можете прервать диалог в любой момент, отправив /cancel.',
       );
 
       while (true) {
@@ -162,90 +164,90 @@ export class PaymentConversationService {
     }
   };
 
-  public buyTopupConversation = async (
-    conversation: Conversation,
-    ctx: Context,
-    { user }: { user: User },
-  ) => {
-    try {
-      await ctx.reply(
-        'Вы можете прервать диалог в любой момент, отправив /cancel.',
-      );
-      const session = await conversation.external((ctx) => ctx.session);
-      await ctx.reply('Введите email:');
-      const email = await this.waitForText(conversation);
+  // public buyTopupConversation = async (
+  //   conversation: Conversation,
+  //   ctx: Context,
+  //   { user }: { user: User },
+  // ) => {
+  //   try {
+  //       await ctx.reply(
+  //   '‼️ Вы можете прервать диалог в любой момент, отправив /cancel.',
+  // );
+  //     const session = await conversation.external((ctx) => ctx.session);
+  //     await ctx.reply('Введите email:');
+  //     const email = await this.waitForText(conversation);
 
-      await ctx.reply('Введите пароль:');
-      const password = await this.waitForText(conversation);
+  //     await ctx.reply('Введите пароль:');
+  //     const password = await this.waitForText(conversation);
 
-      await ctx.reply('Введите ник в игре:');
-      const nickname = await this.waitForText(conversation);
+  //     await ctx.reply('Введите ник в игре:');
+  //     const nickname = await this.waitForText(conversation);
 
-      const backupAnswer = await this.ask2FAStep(conversation, ctx);
+  //     const backupAnswer = await this.ask2FAStep(conversation, ctx);
 
-      await ctx.reply(
-        `✅ Email: ${email}\nПароль: ${password}\nНик: ${nickname}\n Backup code: ${backupAnswer.has2FA ? backupAnswer.backupCode : 'Нет'}\n\nВсе верно?`,
-        {
-          reply_markup: new Keyboard()
-            .text('Да')
-            .text('Прервать')
-            .resized()
-            .oneTime(),
-        },
-      );
+  //     await ctx.reply(
+  //       `✅ Email: ${email}\nПароль: ${password}\nНик: ${nickname}\n Backup code: ${backupAnswer.has2FA ? backupAnswer.backupCode : 'Нет'}\n\nВсе верно?`,
+  //       {
+  //         reply_markup: new Keyboard()
+  //           .text('Да')
+  //           .text('Прервать')
+  //           .resized()
+  //           .oneTime(),
+  //       },
+  //     );
 
-      const confirmText = await this.waitForText(conversation);
-      if (confirmText.toLowerCase() !== 'да') {
-        await ctx.reply('Попробуйте ещё раз');
-        session.topupData = null;
-        return;
-      }
+  //     const confirmText = await this.waitForText(conversation);
+  //     if (confirmText.toLowerCase() !== 'да') {
+  //       await ctx.reply('Попробуйте ещё раз');
+  //       session.topupData = null;
+  //       return;
+  //     }
 
-      if (!session.topupData) return;
+  //     if (!session.topupData) return;
 
-      const topupReqData: ITopupCheckRequest = {
-        account: email,
-        password,
-        nickname,
-        retail_price: session.topupData.retailPrice,
-        backupcode: backupAnswer.has2FA ? backupAnswer.backupCode : undefined,
-        region: 'Any',
-        product_id: session.topupData.productId,
-      };
+  //     const topupReqData: ITopupCheckRequest = {
+  //       account: email,
+  //       password,
+  //       nickname,
+  //       retail_price: session.topupData.retailPrice,
+  //       backupcode: backupAnswer.has2FA ? backupAnswer.backupCode : undefined,
+  //       region: 'Any',
+  //       product_id: session.topupData.productId,
+  //     };
 
-      const res = await conversation.external(async () => {
-        const { data } =
-          await this.httpClientService.payDigitalInstance.post<ITopupCheckResponse>(
-            PAY_DIGITAL_PAYMENT_ENDPOINTS.topupCheck,
-            topupReqData,
-          );
-        return data;
-      });
+  //     const res = await conversation.external(async () => {
+  //       const { data } =
+  //         await this.httpClientService.payDigitalInstance.post<ITopupCheckResponse>(
+  //           PAY_DIGITAL_PAYMENT_ENDPOINTS.topupCheck,
+  //           topupReqData,
+  //         );
+  //       return data;
+  //     });
 
-      await conversation.external(async () => {
-        await this.orderService.create({
-          type: 'TOPUP',
-          status: 'NEW',
-          amount: res.retail_price_rub,
-          email,
-          paymentId: res.sbp_uuid,
-          user,
-          items: '',
-          cart: null,
-        });
-      });
+  //     await conversation.external(async () => {
+  //       await this.orderService.create({
+  //         type: 'TOPUP',
+  //         status: 'NEW',
+  //         amount: res.retail_price_rub,
+  //         email,
+  //         paymentId: res.sbp_uuid,
+  //         user,
+  //         items: '',
+  //         cart: null,
+  //       });
+  //     });
 
-      const keyboard = new InlineKeyboard();
-      keyboard.url('Перейти к оплате', res.sbp_url);
-      await ctx.reply(`Ссылка на оплату ${res.product}:`, {
-        reply_markup: keyboard,
-      });
-    } catch (error) {
-      console.log('[BUY_TOPUP_CONV]', error);
-      if (error.message === 'Conversation cancelled') return;
-      await ctx.reply('❌ Ошибка. Попробуйте ещё раз.');
-    }
-  };
+  //     const keyboard = new InlineKeyboard();
+  //     keyboard.url('Перейти к оплате', res.sbp_url);
+  //     await ctx.reply(`Ссылка на оплату ${res.product}:`, {
+  //       reply_markup: keyboard,
+  //     });
+  //   } catch (error) {
+  //     console.log('[BUY_TOPUP_CONV]', error);
+  //     if (error.message === 'Conversation cancelled') return;
+  //     await ctx.reply('❌ Ошибка. Попробуйте ещё раз.');
+  //   }
+  // };
 
   public async ask2FAStep(
     conversation: Conversation,
@@ -287,4 +289,161 @@ export class PaymentConversationService {
 
     return text;
   }
+
+  public buyAdditionalTopupConversation = async (
+    conversation: Conversation,
+    ctx: Context,
+    { data, user }: { data: AdditionalGroup; user: User },
+  ) => {
+    try {
+      if (!data.forms?.topup_fields) return;
+      const topups = data.forms?.topup_fields?.find(
+        (f) => f.name === 'product_id',
+      );
+
+      if (!topups || !topups.options) {
+        return await ctx.reply(
+          `❌ К сожалению, товар ${data.group} отсутствует`,
+        );
+      }
+
+      await ctx.reply(
+        '‼️ Вы можете прервать диалог в любой момент, отправив /cancel.',
+      );
+
+      const productKeyboard = new Keyboard();
+
+      topups.options.forEach((topup, i) => {
+        if (!topup.price) return;
+
+        if (i % 2 === 0) {
+          productKeyboard.row();
+        }
+
+        productKeyboard
+          .text(
+            topup.product + ' - ' + increasePriceByPercent(topup.price) + '₽',
+          )
+          .resized()
+          .oneTime();
+      });
+
+      await ctx.reply('Выберите конкретный товар:', {
+        reply_markup: productKeyboard,
+      });
+
+      const topupAnswer = await this.waitForText(conversation);
+
+      const selectedProduct = topups.options.find(
+        (o) =>
+          o.product + ' - ' + increasePriceByPercent(o.price) + '₽' ===
+          topupAnswer,
+      );
+
+      if (!selectedProduct) {
+        await ctx.reply('❌ Пожалуйста, выберите товар из списка.');
+        throw new Error('Conversation cancelled');
+      }
+
+      const dataResult: Record<string, string> = {};
+
+      for (const f of data.forms.topup_fields) {
+        if (f.name === 'product_id') continue;
+        if (!f.options) {
+          await ctx.reply('Введите ' + f.label + ':');
+          dataResult[f.name] = await this.waitForText(conversation);
+          continue;
+        } else {
+          const keyboard = new Keyboard();
+          f.options.forEach((o) => {
+            const text = getOptionText(o);
+
+            keyboard.text(text).resized().oneTime();
+          });
+          await ctx.reply('Выберите из списка ' + f.label + ':', {
+            reply_markup: keyboard,
+          });
+
+          const answer = await this.waitForText(conversation);
+          const selectedOption = f.options.find((o) => {
+            const text = getOptionText(o);
+            return text === answer;
+          });
+          if (!selectedOption) {
+            await ctx.reply('❌ Пожалуйста, выберите из списка.');
+            throw new Error('Conversation cancelled');
+          }
+          dataResult[f.name] = String(selectedOption.value);
+
+          continue;
+        }
+      }
+
+      const summary = Object.entries(dataResult)
+        .map(([key, value]) => `${key}: ${value}`)
+        .join('\n');
+
+      await ctx.reply(`✅${summary}\n\nВсе верно?`, {
+        reply_markup: new Keyboard()
+          .text('Да')
+          .text('Прервать')
+          .resized()
+          .oneTime(),
+      });
+
+      const confirmText = await this.waitForText(conversation);
+      if (confirmText.toLowerCase() !== 'да') {
+        return await ctx.reply('❌ Диалог отменён.');
+        // session.topupData = null;
+      }
+
+      const topupReqData: ITopupCheckRequest = {
+        ...dataResult,
+        retail_price: increasePriceByPercent(selectedProduct.price),
+        product_id: selectedProduct.value,
+      };
+
+      console.log('topupReqData', topupReqData);
+
+      const { data: res } =
+        await this.httpClientService.payDigitalInstance.post<TTopupCheckResponse>(
+          PAY_DIGITAL_PAYMENT_ENDPOINTS.topupCheck,
+          topupReqData,
+        );
+
+      if (!res.status) {
+        return await ctx.reply(`❌ Произошла ошибка: ${res.comment}`);
+      }
+
+      console.log('RES', res);
+
+      await conversation.external(async () => {
+        await this.orderService.create({
+          type: 'TOPUP',
+          status: 'NEW',
+          amount: res.retail_price_rub,
+          email: null,
+          paymentId: res.sbp_uuid,
+          user,
+          items: '',
+          cart: null,
+        });
+      });
+
+      const paymentKeyboard = new InlineKeyboard();
+      paymentKeyboard.url(`${res.product} - Перейти к оплате 👇`, res.sbp_url);
+      await ctx.reply(`Ссылка на оплату ${res.product}:`, {
+        reply_markup: paymentKeyboard,
+      });
+    } catch (error) {
+      console.log('[BUY_ADDITIONAL_TOPUP]', error);
+      if (error.message === 'Conversation cancelled') return;
+      if (!error.response.data.status) {
+        return await ctx.reply(
+          `❌ Произошла ошибка: ${error.response.data.comment}`,
+        );
+      }
+      await ctx.reply('❌ Ошибка. Попробуйте ещё раз.');
+    }
+  };
 }

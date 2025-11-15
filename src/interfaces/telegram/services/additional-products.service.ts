@@ -114,10 +114,9 @@ export class AdditionalProductsService {
     }
   }
 
-  public async showAdditionalGroups(ctx: Context, group: string) {
+  public async showAdditionalGroups(ctx: Context, group: string, user: User) {
+    await ctx.answerCallbackQuery();
     try {
-      await ctx.answerCallbackQuery();
-
       const { data } =
         await this.httpClientService.payDigitalInstance.get<AdditionalGroup>(
           PAY_DIGITAL_PAYMENT_ENDPOINTS.getProductsByGroup,
@@ -127,11 +126,11 @@ export class AdditionalProductsService {
             },
           },
         );
-      console.log(
-        'ADDITIONAL,',
-        data.forms?.topup_fields,
-        data.forms?.topup_fields[2].options?.forEach((o) => console.log(o)),
-      );
+      // console.log(
+      //   'ADDITIONAL,',
+      //   data.forms?.topup_fields,
+      //   data.forms?.topup_fields[2].options?.forEach((o) => console.log(o)),
+      // );
 
       const topups = data.forms?.topup_fields?.find(
         (f) => f.name === 'product_id',
@@ -141,28 +140,30 @@ export class AdditionalProductsService {
         return await ctx.reply(`❌ К сожалению, товар ${group} отсутствует`);
       }
 
-      const keyboard = new InlineKeyboard();
-      keyboard.row({
-        text: data.short_info,
-        callback_data: `noop`,
-      });
+      await ctx.conversation.enter('buy-additional', { data, user });
 
-      topups.options.forEach((topup, i) => {
-        if (!topup.price) return;
+      // const keyboard = new InlineKeyboard();
+      // keyboard.row({
+      //   text: data.short_info,
+      //   callback_data: `noop`,
+      // });
 
-        if (i % 2 === 0) {
-          keyboard.row();
-        }
+      // topups.options.forEach((topup, i) => {
+      //   if (!topup.price) return;
 
-        keyboard.text(
-          topup.product + ' - ' + increasePriceByPercent(topup.price) + '₽',
-          `topup:${topup.value}:${topup.type}`,
-        );
-      });
+      //   if (i % 2 === 0) {
+      //     keyboard.row();
+      //   }
 
-      await ctx.reply('Выберите товар:', {
-        reply_markup: keyboard,
-      });
+      //   keyboard.text(
+      //     topup.product + ' - ' + increasePriceByPercent(topup.price) + '₽',
+      //     `topup:${topup.value}:${topup.type}`,
+      //   );
+      // });
+
+      // await ctx.reply('Выберите товар:', {
+      //   reply_markup: keyboard,
+      // });
     } catch (error) {
       console.log('[showAdditionalGroups]', error);
       await ctx.reply('❌ Произошла ошибка');
