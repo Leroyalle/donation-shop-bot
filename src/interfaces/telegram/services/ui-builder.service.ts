@@ -26,7 +26,7 @@ export class UiBuilderService {
     if (page > 0) {
       navKeyboard.push({
         text: '←',
-        callback_data: `catalog:${page - 1}:${region}`,
+        callback_data: `catalog:${page - 1}:${region}:true`,
       });
     }
     navKeyboard.push({
@@ -36,7 +36,7 @@ export class UiBuilderService {
     if (page < totalPages - 1) {
       navKeyboard.push({
         text: '→',
-        callback_data: `catalog:${page + 1}:${region}`,
+        callback_data: `catalog:${page + 1}:${region}:true`,
       });
     }
     keyboards.row(...navKeyboard);

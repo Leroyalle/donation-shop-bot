@@ -26,7 +26,7 @@ export class CatalogUpdate {
       ctx,
       page,
       region as Region,
-      editable === 'true',
+      Boolean(editable),
     );
   }
 
