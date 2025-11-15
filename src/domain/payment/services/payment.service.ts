@@ -25,7 +25,6 @@ export class PaymentService {
   public async paymentHandler(ctx: Context, user: User, email: string) {
     try {
       // await ctx.answerCallbackQuery();
-      console.log('PAYMENT HANDLER');
       const telegramId = ctx.from?.id;
       if (!telegramId) return;
 
@@ -90,7 +89,6 @@ export class PaymentService {
         data,
       );
 
-      console.log('payRes', response);
       if (typeof response.data === 'string') {
         // FIXME: мб устанавливать сразу + больше статусов Pay и тд
         await this.orderService.update(order.id, { paymentId: ckassaOrderId });

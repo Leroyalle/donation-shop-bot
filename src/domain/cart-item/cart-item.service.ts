@@ -37,7 +37,7 @@ export class CartItemService {
     try {
       return await this.cartItemRepository.update(id, updateCartItemDto);
     } catch (error) {
-      console.log(error);
+      console.log(`CartItemService.update` + error);
     }
   }
 

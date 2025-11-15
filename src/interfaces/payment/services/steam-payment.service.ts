@@ -59,8 +59,6 @@ export class SteamPaymentService {
         items: '',
       });
 
-      console.log('handleSteamPay created order', order);
-
       const payData: ISteamPayRequest = {
         transactionId: checkResult.transactionId,
         netAmount: dto.amount,
@@ -90,14 +88,9 @@ export class SteamPaymentService {
         paymentId: payResult.sbpTransactionUuid,
       });
 
-      console.log(
-        'handleSteamPay sbp id after update',
-        payResult.sbpTransactionUuid,
-      );
-
       return res.status(HttpStatus.OK).json({ success: true, data: payResult });
     } catch (error) {
-      console.log('handleSteamPay', error);
+      console.log('[handleSteamPay]', error);
       return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
         success: false,
         error: 'internal_error',

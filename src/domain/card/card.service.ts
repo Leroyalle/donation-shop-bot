@@ -17,7 +17,7 @@ export class CardService {
     return await this.cardRepository.findAndCount({
       skip: page * take,
       take,
-      order: { createdAt: 'ASC' },
+      order: { price: 'ASC' },
       where: {
         region,
       },

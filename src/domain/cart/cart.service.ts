@@ -36,7 +36,6 @@ export class CartService {
     }
 
     let cartItem = await this.cartItemService.findOneByCardId(cardId, cart.id);
-    console.log(cartItem);
 
     if (!cartItem) {
       cartItem = await this.cartItemService.create({
@@ -44,7 +43,6 @@ export class CartService {
         cart,
         quantity: 1,
       });
-      console.log('IN CCREATE', cartItem);
       cart.cartItems.push(cartItem);
     } else {
       await this.cartItemService.update(cartItem.id, {
@@ -52,11 +50,7 @@ export class CartService {
       });
     }
 
-    console.log('cart before create', cart);
-
     await this.cartRepository.save(cart);
-
-    console.log('cart after push', cart);
   }
 
   async deleteFromCart(cartItemId: string) {

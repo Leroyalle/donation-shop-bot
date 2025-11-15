@@ -75,8 +75,6 @@ export class UiBuilderService {
       navKeyboard.push({ text: '→', callback_data: `cartPage:${page + 1}` });
     keyboards.row(...navKeyboard);
 
-    console.log('after reply');
-
     return { message, keyboards };
   }
 

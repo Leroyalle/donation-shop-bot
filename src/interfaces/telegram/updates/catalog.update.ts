@@ -16,7 +16,6 @@ export class CatalogUpdate {
   @CallbackQuery(/^catalog:/)
   public async getCatalog(ctx: Context) {
     const data = ctx.callbackQuery?.data;
-    console.log(data);
     if (!data) return;
     const [_, strPage, region, editable] = data.split(':');
     const page = Number(strPage);

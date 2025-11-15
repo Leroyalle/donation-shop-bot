@@ -36,9 +36,9 @@ export class CartUpdate {
       await this.cartService.addToCart(product.id, user);
       await ctx.answerCallbackQuery();
       await ctx.reply(`✅ Товар ${product.name} добавлен в корзину`);
-    } catch (e) {
+    } catch (error) {
+      console.log('[addToCart]', error);
       await ctx.reply('❌ Произошла ошибка при добавлении товара');
-      console.log(e);
     }
   }
 
@@ -62,9 +62,9 @@ export class CartUpdate {
         text: '✅ Товар удален из корзины',
         show_alert: true,
       });
-    } catch (e) {
+    } catch (error) {
+      console.log('[deleteFromCart]', error);
       await ctx.reply('❌ Произошла ошибка при удалении товара');
-      console.log(e);
     }
   }
 

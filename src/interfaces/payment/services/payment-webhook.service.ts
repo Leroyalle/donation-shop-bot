@@ -39,7 +39,6 @@ export class PaymentWebhookService {
       }
 
       const order = await this.orderService.findByPaymentId(orderId);
-      console.log('CKASSA_WEBHOOK finded order', order);
 
       if (!order || !order.cart || !order.user.id) {
         console.warn(
@@ -63,10 +62,6 @@ export class PaymentWebhookService {
       if (data.state === 'PAYED') {
         await this.paymentNotificationsService.notifyUserOrderPaid(order);
         await this.paymentNotificationsService.notifyAdminNewOrder(order);
-        console.log(
-          '✅ [CKASSA_WEBHOOK_PROCESSED] Заказ подтверждён:',
-          order.id,
-        );
         return res.status(HttpStatus.OK).json({ status: 'ok' });
       }
     } catch (error) {
@@ -87,7 +82,6 @@ export class PaymentWebhookService {
         status: 'CONFIRMED',
       });
       await this.cartService.clearCart(order.user.id);
-      console.log('[RESOLVE_CKASSA_WEBHOOK after order update');
     }
     return {
       user: order.user,
@@ -98,8 +92,6 @@ export class PaymentWebhookService {
   public async payDigitalPaymentStatusWebhook(data: IPayDigitalWebhookData) {
     try {
       const order = await this.orderService.findByPaymentId(data.order_uuid);
-
-      console.log('payDigitalPaymentStatusWebhook order', order);
 
       if (!order) return;
 

@@ -191,7 +191,6 @@ export class PaymentConversationService {
     try {
       if (!data.forms) return await ctx.reply('❌ Произошла ошибка');
 
-      console.log('after !data.forms');
       const donateTypeKeyboard = new Keyboard();
 
       (
@@ -213,8 +212,6 @@ export class PaymentConversationService {
       await ctx.reply('Выберите тип товара:', {
         reply_markup: donateTypeKeyboard.resized().oneTime(),
       });
-
-      console.log('after entries');
 
       const typeAnswer = await this.waitForText(conversation);
 
@@ -335,8 +332,6 @@ export class PaymentConversationService {
         product_id: selectedProduct.value,
       };
 
-      console.log('topupReqData', donateReqData);
-
       let resData: TTopupCheckResponse | undefined;
 
       if (groupType === 'VOUCHER') {
@@ -371,8 +366,6 @@ export class PaymentConversationService {
       if (!resData.status) {
         return await ctx.reply(`❌ Произошла ошибка: ${resData.comment}`);
       }
-
-      console.log('RES', resData);
 
       await conversation.external(async () => {
         await this.orderService.create({

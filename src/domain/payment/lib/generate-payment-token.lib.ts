@@ -9,7 +9,7 @@ export const generatePaymentToken = (
     String(data.Amount),
     data.Description,
     data.OrderId,
-    secretKey, // Password
+    secretKey,
     data.TerminalKey,
   ];
 
@@ -19,9 +19,6 @@ export const generatePaymentToken = (
     .createHash('sha256')
     .update(stringToHash, 'utf8')
     .digest('hex');
-
-  console.log('stringToHash:', stringToHash);
-  console.log('hash:', hash);
 
   data.Token = hash;
 

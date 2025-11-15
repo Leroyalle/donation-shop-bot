@@ -18,7 +18,7 @@ export class PaymentController {
     @Body() data: ICkassaPaymentWebhookData,
     @Res() res: Response,
   ) {
-    console.log('CKASSA WEBHOOK:', data);
+    // console.log('CKASSA WEBHOOK:', data);
     return await this.paymentWebhookService.ckassaPaymentStatusWebhook(
       data,
       res,
@@ -29,7 +29,7 @@ export class PaymentController {
   public async payDigitalPaymentStatusWebhook(
     @Body() data: IPayDigitalWebhookData,
   ) {
-    console.log('PAYDIGITAL WEBHOOK:', data);
+    // console.log('PAYDIGITAL WEBHOOK:', data);
     return await this.paymentWebhookService.payDigitalPaymentStatusWebhook(
       data,
     );
@@ -40,7 +40,6 @@ export class PaymentController {
     @Body() input: CreateSteamPaymentDto,
     @Res() res: Response,
   ) {
-    console.log('input', input);
     return await this.steamPaymentService.handleSteamPay(input, res);
   }
 }
