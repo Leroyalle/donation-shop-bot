@@ -39,7 +39,7 @@ export class Order {
   status: 'NEW' | 'CONFIRMED' | 'REJECTED';
 
   @Column({ default: 'CARD' })
-  type: 'TOPUP' | 'STEAM' | 'CARD';
+  type: 'TOPUP' | 'VOUCHER' | 'STEAM' | 'CARD';
 
   @CreateDateColumn()
   createdAt: Date;
