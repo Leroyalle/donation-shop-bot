@@ -38,10 +38,12 @@ export class AdditionalProductsUpdate {
 
   @CallbackQuery(/^additional:/)
   async getAdditionalServices(ctx: Context) {
+    console.log('ADDITIONAL ');
     const data = ctx.callbackQuery?.data;
     if (!data) return;
     const user = await this.telegramService.handleCreateOrFindUser(ctx);
     if (!user) return;
+    console.log('after user');
     const [_, group] = data.split(':');
     await this.additionalProductsService.showAdditionalGroups(ctx, group, user);
   }

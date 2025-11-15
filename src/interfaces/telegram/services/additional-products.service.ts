@@ -135,6 +135,8 @@ export class AdditionalProductsService {
         return await ctx.reply(`❌ К сожалению, товар ${group} отсутствует`);
       }
 
+      console.log('before conversaton');
+
       await ctx.conversation.enter('buy-additional', { data, user });
     } catch (error) {
       console.log('[showAdditionalGroups]', error);

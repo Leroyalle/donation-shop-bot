@@ -12,8 +12,14 @@ import { TTopupCheckResponse } from 'src/interfaces/telegram/services/payment-co
 import { TSteamPayResult } from '../../../../shared/types/steam/steam-pay-result.type';
 import { ISteamPayRequest } from '../../../../shared/types/steam/steam-pay-request.type';
 import { increasePriceByPercent } from 'src/shared/lib/increase-price-by-percent.lib';
-import { AdditionalGroup } from 'src/shared/types/additional-group.type';
+import {
+  AdditionalGroup,
+  Field,
+  Forms,
+} from 'src/shared/types/additional-group.type';
 import { getOptionText } from './lib/get-option-text';
+import { additionalTypeTranslater } from './constants/additiomal-type-translater';
+import { TProductType } from 'src/shared/types/product-type.type';
 
 @Injectable()
 export class PaymentConversationService {
@@ -182,25 +188,57 @@ export class PaymentConversationService {
     { data, user }: { data: AdditionalGroup; user: User },
   ) => {
     try {
-      if (!data.forms?.topup_fields) return;
-      const topups = data.forms?.topup_fields?.find(
-        (f) => f.name === 'product_id',
-      );
+      if (!data.forms) return await ctx.reply('❌ Произошла ошибка');
 
-      if (!topups || !topups.options) {
-        return await ctx.reply(
-          `❌ К сожалению, товар ${data.group} отсутствует`,
-        );
-      }
+      console.log('after !data.forms');
+      const donateTypeKeyboard = new Keyboard();
+
+      (
+        Object.entries(data.forms) as [keyof typeof data.forms, Field[]][]
+      ).forEach(([key], i) => {
+        console.log(key);
+        donateTypeKeyboard
+          .text(additionalTypeTranslater[key])
+          .resized()
+          .oneTime();
+      });
 
       await ctx.reply(
         '‼️ Вы можете прервать диалог в любой момент, отправив /cancel.',
       );
 
+      await ctx.reply('Выберите тип товара:', {
+        reply_markup: donateTypeKeyboard.resized().oneTime(),
+      });
+
+      console.log('after entries');
+
+      const typeAnswer = await this.waitForText(conversation);
+
+      let groupFields: Field[] | undefined;
+      let groupType: TProductType | undefined;
+      if (typeAnswer === additionalTypeTranslater['topup_fields']) {
+        groupFields = data.forms?.topup_fields;
+        groupType = 'TOPUP';
+      } else if (typeAnswer === additionalTypeTranslater['voucher_fields']) {
+        groupFields = data.forms?.voucher_fields;
+        groupType = 'VOUCHER';
+      } else {
+        return await ctx.reply('❌ Произошла ошибка');
+      }
+
+      const goods = groupFields?.find((f) => f.name === 'product_id');
+
+      if (!goods || !goods.options) {
+        return await ctx.reply(
+          `❌ К сожалению, товар ${data.group} отсутствует`,
+        );
+      }
+
       const productKeyboard = new Keyboard();
 
-      topups.options.forEach((topup, i) => {
-        if (!topup.price) return;
+      goods.options.forEach((article, i) => {
+        if (!article.price) return;
 
         if (i % 2 === 0) {
           productKeyboard.row();
@@ -208,7 +246,10 @@ export class PaymentConversationService {
 
         productKeyboard
           .text(
-            topup.product + ' - ' + increasePriceByPercent(topup.price) + '₽',
+            article.product +
+              ' - ' +
+              increasePriceByPercent(article.price) +
+              '₽',
           )
           .resized()
           .oneTime();
@@ -218,12 +259,12 @@ export class PaymentConversationService {
         reply_markup: productKeyboard,
       });
 
-      const topupAnswer = await this.waitForText(conversation);
+      const articleAnswer = await this.waitForText(conversation);
 
-      const selectedProduct = topups.options.find(
+      const selectedProduct = goods.options.find(
         (o) =>
           o.product + ' - ' + increasePriceByPercent(o.price) + '₽' ===
-          topupAnswer,
+          articleAnswer,
       );
 
       if (!selectedProduct) {
@@ -233,7 +274,7 @@ export class PaymentConversationService {
 
       const dataResult: Record<string, string> = {};
 
-      for (const f of data.forms.topup_fields) {
+      for (const f of groupFields) {
         if (f.name === 'product_id') continue;
         if (!f.options) {
           await ctx.reply('Введите ' + f.label + ':');
@@ -283,18 +324,23 @@ export class PaymentConversationService {
         // session.topupData = null;
       }
 
-      const topupReqData: ITopupCheckRequest = {
+      const donateReqData: ITopupCheckRequest = {
         ...dataResult,
         retail_price: increasePriceByPercent(selectedProduct.price),
         product_id: selectedProduct.value,
       };
 
-      console.log('topupReqData', topupReqData);
+      console.log('topupReqData', donateReqData);
+
+      const reqUrl =
+        groupType === 'TOPUP'
+          ? PAY_DIGITAL_PAYMENT_ENDPOINTS.topupCheck
+          : PAY_DIGITAL_PAYMENT_ENDPOINTS.voucherBuy;
 
       const { data: res } =
         await this.httpClientService.payDigitalInstance.post<TTopupCheckResponse>(
-          PAY_DIGITAL_PAYMENT_ENDPOINTS.topupCheck,
-          topupReqData,
+          reqUrl,
+          donateReqData,
         );
 
       if (!res.status) {
@@ -305,7 +351,7 @@ export class PaymentConversationService {
 
       await conversation.external(async () => {
         await this.orderService.create({
-          type: 'TOPUP',
+          type: groupType,
           status: 'NEW',
           amount: res.retail_price_rub,
           email: null,

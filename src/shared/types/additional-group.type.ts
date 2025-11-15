@@ -10,14 +10,14 @@ export type Option = {
   type?: TProductType;
 };
 
-type Field = {
+export type Field = {
   name: string;
   type: 'text' | 'options';
   label?: string;
   options?: Option[];
 };
 
-type Forms = {
+export type Forms = {
   topup_fields: Field[];
   voucher_fields: Field[];
 };
