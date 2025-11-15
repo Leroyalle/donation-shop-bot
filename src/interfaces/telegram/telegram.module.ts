@@ -17,7 +17,6 @@ import { AdditionalProductsUpdate } from './updates/additional-products.update';
 import { CartUpdate } from './updates/cart.update';
 import { CatalogUpdate } from './updates/catalog.update';
 import { SteamUpdate } from './updates/steam.update';
-import { TopupUpdate } from './updates/topup.update';
 import { PaymentConversationService } from './services/payment-conversation/payment-conversation.service';
 import { OrderModule } from 'src/domain/order/order.module';
 import { SupportUpdate } from './updates/support.update';
@@ -57,7 +56,6 @@ import { SupportService } from './services/support.service';
     CartUpdate,
     PaymentConversationService,
     CatalogUpdate,
-    TopupUpdate,
     TelegramCoreService,
     UiBuilderService,
     SupportUpdate,

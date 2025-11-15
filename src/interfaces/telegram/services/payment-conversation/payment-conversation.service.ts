@@ -12,11 +12,7 @@ import { TTopupCheckResponse } from 'src/interfaces/telegram/services/payment-co
 import { TSteamPayResult } from '../../../../shared/types/steam/steam-pay-result.type';
 import { ISteamPayRequest } from '../../../../shared/types/steam/steam-pay-request.type';
 import { increasePriceByPercent } from 'src/shared/lib/increase-price-by-percent.lib';
-import {
-  AdditionalGroup,
-  Field,
-  Forms,
-} from 'src/shared/types/additional-group.type';
+import { AdditionalGroup, Field } from 'src/shared/types/additional-group.type';
 import { getOptionText } from './lib/get-option-text';
 import { additionalTypeTranslater } from './constants/additiomal-type-translater';
 import { TProductType } from 'src/shared/types/product-type.type';
