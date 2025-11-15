@@ -54,11 +54,7 @@ export class AdditionalProductsService {
           },
         );
 
-      const topups = data.forms?.topup_fields?.find(
-        (f) => f.name === 'product_id',
-      );
-
-      if (!topups || !topups.options) {
+      if (!data.forms) {
         return await ctx.reply(`❌ К сожалению, товар ${group} отсутствует`);
       }
 
