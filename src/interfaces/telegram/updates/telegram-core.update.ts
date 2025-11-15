@@ -52,13 +52,13 @@ export class TelegramCoreUpdate {
     if (!startButtonNames.has(text as StartButton)) return;
 
     const actionsMap: Record<StartButton, () => Promise<void>> = {
-      '🛍️ Наши услуги': async () => {
+      '🏪 Каталог': async () => {
         await this.telegramService.showCategories(ctx);
       },
       // '🧾 Заказы': async () => {
       //   await ctx.reply('Вот ваши заказы');
       // },
-      '🧺 Корзина': async () => {
+      '🛍️ Корзина': async () => {
         await this.telegramCartService.showCartPage(ctx, 0, false);
       },
       '🏠 Начало': async () => {
