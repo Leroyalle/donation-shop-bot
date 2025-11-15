@@ -40,7 +40,9 @@ export class AdditionalProductsUpdate {
   async getAdditionalServices(ctx: Context) {
     const data = ctx.callbackQuery?.data;
     if (!data) return;
+    const user = await this.telegramService.handleCreateOrFindUser(ctx);
+    if (!user) return;
     const [_, group] = data.split(':');
-    await this.additionalProductsService.showAdditionalGroups(ctx, group);
+    await this.additionalProductsService.showAdditionalGroups(ctx, group, user);
   }
 }

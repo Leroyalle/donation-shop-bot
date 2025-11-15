@@ -1,10 +1,10 @@
 import { TProductType } from './product-type.type';
 
-type Option = {
+export type Option = {
   name?: string;
   value: string | number;
   product?: string;
-  price?: number;
+  price: number;
   region?: string;
   name_prefix?: string;
   type?: TProductType;
