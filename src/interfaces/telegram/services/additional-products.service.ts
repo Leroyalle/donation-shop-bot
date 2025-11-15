@@ -127,7 +127,11 @@ export class AdditionalProductsService {
             },
           },
         );
-      console.log('ADDITIONAL,', data);
+      console.log(
+        'ADDITIONAL,',
+        data.forms?.topup_fields,
+        data.forms?.topup_fields[2].options?.forEach((o) => console.log(o)),
+      );
 
       const topups = data.forms?.topup_fields?.find(
         (f) => f.name === 'product_id',

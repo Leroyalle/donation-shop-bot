@@ -184,7 +184,14 @@ export class PaymentConversationService {
       const backupAnswer = await this.ask2FAStep(conversation, ctx);
 
       await ctx.reply(
-        `✅ Email: ${email}\nПароль: ${password}\nНик: ${nickname}\n Backup code: ${backupAnswer.has2FA ? backupAnswer.backupCode : 'Нет'}\n\nВсе верно? Да/Нет`,
+        `✅ Email: ${email}\nПароль: ${password}\nНик: ${nickname}\n Backup code: ${backupAnswer.has2FA ? backupAnswer.backupCode : 'Нет'}\n\nВсе верно?`,
+        {
+          reply_markup: new Keyboard()
+            .text('Да')
+            .text('Прервать')
+            .resized()
+            .oneTime(),
+        },
       );
 
       const confirmText = await this.waitForText(conversation);
