@@ -193,6 +193,9 @@ export class PaymentConversationService {
         Object.entries(data.forms) as [keyof typeof data.forms, Field[]][]
       ).forEach(([key], i) => {
         console.log(key);
+        if (i % 2 === 0) {
+          donateTypeKeyboard.row();
+        }
         donateTypeKeyboard
           .text(additionalTypeTranslater[key])
           .resized()
