@@ -4,7 +4,10 @@ import { HttpClientService } from 'src/infrastructure/http-client/http-client.se
 import { Context, InlineKeyboard, Keyboard } from 'grammy';
 import { Conversation } from '@grammyjs/conversations';
 import { User } from 'src/domain/user/entities/user.entity';
-import { PAY_DIGITAL_PAYMENT_ENDPOINTS } from 'src/shared/constants/api-paths';
+import {
+  PAY_DIGITAL_PAYMENT_ENDPOINTS,
+  PAY_DIGITAL_PAYMENT_URL,
+} from 'src/shared/constants/api-paths';
 import { PaymentService } from 'src/domain/payment/services/payment.service';
 import { TSteamCheckResult } from 'src/shared/types/steam/steam-check-result.type';
 import { ITopupCheckRequest } from 'src/interfaces/telegram/services/payment-conversation/types/topup-check-request.type';
@@ -16,6 +19,7 @@ import { AdditionalGroup, Field } from 'src/shared/types/additional-group.type';
 import { getOptionText } from './lib/get-option-text';
 import { additionalTypeTranslater } from './constants/additiomal-type-translater';
 import { TProductType } from 'src/shared/types/product-type.type';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class PaymentConversationService {
@@ -23,6 +27,7 @@ export class PaymentConversationService {
     private readonly paymentService: PaymentService,
     private readonly orderService: OrderService,
     private readonly httpClientService: HttpClientService,
+    private readonly configService: ConfigService,
   ) {}
 
   public cartCheckoutConversation = async (
@@ -322,6 +327,8 @@ export class PaymentConversationService {
         // session.topupData = null;
       }
 
+      await ctx.reply('⌛ Поиск и проверка аккаунта...');
+
       const donateReqData: ITopupCheckRequest = {
         ...dataResult,
         retail_price: increasePriceByPercent(selectedProduct.price),
@@ -330,30 +337,50 @@ export class PaymentConversationService {
 
       console.log('topupReqData', donateReqData);
 
-      const reqUrl =
-        groupType === 'TOPUP'
-          ? PAY_DIGITAL_PAYMENT_ENDPOINTS.topupCheck
-          : PAY_DIGITAL_PAYMENT_ENDPOINTS.voucherBuy;
+      let resData: TTopupCheckResponse | undefined;
 
-      const { data: res } =
-        await this.httpClientService.payDigitalInstance.post<TTopupCheckResponse>(
-          reqUrl,
-          donateReqData,
-        );
-
-      if (!res.status) {
-        return await ctx.reply(`❌ Произошла ошибка: ${res.comment}`);
+      if (groupType === 'VOUCHER') {
+        const { data: res } =
+          await this.httpClientService.payDigitalInstance.post<TTopupCheckResponse>(
+            PAY_DIGITAL_PAYMENT_URL.v1,
+            {
+              path: '/voucher/buy',
+              request: donateReqData,
+            },
+            {
+              headers: {
+                Authorization: `Bearer ${this.configService.get('PAYDIGITAL_VOUCHER')}`,
+                'X-Partner-ID':
+                  this.configService.get<string>('PAYDIGITAL_STEAM')!,
+              },
+            },
+          );
+        resData = res;
+      }
+      if (groupType === 'TOPUP') {
+        const { data: res } =
+          await this.httpClientService.payDigitalInstance.post<TTopupCheckResponse>(
+            PAY_DIGITAL_PAYMENT_ENDPOINTS.topupCheck,
+            donateReqData,
+          );
+        resData = res;
       }
 
-      console.log('RES', res);
+      if (!resData) return await ctx.reply('❌ Произошла ошибка');
+
+      if (!resData.status) {
+        return await ctx.reply(`❌ Произошла ошибка: ${resData.comment}`);
+      }
+
+      console.log('RES', resData);
 
       await conversation.external(async () => {
         await this.orderService.create({
           type: groupType,
           status: 'NEW',
-          amount: res.retail_price_rub,
+          amount: resData.retail_price_rub,
           email: null,
-          paymentId: res.sbp_uuid,
+          paymentId: resData.sbp_uuid,
           user,
           items: '',
           cart: null,
@@ -361,14 +388,14 @@ export class PaymentConversationService {
       });
 
       const paymentKeyboard = new InlineKeyboard();
-      paymentKeyboard.url(`${res.product} - Перейти к оплате 👇`, res.sbp_url);
-      await ctx.reply(`Ссылка на оплату ${res.product}:`, {
+      paymentKeyboard.url(`Оплатить`, resData.sbp_url);
+      await ctx.reply(`Ссылка на оплату ${resData.product} 👇:`, {
         reply_markup: paymentKeyboard,
       });
     } catch (error) {
       console.log('[BUY_ADDITIONAL_TOPUP]', error);
-      if (error.message === 'Conversation cancelled') return;
-      if (!error.response.data.status) {
+      if (error?.message === 'Conversation cancelled') return;
+      if (!error?.response?.data?.status) {
         return await ctx.reply(
           `❌ Произошла ошибка: ${error.response.data.comment}`,
         );
