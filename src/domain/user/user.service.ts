@@ -43,6 +43,9 @@ export class UserService {
         name: userData.name,
         username: userData.username,
         telegramId: userData.telegramId,
+        source: userData.source,
+        cart: null,
+        orders: [],
       });
     }
     return user;
