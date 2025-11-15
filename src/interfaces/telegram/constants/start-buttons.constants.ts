@@ -1,7 +1,7 @@
 export const startButtons = [
-  { name: '🛍️ Наши услуги', callback_data: 'categories' },
+  { name: '🏪 Каталог', callback_data: 'categories' },
   // { name: '🧾 Заказы', callback_data: 'orders' },
-  { name: '🧺 Корзина', callback_data: 'cart' },
+  { name: '🛍️ Корзина', callback_data: 'cart' },
   { name: '🏠 Начало', callback_data: 'start' },
   { name: '❓ Помощь', callback_data: 'support' },
 ] as const;
