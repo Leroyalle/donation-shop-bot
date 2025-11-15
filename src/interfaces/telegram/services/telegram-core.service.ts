@@ -18,13 +18,6 @@ export class TelegramCoreService {
 
     this.bot.use(conversations());
 
-    // this.bot.use(
-    //   createConversation(
-    //     this.paymentConversationService.buyTopupConversation,
-    //     'buy-topup',
-    //   ),
-    // );
-
     this.bot.use(
       createConversation(
         this.paymentConversationService.buyAdditionalTopupConversation,

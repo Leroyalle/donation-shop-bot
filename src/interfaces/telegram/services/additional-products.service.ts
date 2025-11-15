@@ -13,75 +13,75 @@ import { increasePriceByPercent } from 'src/shared/lib/increase-price-by-percent
 export class AdditionalProductsService {
   constructor(private readonly httpClientService: HttpClientService) {}
 
-  public async showAdditionalTopup(
-    ctx: Context,
-    id: string,
-    type: TProductType,
-  ) {
-    try {
-      const { data } =
-        await this.httpClientService.payDigitalInstance.get<IProductById>(
-          PAY_DIGITAL_PAYMENT_ENDPOINTS.getProduct,
-          {
-            params: {
-              product_id: id,
-              type,
-            },
-          },
-        );
+  // public async showAdditionalTopup(
+  //   ctx: Context,
+  //   id: string,
+  //   type: TProductType,
+  // ) {
+  //   try {
+  //     const { data } =
+  //       await this.httpClientService.payDigitalInstance.get<IProductById>(
+  //         PAY_DIGITAL_PAYMENT_ENDPOINTS.getProduct,
+  //         {
+  //           params: {
+  //             product_id: id,
+  //             type,
+  //           },
+  //         },
+  //       );
 
-      if (!data) {
-        return await ctx.reply('❌ Произошла ошибка');
-      }
+  //     if (!data) {
+  //       return await ctx.reply('❌ Произошла ошибка');
+  //     }
 
-      if (!data.in_stock) {
-        return await ctx.reply(`Товара ${data.name} нет в наличии`);
-      }
+  //     if (!data.in_stock) {
+  //       return await ctx.reply(`Товара ${data.name} нет в наличии`);
+  //     }
 
-      const retailPrice = increasePriceByPercent(data.price);
-      const keyboard = new InlineKeyboard();
+  //     const retailPrice = increasePriceByPercent(data.price);
+  //     const keyboard = new InlineKeyboard();
 
-      keyboard.row({
-        text: 'Купить сейчас',
-        callback_data: `additionalBuy:${id}:${type}:${retailPrice}`,
-      });
+  //     keyboard.row({
+  //       text: 'Купить сейчас',
+  //       callback_data: `additionalBuy:${id}:${type}:${retailPrice}`,
+  //     });
 
-      // await this.buyTopupConversation(ctx.conversation, ctx);
+  //     // await this.buyTopupConversation(ctx.conversation, ctx);
 
-      return await ctx.reply(
-        `🛍️ <b>Товар</b>\n\n<b>${data.name}</b>\n\n💰 <b><u>${retailPrice} ₽</u></b>`,
-        {
-          parse_mode: 'HTML',
-          reply_markup: keyboard,
-        },
-      );
-    } catch (error) {
-      console.log('[showTopup]', error);
-      await ctx.reply('❌ Произошла ошибка');
-    }
-  }
+  //     return await ctx.reply(
+  //       `🛍️ <b>Товар</b>\n\n<b>${data.name}</b>\n\n💰 <b><u>${retailPrice} ₽</u></b>`,
+  //       {
+  //         parse_mode: 'HTML',
+  //         reply_markup: keyboard,
+  //       },
+  //     );
+  //   } catch (error) {
+  //     console.log('[showTopup]', error);
+  //     await ctx.reply('❌ Произошла ошибка');
+  //   }
+  // }
 
-  public async handleAdditionalBuy(
-    ctx: Context,
-    id: string,
-    type: TProductType,
-    user: User,
-    retailPrice: number,
-  ) {
-    try {
-      await ctx.answerCallbackQuery();
-      if (type === 'TOPUP') {
-        ctx.session.topupData = { productId: id, retailPrice };
-        console.log('SESSION BEFORE', ctx.session);
-        await ctx.conversation.enter('buy-topup', { user });
-      }
+  // public async handleAdditionalBuy(
+  //   ctx: Context,
+  //   id: string,
+  //   type: TProductType,
+  //   user: User,
+  //   retailPrice: number,
+  // ) {
+  //   try {
+  //     await ctx.answerCallbackQuery();
+  //     if (type === 'TOPUP') {
+  //       ctx.session.topupData = { productId: id, retailPrice };
+  //       console.log('SESSION BEFORE', ctx.session);
+  //       await ctx.conversation.enter('buy-topup', { user });
+  //     }
 
-      console.log('after');
-    } catch (error) {
-      console.log('[handleAdditionalBuy]', error);
-      await ctx.reply('❌ Произошла ошибка');
-    }
-  }
+  //     console.log('after');
+  //   } catch (error) {
+  //     console.log('[handleAdditionalBuy]', error);
+  //     await ctx.reply('❌ Произошла ошибка');
+  //   }
+  // }
 
   public async showAdditionalCategories(ctx: Context) {
     try {
@@ -126,11 +126,6 @@ export class AdditionalProductsService {
             },
           },
         );
-      // console.log(
-      //   'ADDITIONAL,',
-      //   data.forms?.topup_fields,
-      //   data.forms?.topup_fields[2].options?.forEach((o) => console.log(o)),
-      // );
 
       const topups = data.forms?.topup_fields?.find(
         (f) => f.name === 'product_id',
@@ -141,29 +136,6 @@ export class AdditionalProductsService {
       }
 
       await ctx.conversation.enter('buy-additional', { data, user });
-
-      // const keyboard = new InlineKeyboard();
-      // keyboard.row({
-      //   text: data.short_info,
-      //   callback_data: `noop`,
-      // });
-
-      // topups.options.forEach((topup, i) => {
-      //   if (!topup.price) return;
-
-      //   if (i % 2 === 0) {
-      //     keyboard.row();
-      //   }
-
-      //   keyboard.text(
-      //     topup.product + ' - ' + increasePriceByPercent(topup.price) + '₽',
-      //     `topup:${topup.value}:${topup.type}`,
-      //   );
-      // });
-
-      // await ctx.reply('Выберите товар:', {
-      //   reply_markup: keyboard,
-      // });
     } catch (error) {
       console.log('[showAdditionalGroups]', error);
       await ctx.reply('❌ Произошла ошибка');

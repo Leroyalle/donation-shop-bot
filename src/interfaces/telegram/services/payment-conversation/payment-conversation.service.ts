@@ -164,120 +164,6 @@ export class PaymentConversationService {
     }
   };
 
-  // public buyTopupConversation = async (
-  //   conversation: Conversation,
-  //   ctx: Context,
-  //   { user }: { user: User },
-  // ) => {
-  //   try {
-  //       await ctx.reply(
-  //   '‼️ Вы можете прервать диалог в любой момент, отправив /cancel.',
-  // );
-  //     const session = await conversation.external((ctx) => ctx.session);
-  //     await ctx.reply('Введите email:');
-  //     const email = await this.waitForText(conversation);
-
-  //     await ctx.reply('Введите пароль:');
-  //     const password = await this.waitForText(conversation);
-
-  //     await ctx.reply('Введите ник в игре:');
-  //     const nickname = await this.waitForText(conversation);
-
-  //     const backupAnswer = await this.ask2FAStep(conversation, ctx);
-
-  //     await ctx.reply(
-  //       `✅ Email: ${email}\nПароль: ${password}\nНик: ${nickname}\n Backup code: ${backupAnswer.has2FA ? backupAnswer.backupCode : 'Нет'}\n\nВсе верно?`,
-  //       {
-  //         reply_markup: new Keyboard()
-  //           .text('Да')
-  //           .text('Прервать')
-  //           .resized()
-  //           .oneTime(),
-  //       },
-  //     );
-
-  //     const confirmText = await this.waitForText(conversation);
-  //     if (confirmText.toLowerCase() !== 'да') {
-  //       await ctx.reply('Попробуйте ещё раз');
-  //       session.topupData = null;
-  //       return;
-  //     }
-
-  //     if (!session.topupData) return;
-
-  //     const topupReqData: ITopupCheckRequest = {
-  //       account: email,
-  //       password,
-  //       nickname,
-  //       retail_price: session.topupData.retailPrice,
-  //       backupcode: backupAnswer.has2FA ? backupAnswer.backupCode : undefined,
-  //       region: 'Any',
-  //       product_id: session.topupData.productId,
-  //     };
-
-  //     const res = await conversation.external(async () => {
-  //       const { data } =
-  //         await this.httpClientService.payDigitalInstance.post<ITopupCheckResponse>(
-  //           PAY_DIGITAL_PAYMENT_ENDPOINTS.topupCheck,
-  //           topupReqData,
-  //         );
-  //       return data;
-  //     });
-
-  //     await conversation.external(async () => {
-  //       await this.orderService.create({
-  //         type: 'TOPUP',
-  //         status: 'NEW',
-  //         amount: res.retail_price_rub,
-  //         email,
-  //         paymentId: res.sbp_uuid,
-  //         user,
-  //         items: '',
-  //         cart: null,
-  //       });
-  //     });
-
-  //     const keyboard = new InlineKeyboard();
-  //     keyboard.url('Перейти к оплате', res.sbp_url);
-  //     await ctx.reply(`Ссылка на оплату ${res.product}:`, {
-  //       reply_markup: keyboard,
-  //     });
-  //   } catch (error) {
-  //     console.log('[BUY_TOPUP_CONV]', error);
-  //     if (error.message === 'Conversation cancelled') return;
-  //     await ctx.reply('❌ Ошибка. Попробуйте ещё раз.');
-  //   }
-  // };
-
-  public async ask2FAStep(
-    conversation: Conversation,
-    ctx: Context,
-  ): Promise<{ has2FA: boolean; backupCode?: string }> {
-    while (true) {
-      await ctx.reply(
-        'У вас включена двухфакторная аутентификация (2FA)?\n\nОтветьте: <b>Да</b> или <b>Нет</b>.',
-        { parse_mode: 'HTML' },
-      );
-
-      const answer = (await this.waitForText(conversation)).toLowerCase();
-
-      if (answer === 'да') {
-        await ctx.reply(
-          '🧩 Введите ваш <b>backup-код</b> — одноразовый код для входа',
-          { parse_mode: 'HTML' },
-        );
-        const backupCode = await this.waitForText(conversation);
-        return { has2FA: true, backupCode };
-      }
-
-      if (answer === 'нет') {
-        return { has2FA: false };
-      }
-
-      await ctx.reply('⚠️ Пожалуйста, ответьте только “Да” или “Нет”.');
-    }
-  }
-
   private async waitForText(conversation: Conversation) {
     const msgCtx = await conversation.waitFor('message:text');
     const text = msgCtx.message.text.trim();
@@ -328,7 +214,7 @@ export class PaymentConversationService {
           .oneTime();
       });
 
-      await ctx.reply('Выберите конкретный товар:', {
+      await ctx.reply(`Выберите конкретный товар ${data.group}:`, {
         reply_markup: productKeyboard,
       });
 

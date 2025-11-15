@@ -19,22 +19,22 @@ export class AdditionalProductsUpdate {
     await this.additionalProductsService.showAdditionalCategories(ctx);
   }
 
-  @CallbackQuery(/^additionalBuy:/)
-  async handleAdditionalBuy(ctx: Context) {
-    const data = ctx.callbackQuery?.data;
-    if (!data) return;
-    const user = await this.telegramService.handleCreateOrFindUser(ctx);
-    if (!user) return;
-    const [_, id, type, retailPrice] = data.split(':');
-    const price = Number(retailPrice);
-    return await this.additionalProductsService.handleAdditionalBuy(
-      ctx,
-      id,
-      type as TProductType,
-      user,
-      price,
-    );
-  }
+  // @CallbackQuery(/^additionalBuy:/)
+  // async handleAdditionalBuy(ctx: Context) {
+  //   const data = ctx.callbackQuery?.data;
+  //   if (!data) return;
+  //   const user = await this.telegramService.handleCreateOrFindUser(ctx);
+  //   if (!user) return;
+  //   const [_, id, type, retailPrice] = data.split(':');
+  //   const price = Number(retailPrice);
+  //   return await this.additionalProductsService.handleAdditionalBuy(
+  //     ctx,
+  //     id,
+  //     type as TProductType,
+  //     user,
+  //     price,
+  //   );
+  // }
 
   @CallbackQuery(/^additional:/)
   async getAdditionalServices(ctx: Context) {
