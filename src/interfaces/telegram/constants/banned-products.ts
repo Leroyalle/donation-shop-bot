@@ -8,7 +8,6 @@ export const bannedProducts = [
   'Steam',
   'Test',
   'Clash of Clans',
-  'Hayday',
   'The boat',
   'Mo.co',
 ];
