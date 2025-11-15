@@ -4,7 +4,7 @@ import { PAY_DIGITAL_PAYMENT_ENDPOINTS } from 'src/shared/constants/api-paths';
 import { AdditionalGroup } from 'src/shared/types/additional-group.type';
 import { HttpClientService } from 'src/infrastructure/http-client/http-client.service';
 import { User } from 'src/domain/user/entities/user.entity';
-import { productsWithoutTopup } from '../constants/additional-products-without-topup.constants';
+import { checkProductsIsBanned } from '../lib/check-product-is-banned';
 
 @Injectable()
 export class AdditionalProductsService {
@@ -23,11 +23,9 @@ export class AdditionalProductsService {
       const keyboard = new InlineKeyboard();
 
       data.forEach((group) => {
-        const withoutTopup = productsWithoutTopup.find(
-          (g) => g === group.group,
-        );
+        const isBanned = checkProductsIsBanned(group.group);
 
-        if (group.category === 'games' && !withoutTopup) {
+        if (group.category === 'games' && !isBanned) {
           keyboard.text(group.group, `additional:${group.group}`).row();
         }
       });
