@@ -13,6 +13,21 @@ services:
     networks:
       - web
 
+  db:
+    image: postgres:16
+    container_name: postgres-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_DATABASE}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - '127.0.0.1:5432:5432'
+    networks:
+      - web
+
   caddy:
     image: caddy:2
     container_name: caddy
@@ -32,5 +47,6 @@ networks:
     driver: bridge
 
 volumes:
+  postgres_data:
   caddy_data:
   caddy_config:
