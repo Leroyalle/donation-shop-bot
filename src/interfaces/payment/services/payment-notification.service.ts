@@ -3,6 +3,7 @@ import { InjectBot } from '@grammyjs/nestjs';
 import { Bot, Context } from 'grammy';
 import { ConfigService } from '@nestjs/config';
 import { Order } from 'src/domain/order/entities/order.entity';
+import { CartItem } from 'src/domain/cart-item/entities/cart-item.entity';
 
 @Injectable()
 export class PaymentNotificationsService {
@@ -26,6 +27,15 @@ export class PaymentNotificationsService {
         : `@${username}`
       : name || 'Неизвестен';
 
+    const parsedItems = JSON.parse(order.items) as CartItem[];
+
+    const itemsString = parsedItems
+      .map(
+        (item) =>
+          `📌 <b>${item.card.name}</b> (${item.card.region}) — x${item.quantity}`,
+      )
+      .join('\n');
+
     await this.bot.api.sendMessage(
       adminChatId,
       `
@@ -33,12 +43,15 @@ export class PaymentNotificationsService {
 🧾 <b>ID заказа:</b> <code>${order.id}</code>
 👤 <b>Покупатель:</b> ${displayUser}
 💰 <b>Сумма:</b> ${order.type === 'CARD' ? order.amount / 100 : order.amount} ₽
-📋 <b>Тип: ${order.type}</b>
-${order.type === 'CARD' ? `🛫 <b>Отправить на: ${order.email}</b>` : ''}
+📋 <b>Тип:</b> ${order.type}
+${order.type === 'CARD' ? `🛫 <b>Отправить на:</b> ${order.email}` : ''}
 🕒 <b>Дата:</b> ${new Date(order.createdAt).toLocaleString('ru-RU', {
         timeZone: 'Europe/Moscow',
       })}
-      `,
+
+🛍️ <b>Содержимое заказа:</b>
+${order.type === 'CARD' ? itemsString : 'Автоматически выполнено поставщиком'}
+  `,
       { parse_mode: 'HTML' },
     );
   }
