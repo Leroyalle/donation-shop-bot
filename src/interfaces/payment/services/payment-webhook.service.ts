@@ -7,6 +7,8 @@ import { ICkassaPaymentWebhookData } from 'src/domain/payment/types/ckassa-payme
 import { IPayDigitalWebhookData } from 'src/domain/payment/types/pay-digital-webhook-data.type';
 import { PaymentNotificationsService } from './payment-notification.service';
 import { Response } from 'express';
+import { ConfigService } from '@nestjs/config';
+import { createHash } from '../lib/create-hash';
 
 @Injectable()
 export class PaymentWebhookService {
@@ -15,6 +17,7 @@ export class PaymentWebhookService {
     private readonly cartService: CartService,
     private readonly cartItemService: CartItemService,
     private readonly paymentNotificationsService: PaymentNotificationsService,
+    private readonly configService: ConfigService,
   ) {}
 
   async ckassaPaymentStatusWebhook(
@@ -89,11 +92,25 @@ export class PaymentWebhookService {
     };
   }
 
-  public async payDigitalPaymentStatusWebhook(data: IPayDigitalWebhookData) {
+  public async payDigitalPaymentStatusWebhook(
+    data: IPayDigitalWebhookData,
+    res: Response,
+  ) {
     try {
       const order = await this.orderService.findByPaymentId(data.order_uuid);
 
-      if (!order) return;
+      if (!order) {
+        return res
+          .status(HttpStatus.NOT_FOUND)
+          .json({ error: 'order_not_found' });
+      }
+
+      const result = this.validatePayDigitalWebhook(data, order);
+      if (!result) {
+        return res
+          .status(HttpStatus.BAD_REQUEST)
+          .json({ error: 'invalid_signature' });
+      }
 
       if (data.status === 'Paid') {
         await this.orderService.update(order.id, {
@@ -102,8 +119,38 @@ export class PaymentWebhookService {
         await this.paymentNotificationsService.notifyUserOrderPaid(order);
         await this.paymentNotificationsService.notifyAdminNewOrder(order);
       }
+
+      return res.status(HttpStatus.OK).json({ status: 'ok' });
     } catch (error) {
       console.log('PAY_DIGITAL_WEBHOOK', error);
+      return res
+        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .json({ status: 'error' });
     }
+  }
+
+  private validatePayDigitalWebhook(
+    data: IPayDigitalWebhookData,
+    order: Order,
+  ): boolean {
+    let hash: string | null = null;
+
+    if (order.type === 'TOPUP') {
+      const secret = this.configService.get<string>('PAYDIGITAL_TOPUP');
+      if (!secret) return false;
+      hash = createHash(data.order_uuid, secret);
+    }
+    if (order.type === 'VOUCHER') {
+      const secret = this.configService.get<string>('PAYDIGITAL_VOUCHER');
+      if (!secret) return false;
+      hash = createHash(data.order_uuid, secret);
+    }
+    if (order.type === 'STEAM') {
+      const secret = this.configService.get<string>('PAYDIGITAL_STEAM');
+      if (!secret) return false;
+      hash = createHash(data.order_uuid, secret);
+    }
+
+    return hash === data.hash;
   }
 }

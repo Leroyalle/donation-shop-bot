@@ -28,10 +28,12 @@ export class PaymentController {
   @Post('pay-digital-payment-status')
   public async payDigitalPaymentStatusWebhook(
     @Body() data: IPayDigitalWebhookData,
+    @Res() res: Response,
   ) {
     // console.log('PAYDIGITAL WEBHOOK:', data);
     return await this.paymentWebhookService.payDigitalPaymentStatusWebhook(
       data,
+      res,
     );
   }
 

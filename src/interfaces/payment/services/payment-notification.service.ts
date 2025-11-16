@@ -12,6 +12,18 @@ export class PaymentNotificationsService {
     private readonly configService: ConfigService,
   ) {}
 
+  private buildItemsString(items: CartItem[] | '') {
+    return (
+      items &&
+      items
+        .map(
+          (item) =>
+            `📌 <b>${item.card.name}</b> (${item.card.region}) — x${item.quantity}`,
+        )
+        .join('\n')
+    );
+  }
+
   public async notifyAdminNewOrder(order: Order) {
     const adminChatId = this.configService.get<string>(
       'ADMIN_CHAT_NOTIFICATIONS',
@@ -27,14 +39,9 @@ export class PaymentNotificationsService {
         : `@${username}`
       : name || 'Неизвестен';
 
-    const parsedItems = JSON.parse(order.items) as CartItem[];
+    const parsedItems = order.items && (JSON.parse(order.items) as CartItem[]);
 
-    const itemsString = parsedItems
-      .map(
-        (item) =>
-          `📌 <b>${item.card.name}</b> (${item.card.region}) — x${item.quantity}`,
-      )
-      .join('\n');
+    const itemsString = this.buildItemsString(parsedItems);
 
     await this.bot.api.sendMessage(
       adminChatId,
@@ -50,7 +57,7 @@ ${order.type === 'CARD' ? `🛫 <b>Отправить на:</b> ${order.email}` 
       })}
 
 🛍️ <b>Содержимое заказа:</b>
-${order.type === 'CARD' ? itemsString : 'Автоматически выполнено поставщиком'}
+    ${order.type === 'CARD' ? itemsString : 'Автоматически выполнено поставщиком'}
   `,
       { parse_mode: 'HTML' },
     );
