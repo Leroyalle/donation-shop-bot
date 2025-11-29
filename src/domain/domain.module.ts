@@ -4,7 +4,7 @@ import { OrderModule } from './order/order.module';
 import { PaymentModule } from './payment/payment.module';
 import { UserModule } from './user/user.module';
 import { CartItemModule } from './cart-item/cart-item.module';
-import { CardModule } from './card/card.module';
+import { ProductModule } from './product/product.module';
 
 @Module({
   imports: [
@@ -13,7 +13,7 @@ import { CardModule } from './card/card.module';
     PaymentModule,
     UserModule,
     CartItemModule,
-    CardModule,
+    ProductModule,
   ],
   exports: [
     CartModule,
@@ -21,7 +21,7 @@ import { CardModule } from './card/card.module';
     PaymentModule,
     UserModule,
     CartItemModule,
-    CardModule,
+    ProductModule,
   ],
 })
 export class DomainModule {}

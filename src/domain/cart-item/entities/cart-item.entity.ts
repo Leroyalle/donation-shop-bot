@@ -1,4 +1,4 @@
-import { Card } from 'src/domain/card/entities/card.entity';
+import { Product } from 'src/domain/product/entities/product.entity';
 import { Cart } from 'src/domain/cart/entities/cart.entity';
 import {
   Column,
@@ -16,8 +16,8 @@ export class CartItem {
   @Column()
   quantity: number;
 
-  @ManyToOne(() => Card, (card) => card.cartItems)
-  card: Card;
+  @ManyToOne(() => Product, (card) => card.cartItems)
+  card: Product;
 
   @ManyToOne(() => Cart, (cart) => cart.cartItems)
   cart: Cart;

@@ -1,7 +1,7 @@
 import { CallbackQuery, Update } from '@grammyjs/nestjs';
 import { Injectable } from '@nestjs/common';
 import { Context } from 'grammy';
-import { CardService } from 'src/domain/card/card.service';
+import { ProductService } from 'src/domain/product/product.service';
 import { CartService } from 'src/domain/cart/cart.service';
 import { TelegramCoreService } from '../services/telegram-core.service';
 import { TelegramCartService } from '../services/telegram-cart.service';
@@ -11,7 +11,7 @@ import { TelegramCartService } from '../services/telegram-cart.service';
 export class CartUpdate {
   constructor(
     private readonly cartService: CartService,
-    private readonly cardService: CardService,
+    private readonly productService: ProductService,
     private readonly telegramService: TelegramCoreService,
     private readonly telegramCartService: TelegramCartService,
   ) {}
@@ -26,7 +26,7 @@ export class CartUpdate {
       const telegramId = ctx.from?.id;
       if (!telegramId) return;
 
-      const product = await this.cardService.getById(id);
+      const product = await this.productService.getById(id);
       if (!product) return await ctx.reply('Продукт не найден');
 
       const user = await this.telegramService.handleCreateOrFindUser(ctx);

@@ -1,24 +1,32 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Card } from './entities/card.entity';
+import { Product } from './entities/product.entity';
 import { Repository } from 'typeorm';
 import { Region } from './types/region.enum';
+import { ProductType } from './types/product-type.enum';
 
 @Injectable()
-export class CardService {
+export class ProductService {
   constructor(
-    @InjectRepository(Card) private readonly cardRepository: Repository<Card>,
+    @InjectRepository(Product)
+    private readonly cardRepository: Repository<Product>,
   ) {}
   async getAll() {
     return await this.cardRepository.find();
   }
 
-  async getByPage(page: number, take: number = 1, region: Region) {
+  async getByPage(
+    page: number,
+    take: number = 1,
+    type: ProductType,
+    region?: Region,
+  ) {
     return await this.cardRepository.findAndCount({
       skip: page * take,
       take,
       order: { price: 'ASC' },
       where: {
+        type,
         region,
       },
     });

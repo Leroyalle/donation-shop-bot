@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { TelegramCoreUpdate } from './updates/telegram-core.update';
 import { NestjsGrammyModule } from '@grammyjs/nestjs';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { CardModule } from '../../domain/card/card.module';
+import { ProductModule } from '../../domain/product/product.module';
 import { UserModule } from 'src/domain/user/user.module';
 import { CartModule } from 'src/domain/cart/cart.module';
 import { PaymentModule } from 'src/domain/payment/payment.module';
@@ -32,7 +32,7 @@ import { SupportService } from './services/support.service';
         token: configService.get<string>('TELEGRAM_BOT_TOKEN') as string,
       }),
     }),
-    CardModule,
+    ProductModule,
     UserModule,
     OrderModule,
     HttpClientModule,

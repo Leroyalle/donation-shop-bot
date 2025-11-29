@@ -6,6 +6,7 @@ import { InjectBot } from '@grammyjs/nestjs';
 import { conversations, createConversation } from '@grammyjs/conversations';
 import { PaymentConversationService } from './payment-conversation/payment-conversation.service';
 import { UserSource } from 'src/shared/types/user/user-sourse.enum';
+import { ProductType } from 'src/domain/product/types/product-type.enum';
 
 @Injectable()
 export class TelegramCoreService {
@@ -99,6 +100,12 @@ export class TelegramCoreService {
   public async showCategories(ctx: Context) {
     try {
       const keyboards = new InlineKeyboard([
+        [
+          {
+            text: 'Telegram Stars (🆕)',
+            callback_data: `catalog:0:${ProductType.STARS}:${undefined}:false`,
+          },
+        ],
         [{ text: 'Карты пополнения APP STORE', callback_data: 'apple_cards' }],
         [{ text: 'Пополнение Steam', callback_data: 'steam' }],
         [

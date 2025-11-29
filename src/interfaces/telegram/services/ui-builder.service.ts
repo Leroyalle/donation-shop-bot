@@ -1,17 +1,19 @@
 import { Injectable } from '@nestjs/common';
 import { InlineKeyboard } from 'grammy';
-import { Card } from 'src/domain/card/entities/card.entity';
-import { Region } from 'src/domain/card/types/region.enum';
+import { Product } from 'src/domain/product/entities/product.entity';
+import { Region } from 'src/domain/product/types/region.enum';
 import { CartItem } from 'src/domain/cart-item/entities/cart-item.entity';
 import { appleRegionTranslater } from '../constants/apple-regions-translater.constants';
+import { ProductType } from 'src/domain/product/types/product-type.enum';
 
 @Injectable()
 export class UiBuilderService {
   public buildCardCatalogKeyboard(
-    card: Card,
+    card: Product,
     page: number,
     totalItems: number,
-    region: Region,
+    type: ProductType,
+    region?: Region,
     perPage: number = 1,
   ) {
     const message = `<b>${card.name}</b>\n${card.description}`;
@@ -21,12 +23,13 @@ export class UiBuilderService {
     });
 
     const totalPages = Math.ceil(totalItems / perPage);
+    const editable = true;
 
     const navKeyboard: { text: string; callback_data: string }[] = [];
     if (page > 0) {
       navKeyboard.push({
         text: '←',
-        callback_data: `catalog:${page - 1}:${region}:true`,
+        callback_data: `catalog:${page - 1}:${type}:${region}:${editable}`,
       });
     }
     navKeyboard.push({
@@ -36,7 +39,7 @@ export class UiBuilderService {
     if (page < totalPages - 1) {
       navKeyboard.push({
         text: '→',
-        callback_data: `catalog:${page + 1}:${region}:true`,
+        callback_data: `catalog:${page + 1}:${type}:${region}:${editable}`,
       });
     }
     keyboards.row(...navKeyboard);
@@ -84,7 +87,7 @@ export class UiBuilderService {
     Object.values(regions).map((r) => {
       keyboard.row({
         text: appleRegionTranslater[r],
-        callback_data: `catalog:0:${r}:false`,
+        callback_data: `catalog:0:${ProductType.CARD}:${r}:false`,
       });
     });
 

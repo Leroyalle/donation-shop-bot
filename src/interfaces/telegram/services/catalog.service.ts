@@ -1,40 +1,45 @@
 import { Injectable } from '@nestjs/common';
 import { Context } from 'grammy';
-import { CardService } from 'src/domain/card/card.service';
+import { ProductService } from 'src/domain/product/product.service';
 import { UiBuilderService } from './ui-builder.service';
-import { Region } from 'src/domain/card/types/region.enum';
+import { Region } from 'src/domain/product/types/region.enum';
+import { ProductType } from 'src/domain/product/types/product-type.enum';
 
 @Injectable()
 export class CatalogService {
   constructor(
-    private readonly cardService: CardService,
+    private readonly productService: ProductService,
     private readonly uiBuilderService: UiBuilderService,
   ) {}
 
   public async showCatalogPage(
     ctx: Context,
     page: number,
-    region: Region,
+    type: ProductType,
+    region?: Region,
     editable: boolean = true,
   ) {
     try {
+      console.log(typeof editable, editable);
       const telegramId = ctx.from?.id;
       if (!telegramId) return;
       const perPage = 1;
-      const [cards, totalItems] = await this.cardService.getByPage(
+      const [cards, totalItems] = await this.productService.getByPage(
         page,
         perPage,
+        type,
         region,
       );
 
       if (cards.length === 0)
-        return await ctx.reply('Товаров пока нет! Попробуйте позже');
+        return await ctx.reply('😟 Этих товаров пока нет! Попробуйте позже');
 
       const { message, keyboards } =
         this.uiBuilderService.buildCardCatalogKeyboard(
           cards[0],
           page,
           totalItems,
+          type,
           region,
           perPage,
         );
@@ -65,7 +70,7 @@ export class CatalogService {
   }
 
   public async getCardsRegions(ctx: Context) {
-    const regions = this.cardService.getCardsRegions();
+    const regions = this.productService.getCardsRegions();
     const keyboard = this.uiBuilderService.buildCardsRegionsList(regions);
     await ctx.reply('Выберите регион:', { reply_markup: keyboard });
   }

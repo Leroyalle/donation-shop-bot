@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { Cart } from './entities/cart.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { CardService } from 'src/domain/card/card.service';
+import { ProductService } from 'src/domain/product/product.service';
 import { CartItemService } from 'src/domain/cart-item/cart-item.service';
 import { User } from 'src/domain/user/entities/user.entity';
 
@@ -10,12 +10,12 @@ import { User } from 'src/domain/user/entities/user.entity';
 export class CartService {
   constructor(
     @InjectRepository(Cart) private readonly cartRepository: Repository<Cart>,
-    private readonly cardService: CardService,
+    private readonly productService: ProductService,
     private readonly cartItemService: CartItemService,
   ) {}
 
   async addToCart(cardId: string, user: User) {
-    const findCard = await this.cardService.getById(cardId);
+    const findCard = await this.productService.getById(cardId);
 
     if (!findCard) return;
 
