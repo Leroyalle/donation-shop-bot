@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Res } from '@nestjs/common';
+import { Body, Controller, HttpCode, Post, Res } from '@nestjs/common';
 import { PaymentWebhookService } from './services/payment-webhook.service';
 import { ICkassaPaymentWebhookData } from 'src/domain/payment/types/ckassa-payment-status.type';
 import { IPayDigitalWebhookData } from 'src/domain/payment/types/pay-digital-webhook-data.type';
@@ -38,6 +38,7 @@ export class PaymentController {
     );
   }
 
+  @HttpCode(200)
   @Post('intellect-money-payment-status')
   public async intellectMoneyPaymentStatusWebhook(
     @Body() data: IntellectMoneyWebhookDto,

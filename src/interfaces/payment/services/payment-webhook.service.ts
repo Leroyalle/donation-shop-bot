@@ -171,13 +171,15 @@ export class PaymentWebhookService {
       'md5',
     );
 
+    console.log('generatedHash:', hash, 'webhook hash:', data.hash);
+
     const isHashValid = hash === data.hash;
     if (!isHashValid) {
       console.warn(
         '⚠️ [intellectMoneyPaymentStatusWebhook] Неверная подпись вебхука',
         data,
       );
-      return { status: 'OK' };
+      return { status: 'ERROR' };
     }
     const paymentId = data.paymentId.toString();
     const order = await this.orderService.findByPaymentId(paymentId);
@@ -187,7 +189,7 @@ export class PaymentWebhookService {
         '⚠️ [intellectMoneyPaymentStatusWebhook] Заказ или корзина и юзер в нем не найден по paymentId',
         paymentId,
       );
-      return { status: 'OK' };
+      return 'OK';
     }
 
     const isPayed =
@@ -198,7 +200,7 @@ export class PaymentWebhookService {
       console.log(
         `ℹ️ [intellectMoneyWebhook] Статус ${data.paymentStatus} уже обработан, дублирование вебхука`,
       );
-      return { status: 'OK' };
+      return 'OK';
     }
 
     if (data.paymentStatus === PaymentStatus.Paid) {
@@ -207,7 +209,7 @@ export class PaymentWebhookService {
       await this.paymentNotificationsService.notifyUserOrderPaid(order);
       await this.paymentNotificationsService.notifyAdminNewOrder(order);
       console.log('Payment status is paid, after update');
-      return { status: 'OK' };
+      return 'OK';
     }
 
     if (data.paymentStatus === PaymentStatus.Refunded) {
@@ -215,10 +217,10 @@ export class PaymentWebhookService {
         '🔙 [intellectMoneyPaymentStatusWebhook] Сделан возврат paymentId:',
         paymentId,
       );
-      return { status: 'OK' };
+      return 'OK';
     }
 
     console.log('After all BEFORE OK');
-    return { status: 'OK' };
+    return 'OK';
   }
 }
