@@ -38,11 +38,11 @@ export const createIntellectMoneyHash = (
   } = params;
 
   const input = [
-    EshopId, // 1
-    OrderId, // 2
+    EshopId ?? '', // 1
+    OrderId ?? '', // 2
     ServiceName ?? '', // 3
-    RecipientAmount, // 4
-    RecipientCurrency, // 5
+    RecipientAmount ?? '', // 4
+    RecipientCurrency ?? '', // 5
     UserName ?? '', // 6
     Email ?? '', // 7
     SuccessUrl ?? '', // 8
@@ -52,7 +52,7 @@ export const createIntellectMoneyHash = (
     ExpireDate ?? '', // 12
     HoldMode ?? '', // 13
     Preference ?? '', // 14
-    SignSecretKey, // 15
+    SignSecretKey ?? '', // 15
   ].join('::');
 
   console.log('Length:', input.split('::').length);

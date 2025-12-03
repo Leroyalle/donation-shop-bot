@@ -167,13 +167,6 @@ export class PaymentWebhookService {
         SignSecretKey: this.configService.getOrThrow<string>(
           'INTELLECT_MONEY_SECRET_KEY',
         ),
-        // ServiceName: data.ServiceName,
-        // SuccessUrl: data.SuccessUrl,
-        // ResultUrl: data.ResultUrl,
-        // Preference: data.Preference,
-        // HoldMode: data.HoldMode,
-        // ExpireDate: data.ExpireDate,
-        // BackUrl: data.BackUrl,
       },
       'md5',
     );
@@ -209,9 +202,11 @@ export class PaymentWebhookService {
     }
 
     if (data.paymentStatus === PaymentStatus.Paid) {
+      console.log('Payment status is paid, before update');
       await this.clearCartAndOrderUpdate(order);
       await this.paymentNotificationsService.notifyUserOrderPaid(order);
       await this.paymentNotificationsService.notifyAdminNewOrder(order);
+      console.log('Payment status is paid, after update');
       return { status: 'OK' };
     }
 
@@ -222,6 +217,8 @@ export class PaymentWebhookService {
       );
       return { status: 'OK' };
     }
+
+    console.log('After all BEFORE OK');
     return { status: 'OK' };
   }
 }
