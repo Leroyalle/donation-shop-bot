@@ -159,11 +159,11 @@ export class PaymentWebhookService {
   ) {
     const hash = createIntellectMoneyHash(
       {
-        Email: data.UserEmail,
-        EshopId: data.EshopId,
-        OrderId: data.OrderId,
-        RecipientAmount: String(data.RecipientAmount),
-        RecipientCurrency: data.RecipientCurrency,
+        Email: data.userEmail,
+        EshopId: data.eshopId,
+        OrderId: data.orderId,
+        RecipientAmount: String(data.recipientAmount),
+        RecipientCurrency: data.recipientCurrency,
         SignSecretKey: this.configService.getOrThrow<string>(
           'INTELLECT_MONEY_SECRET_KEY',
         ),
@@ -178,18 +178,15 @@ export class PaymentWebhookService {
       'md5',
     );
 
-    const isHashValid = hash === data.Hash;
+    const isHashValid = hash === data.hash;
     if (!isHashValid) {
       console.warn(
         '⚠️ [intellectMoneyPaymentStatusWebhook] Неверная подпись вебхука',
         data,
       );
-      throw new HttpException(
-        { status: 'invalid_signature' },
-        HttpStatus.FORBIDDEN,
-      );
+      return { status: 'OK' };
     }
-    const paymentId = data.PaymentId.toString();
+    const paymentId = data.paymentId.toString();
     const order = await this.orderService.findByPaymentId(paymentId);
 
     if (!order || !order.cart || !order.user.id) {
@@ -197,31 +194,28 @@ export class PaymentWebhookService {
         '⚠️ [intellectMoneyPaymentStatusWebhook] Заказ или корзина и юзер в нем не найден по paymentId',
         paymentId,
       );
-      throw new HttpException(
-        { status: 'order_not_found' },
-        HttpStatus.NOT_FOUND,
-      );
+      return { status: 'OK' };
     }
 
     const isPayed =
-      order.status === 'CONFIRMED' && data.PaymentStatus === PaymentStatus.Paid;
+      order.status === 'CONFIRMED' && data.paymentStatus === PaymentStatus.Paid;
     // const isRefunded =
     //   order.status === 'REJECTED' && data.PaymentStatus === 'REFUNDED';
     if (isPayed) {
       console.log(
-        `ℹ️ [intellectMoneyWebhook] Статус ${data.PaymentStatus} уже обработан, дублирование вебхука`,
+        `ℹ️ [intellectMoneyWebhook] Статус ${data.paymentStatus} уже обработан, дублирование вебхука`,
       );
-      return { status: 'duplicate' };
+      return { status: 'OK' };
     }
 
-    if (data.PaymentStatus === PaymentStatus.Paid) {
+    if (data.paymentStatus === PaymentStatus.Paid) {
       await this.clearCartAndOrderUpdate(order);
       await this.paymentNotificationsService.notifyUserOrderPaid(order);
       await this.paymentNotificationsService.notifyAdminNewOrder(order);
       return { status: 'OK' };
     }
 
-    if (data.PaymentStatus === PaymentStatus.Refunded) {
+    if (data.paymentStatus === PaymentStatus.Refunded) {
       console.log(
         '🔙 [intellectMoneyPaymentStatusWebhook] Сделан возврат paymentId:',
         paymentId,
