@@ -14,6 +14,7 @@ import {
   PaymentStatus,
 } from '../dto/intellect-money-payment-webhook.dto';
 import { createIntellectMoneyHash } from 'src/domain/payment/lib/create-intellect-money-hash.lib';
+import { createIntellectMoneyWebhookHash } from '../lib/create-intellect-money-webhook-hash';
 
 @Injectable()
 export class PaymentWebhookService {
@@ -157,14 +158,19 @@ export class PaymentWebhookService {
   public async intellectMoneyPaymentStatusWebhook(
     data: IntellectMoneyWebhookDto,
   ) {
-    const hash = createIntellectMoneyHash(
+    const hash = createIntellectMoneyWebhookHash(
       {
-        Email: data.userEmail,
         EshopId: data.eshopId,
         OrderId: data.orderId,
-        RecipientAmount: String(data.recipientAmount),
+        ServiceName: data.serviceName,
+        EshopAccount: data.eshopAccount,
+        RecipientAmount: data.recipientAmount,
         RecipientCurrency: data.recipientCurrency,
-        SignSecretKey: this.configService.getOrThrow<string>(
+        PaymentStatus: data.paymentStatus,
+        UserName: data.userName,
+        UserEmail: data.userEmail,
+        PaymentData: data.paymentData,
+        SecretKey: this.configService.getOrThrow<string>(
           'INTELLECT_MONEY_SECRET_KEY',
         ),
       },
@@ -179,7 +185,7 @@ export class PaymentWebhookService {
         '⚠️ [intellectMoneyPaymentStatusWebhook] Неверная подпись вебхука',
         data,
       );
-      return { status: 'ERROR' };
+      return 'OK';
     }
     const paymentId = data.paymentId.toString();
     const order = await this.orderService.findByPaymentId(paymentId);
