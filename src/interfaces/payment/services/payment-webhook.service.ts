@@ -161,18 +161,18 @@ export class PaymentWebhookService {
     const hash = createIntellectMoneyWebhookHash({
       EshopId: String(data.eshopId),
       OrderId: data.orderId,
-      ServiceName: data.serviceName ?? '',
+      ServiceName: data.serviceName,
       EshopAccount: String(data.eshopAccount),
-      RecipientAmount: Number(data.recipientAmount).toFixed(2), // <- важно
+      RecipientAmount: Number(data.recipientAmount).toFixed(2),
       RecipientCurrency: data.recipientCurrency,
       PaymentStatus: String(data.paymentStatus),
-      UserName: data.userName ?? '',
-      UserEmail: data.userEmail ?? '',
+      UserName: data.userName,
+      UserEmail: data.userEmail,
       PaymentData: data.paymentData,
-      SecretKey: data.secretKey!, // тот, что сервер прислал
+      SecretKey: this.configService.getOrThrow<string>(
+        'INTELLECT_MONEY_SECRET_KEY',
+      ),
     });
-
-    console.log('generatedHash:', hash, 'webhook hash:', data.hash);
 
     const isHashValid = hash === data.hash;
     if (!isHashValid) {
@@ -185,7 +185,7 @@ export class PaymentWebhookService {
     const paymentId = data.paymentId.toString();
     const order = await this.orderService.findByPaymentId(paymentId);
 
-    if (!order || !order.cart || !order.user.id) {
+    if (!order || !order.user.id) {
       console.warn(
         '⚠️ [intellectMoneyPaymentStatusWebhook] Заказ или корзина и юзер в нем не найден по paymentId',
         paymentId,
