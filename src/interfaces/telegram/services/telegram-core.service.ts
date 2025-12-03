@@ -7,6 +7,7 @@ import { conversations, createConversation } from '@grammyjs/conversations';
 import { PaymentConversationService } from './payment-conversation/payment-conversation.service';
 import { UserSource } from 'src/shared/types/user/user-sourse.enum';
 import { ProductType } from 'src/domain/product/types/product-type.enum';
+import { KeysPaymentConversationsService } from './payment-conversation/keys-payment-conversations.service';
 
 @Injectable()
 export class TelegramCoreService {
@@ -14,6 +15,7 @@ export class TelegramCoreService {
     private readonly userService: UserService,
     private readonly paymentConversationService: PaymentConversationService,
     @InjectBot() private readonly bot: Bot<Context>,
+    private readonly keysPaymentConversationsService: KeysPaymentConversationsService,
   ) {
     this.bot.use(session({ initial: () => ({}) }));
 
@@ -37,6 +39,18 @@ export class TelegramCoreService {
       createConversation(
         this.paymentConversationService.cartCheckoutConversation,
         'cart-checkout',
+      ),
+    );
+    this.bot.use(
+      createConversation(
+        this.keysPaymentConversationsService.buyKeyConversation,
+        'buy_key',
+      ),
+    );
+    this.bot.use(
+      createConversation(
+        this.keysPaymentConversationsService.extendKeyConversation,
+        'extend_key',
       ),
     );
   }
@@ -102,8 +116,14 @@ export class TelegramCoreService {
       const keyboards = new InlineKeyboard([
         [
           {
-            text: 'Telegram Stars (🆕)',
+            text: 'Telegram Stars 🆕',
             callback_data: `catalog:0:${ProductType.STARS}:${undefined}:false`,
+          },
+        ],
+        [
+          {
+            text: 'Ключи 🆕',
+            callback_data: `keys`,
           },
         ],
         [{ text: 'Карты пополнения APP STORE', callback_data: 'apple_cards' }],

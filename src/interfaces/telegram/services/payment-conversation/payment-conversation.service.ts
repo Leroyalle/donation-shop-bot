@@ -20,6 +20,10 @@ import { getOptionText } from './lib/get-option-text';
 import { additionalTypeTranslater } from './constants/additiomal-type-translater';
 import { TProductType } from 'src/shared/types/product-type.type';
 import { ConfigService } from '@nestjs/config';
+import { ConversationHelpersService } from './conversation-helpers.service';
+import { validateEmail } from './lib/validate-email.lib';
+import { Cart } from 'src/domain/cart/entities/cart.entity';
+import { ProductType } from 'src/domain/product/types/product-type.enum';
 
 @Injectable()
 export class PaymentConversationService {
@@ -28,21 +32,40 @@ export class PaymentConversationService {
     private readonly orderService: OrderService,
     private readonly httpClientService: HttpClientService,
     private readonly configService: ConfigService,
+    private readonly conversationHelpersService: ConversationHelpersService,
   ) {}
 
   public cartCheckoutConversation = async (
     conversation: Conversation,
     ctx: Context,
-    { user }: { user: User },
+    { user, cart }: { user: User; cart: Cart },
   ) => {
     try {
-      await ctx.reply(
-        '‼️ Вы можете прервать диалог в любой момент, отправив /cancel.',
-      );
-      await ctx.reply('Введите email, на который отправить ссылку:');
-      const email = await this.waitForText(conversation);
-      if (!email) return await ctx.reply('Попробуйте ещё раз');
-      await this.paymentService.paymentHandler(ctx, user, email);
+      await this.conversationHelpersService.cancelNotification(ctx);
+      await ctx.reply('Введите вашу электронную почту:');
+      const email =
+        await this.conversationHelpersService.waitForText(conversation);
+
+      if (!validateEmail(email)) {
+        await ctx.reply('❌ Некорректный e-mail. Попробуйте ещё раз.');
+        return;
+      }
+
+      let tgUsername: string | undefined;
+      if (cart.cartItems.some((item) => item.card.type === ProductType.STARS)) {
+        await ctx.reply(
+          'Введите телеграм Username (@) на который отправить звезды:',
+        );
+        tgUsername =
+          await this.conversationHelpersService.waitForText(conversation);
+        tgUsername.replace(/^@/, '').trim();
+        if (tgUsername.length > 20 || tgUsername.length < 3) {
+          await ctx.reply('❌ Никнейм должен быть от 3 до 20 символов.');
+          return;
+        }
+      }
+
+      await this.paymentService.paymentHandler(ctx, user, email, tgUsername);
     } catch (error) {
       console.log('[CART_CHECKOUT_CONV]', error);
       if (error.message === 'Conversation cancelled') return;
@@ -56,30 +79,41 @@ export class PaymentConversationService {
     { user }: { user: User },
   ) => {
     try {
-      await ctx.reply(
-        '‼️ Вы можете прервать диалог в любой момент, отправив /cancel.',
-      );
+      await this.conversationHelpersService.cancelNotification(ctx);
 
       while (true) {
         await ctx.reply('Напишите имя вашего аккаунта STEAM:');
 
-        const nickname = await this.waitForText(conversation);
+        const nickname =
+          await this.conversationHelpersService.waitForText(conversation);
+
+        if (nickname.length > 20 || nickname.length <= 1) {
+          await ctx.reply('❌ Никнейм должен быть от 2 до 20 символов.');
+          continue;
+        }
 
         await ctx.reply('Повторите введённое ранее имя:');
-        const repeatNick = await this.waitForText(conversation);
+        const repeatNick =
+          await this.conversationHelpersService.waitForText(conversation);
 
         if (!nickname || !repeatNick || nickname !== repeatNick) {
-          await ctx.reply('Никнеймы не совпадают, попробуем ещё раз.');
+          await ctx.reply('❌ Никнеймы не совпадают, попробуем ещё раз.');
           continue;
         }
 
         await ctx.reply('Введите сумму пополнения в рублях:');
-        const amount = await this.waitForText(conversation);
+        const amount =
+          await this.conversationHelpersService.waitForText(conversation);
         const parsedAmount = parseInt(amount || '', 10);
 
-        if (!amount || isNaN(parsedAmount) || parsedAmount <= 0) {
+        if (
+          !amount ||
+          isNaN(parsedAmount) ||
+          parsedAmount <= 4 ||
+          parsedAmount > 100000
+        ) {
           await ctx.reply(
-            '❌ Введите корректное число больше 0. Диалог перезапускается.',
+            '❌ Число должно быть больше 4 и меньше 100000. Диалог перезапускается.',
           );
           continue;
         }
@@ -97,7 +131,8 @@ export class PaymentConversationService {
           },
         );
 
-        const confirm = await this.waitForText(conversation);
+        const confirm =
+          await this.conversationHelpersService.waitForText(conversation);
 
         if (confirm !== 'Да') {
           await ctx.reply('❌ Диалог отменён.');
@@ -171,18 +206,6 @@ export class PaymentConversationService {
     }
   };
 
-  private async waitForText(conversation: Conversation) {
-    const msgCtx = await conversation.waitFor('message:text');
-    const text = msgCtx.message.text.trim();
-
-    if (text?.toLowerCase() === '/cancel' || text?.toLowerCase() === 'отмена') {
-      await msgCtx.reply('❌ Диалог отменён.');
-      throw new Error('Conversation cancelled');
-    }
-
-    return text;
-  }
-
   public buyAdditionalTopupConversation = async (
     conversation: Conversation,
     ctx: Context,
@@ -205,15 +228,14 @@ export class PaymentConversationService {
           .oneTime();
       });
 
-      await ctx.reply(
-        '‼️ Вы можете прервать диалог в любой момент, отправив /cancel.',
-      );
+      await this.conversationHelpersService.cancelNotification(ctx);
 
       await ctx.reply('Выберите тип товара:', {
         reply_markup: donateTypeKeyboard.resized().oneTime(),
       });
 
-      const typeAnswer = await this.waitForText(conversation);
+      const typeAnswer =
+        await this.conversationHelpersService.waitForText(conversation);
 
       let groupFields: Field[] | undefined;
       let groupType: TProductType | undefined;
@@ -259,7 +281,8 @@ export class PaymentConversationService {
         reply_markup: productKeyboard,
       });
 
-      const articleAnswer = await this.waitForText(conversation);
+      const articleAnswer =
+        await this.conversationHelpersService.waitForText(conversation);
 
       const selectedProduct = goods.options.find(
         (o) =>
@@ -278,7 +301,8 @@ export class PaymentConversationService {
         if (f.name === 'product_id') continue;
         if (!f.options) {
           await ctx.reply('Введите ' + f.label + ':');
-          dataResult[f.name] = await this.waitForText(conversation);
+          dataResult[f.name] =
+            await this.conversationHelpersService.waitForText(conversation);
           continue;
         } else {
           const keyboard = new Keyboard();
@@ -291,7 +315,8 @@ export class PaymentConversationService {
             reply_markup: keyboard,
           });
 
-          const answer = await this.waitForText(conversation);
+          const answer =
+            await this.conversationHelpersService.waitForText(conversation);
           const selectedOption = f.options.find((o) => {
             const text = getOptionText(o);
             return text === answer;
@@ -318,7 +343,8 @@ export class PaymentConversationService {
           .oneTime(),
       });
 
-      const confirmText = await this.waitForText(conversation);
+      const confirmText =
+        await this.conversationHelpersService.waitForText(conversation);
       if (confirmText.toLowerCase() !== 'да') {
         return await ctx.reply('❌ Диалог отменён.');
         // session.topupData = null;

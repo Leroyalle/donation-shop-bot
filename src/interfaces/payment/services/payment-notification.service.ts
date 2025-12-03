@@ -4,6 +4,7 @@ import { Bot, Context } from 'grammy';
 import { ConfigService } from '@nestjs/config';
 import { Order } from 'src/domain/order/entities/order.entity';
 import { CartItem } from 'src/domain/cart-item/entities/cart-item.entity';
+import { OrderType } from 'src/domain/order/types/order-type.type';
 
 @Injectable()
 export class PaymentNotificationsService {
@@ -39,9 +40,26 @@ export class PaymentNotificationsService {
         : `@${username}`
       : name || 'Неизвестен';
 
-    const parsedItems = order.items && (JSON.parse(order.items) as CartItem[]);
+    const parsedItems = JSON.parse(order.items);
 
-    const itemsString = this.buildItemsString(parsedItems);
+    let filling = '';
+
+    switch (order.type) {
+      case 'STARS':
+      case 'CARD': {
+        filling = this.buildItemsString(parsedItems as CartItem[]);
+        break;
+      }
+      case 'BUY_KEY':
+      case 'EXTEND_KEY': {
+        filling = order.items;
+        break;
+      }
+
+      default:
+        filling = 'Автоматически выполнено поставщиком';
+        break;
+    }
 
     await this.bot.api.sendMessage(
       adminChatId,
@@ -51,13 +69,16 @@ export class PaymentNotificationsService {
 👤 <b>Покупатель:</b> ${displayUser}
 💰 <b>Сумма:</b> ${order.type === 'CARD' ? order.amount / 100 : order.amount} ₽
 📋 <b>Тип:</b> ${order.type}
-${order.type === 'CARD' ? `🛫 <b>Отправить на:</b> ${order.email}` : ''}
+${
+  order.type === 'CARD' || order.type === 'STARS'
+    ? `🛫 <b>Отправить на:</b> email: ${order.email}${order.tgUsername ? `, tgUsername: ${order.tgUsername}` : ''}`
+    : ''
+}
 🕒 <b>Дата:</b> ${new Date(order.createdAt).toLocaleString('ru-RU', {
         timeZone: 'Europe/Moscow',
       })}
-
 🛍️ <b>Содержимое заказа:</b>
-    ${order.type === 'CARD' ? itemsString : 'Автоматически выполнено поставщиком'}
+    ${filling}
   `,
       { parse_mode: 'HTML' },
     );
@@ -66,26 +87,35 @@ ${order.type === 'CARD' ? `🛫 <b>Отправить на:</b> ${order.email}` 
   public async notifyUserOrderPaid(order: Order) {
     if (!order.user?.telegramId) return;
 
-    const notificationManager: Record<string, string> = {
+    const notificationManager: Record<OrderType, string> = {
       CARD: `✅ <b>Платеж успешно выполнен!</b>
-
 🧾 Заказ <b>#${order.id}</b>
 💳 Сумма: <b>${order.amount / 100} ₽</b>
 ⏳ <i>Данные будут отправлены на вашу почту в течение 20 минут.</i>`,
 
       TOPUP: `✅ <b>Оплата прошла успешно!</b>
-
 🧾 Заказ <b>#${order.id}</b>
 💰 Пополнение аккаунта будет выполнено в ближайшее время!`,
 
       VOUCHER: `✅ <b>Оплата прошла успешно!</b>
-
 🧾 Заказ <b>#${order.id}</b>
 💰 Ссылка будет отправлена на вашу почту в ближайшее время! Не забудьте проверить папку СПАМ ❗`,
 
       STEAM: `✅ <b>Оплата прошла успешно!</b>
 🧾 Заказ <b>#${order.id}</b>
 🎮 Пополнение Steam-аккаунта будет выполнено в ближайшее время.`,
+
+      BUY_KEY: `✅ <b>Оплата прошла успешно!</b>
+🧾 Заказ <b>#${order.id}</b>
+🗝️ Ключ будет выслан на вашу электронную почту в ближайшее время!.`,
+
+      EXTEND_KEY: `✅ <b>Оплата прошла успешно!</b>
+🧾 Заказ <b>#${order.id}</b>
+🗝️ Ключ будет продлен в ближайшее время! Спасибо что выбираете нас!`,
+
+      STARS: `✅ <b>Оплата прошла успешно!</b>
+🧾 Заказ <b>#${order.id}</b>
+⭐ Ваш аккаунт будет пополнен в ближайшее время!`,
     };
 
     await this.bot.api.sendMessage(

@@ -99,7 +99,9 @@ export class CartUpdate {
     await ctx.answerCallbackQuery();
     const user = await this.telegramService.handleCreateOrFindUser(ctx);
     if (!user) return;
-    await ctx.conversation.enter('cart-checkout', { user });
+    const cart = await this.cartService.getUserCart(user.id);
+
+    await ctx.conversation.enter('cart-checkout', { user, cart });
     // ctx.session.cardEmail
   }
 }
