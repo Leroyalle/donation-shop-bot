@@ -1,82 +1,82 @@
 export class IntellectMoneyWebhookDto {
   /** Номер магазина */
   // @IsNumber()
-  EshopId: number; // INT, required
+  eshopId: number; // INT, required
 
   /** Номер СКО (3xxxxxxxxx) */
   // @IsString()
-  PaymentId: number; // LONG, required
+  paymentId: number; // LONG, required
 
   /** Внутренний номер покупки */
   // @IsString()
-  OrderId: string; // STRING, required, max 50
+  orderId: string; // STRING, required, max 50
 
   /** Номер счёта магазина */
   // @IsString()
-  EshopAccount: number; // LONG, required
+  eshopAccount: number; // LONG, required
 
   /** Назначение платежа (описание товара/услуги) */
-  ServiceName?: string; // STRING, optional, max 1024
+  serviceName?: string; // STRING, optional, max 1024
 
   /** Исходная сумма платежа */
-  RecipientOriginalAmount: number; // DECIMAL, required
+  recipientOriginalAmount: number; // DECIMAL, required
 
   /** Сумма платежа */
-  RecipientAmount: number; // DECIMAL, required
+  recipientAmount: number; // DECIMAL, required
 
   /** Сумма возврата */
-  RefundAmount?: number; // DECIMAL, optional
+  refundAmount?: number; // DECIMAL, optional
 
   /** Валюта платежа */
-  RecipientCurrency: RecipientCurrency; // STRING, required
+  recipientCurrency: RecipientCurrency; // STRING, required
 
   /** Статус платежа */
-  PaymentStatus: PaymentStatus; // INT, required
+  paymentStatus: PaymentStatus; // INT, required
 
   /** Имя покупателя */
-  UserName?: string; // STRING, optional, max 255
+  userName?: string; // STRING, optional, max 255
 
   /** Email покупателя */
-  UserEmail: string; // STRING, required
+  userEmail: string; // STRING, required
 
   /** Дата последнего события (yyyy-MM-dd HH:mm:ss) */
-  PaymentData: string; // STRING, required
+  paymentData: string; // STRING, required
 
   /** Способ оплаты */
-  PayMethod?: PayMethod; // STRING, optional
+  payMethod?: PayMethod; // STRING, optional
 
   /** Короткий PAN */
-  ShortPan?: string; // STRING, optional, max 22
+  shortPan?: string; // STRING, optional, max 22
 
   /** Страна карты (ISO 3166-1 alpha-3) */
-  Country?: string; // STRING, optional, max 3
+  country?: string; // STRING, optional, max 3
 
   /** Банк-эмитент */
-  Bank?: string; // STRING, optional, max 100
+  bank?: string; // STRING, optional, max 100
 
   /** IPv4 адрес пользователя */
-  IpAddress?: string; // STRING, optional, max 15
+  ipAddress?: string; // STRING, optional, max 15
 
   /** Секретный ключ (если передаётся) */
-  SecretKey?: string; // STRING, optional
+  secretKey?: string; // STRING, optional
 
   /** Название шлюза */
-  GatewayName?: string; // STRING, optional, max 50
+  gatewayName?: string; // STRING, optional, max 50
 
   /**
    * Статус операции по расписанию (recurring)
    * Передаётся только для операций по расписанию
    */
-  RecurringState?: RecurringState; // STRING, conditional
+  recurringState?: RecurringState; // STRING, conditional
 
   /**
    * Исходный СКО
    * Передаётся только для операций по расписанию
    */
-  SourceInvoiceId?: number; // LONG, conditional
+  sourceInvoiceId?: number; // LONG, conditional
 
   /** Контрольная подпись */
-  Hash: string; // STRING, required
+  hash: string; // STRING, required
 }
 
 /* =========================
