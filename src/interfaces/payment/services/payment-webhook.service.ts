@@ -158,24 +158,19 @@ export class PaymentWebhookService {
   public async intellectMoneyPaymentStatusWebhook(
     data: IntellectMoneyWebhookDto,
   ) {
-    const hash = createIntellectMoneyWebhookHash(
-      {
-        EshopId: data.eshopId,
-        OrderId: data.orderId,
-        ServiceName: data.serviceName,
-        EshopAccount: data.eshopAccount,
-        RecipientAmount: data.recipientAmount,
-        RecipientCurrency: data.recipientCurrency,
-        PaymentStatus: data.paymentStatus,
-        UserName: data.userName,
-        UserEmail: data.userEmail,
-        PaymentData: data.paymentData,
-        SecretKey: this.configService.getOrThrow<string>(
-          'INTELLECT_MONEY_SECRET_KEY',
-        ),
-      },
-      'md5',
-    );
+    const hash = createIntellectMoneyWebhookHash({
+      EshopId: String(data.eshopId),
+      OrderId: data.orderId,
+      ServiceName: data.serviceName ?? '',
+      EshopAccount: String(data.eshopAccount),
+      RecipientAmount: Number(data.recipientAmount).toFixed(2), // <- важно
+      RecipientCurrency: data.recipientCurrency,
+      PaymentStatus: String(data.paymentStatus),
+      UserName: data.userName ?? '',
+      UserEmail: data.userEmail ?? '',
+      PaymentData: data.paymentData,
+      SecretKey: data.secretKey!, // тот, что сервер прислал
+    });
 
     console.log('generatedHash:', hash, 'webhook hash:', data.hash);
 
