@@ -1,4 +1,4 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { OrderService } from 'src/domain/order/order.service';
 import { CartService } from 'src/domain/cart/cart.service';
 import { CartItemService } from 'src/domain/cart-item/cart-item.service';
@@ -156,7 +156,6 @@ export class PaymentWebhookService {
 
   public async intellectMoneyPaymentStatusWebhook(
     data: IntellectMoneyWebhookDto,
-    res: Response,
   ) {
     const hash = createIntellectMoneyHash(
       {
@@ -185,9 +184,10 @@ export class PaymentWebhookService {
         '⚠️ [intellectMoneyPaymentStatusWebhook] Неверная подпись вебхука',
         data,
       );
-      return res
-        .status(HttpStatus.FORBIDDEN)
-        .json({ status: 'invalid_signature' });
+      throw new HttpException(
+        { status: 'invalid_signature' },
+        HttpStatus.FORBIDDEN,
+      );
     }
     const paymentId = data.PaymentId.toString();
     const order = await this.orderService.findByPaymentId(paymentId);
@@ -197,9 +197,10 @@ export class PaymentWebhookService {
         '⚠️ [intellectMoneyPaymentStatusWebhook] Заказ или корзина и юзер в нем не найден по paymentId',
         paymentId,
       );
-      return res
-        .status(HttpStatus.NOT_FOUND)
-        .json({ status: 'order_not_found' });
+      throw new HttpException(
+        { status: 'order_not_found' },
+        HttpStatus.NOT_FOUND,
+      );
     }
 
     const isPayed =
@@ -210,14 +211,14 @@ export class PaymentWebhookService {
       console.log(
         `ℹ️ [intellectMoneyWebhook] Статус ${data.PaymentStatus} уже обработан, дублирование вебхука`,
       );
-      return res.status(HttpStatus.OK).json({ status: 'duplicate' });
+      return { status: 'duplicate' };
     }
 
     if (data.PaymentStatus === PaymentStatus.Paid) {
       await this.clearCartAndOrderUpdate(order);
       await this.paymentNotificationsService.notifyUserOrderPaid(order);
       await this.paymentNotificationsService.notifyAdminNewOrder(order);
-      return res.status(HttpStatus.OK).json({ status: 'OK' });
+      return { status: 'OK' };
     }
 
     if (data.PaymentStatus === PaymentStatus.Refunded) {
@@ -225,7 +226,8 @@ export class PaymentWebhookService {
         '🔙 [intellectMoneyPaymentStatusWebhook] Сделан возврат paymentId:',
         paymentId,
       );
-      return res.status(HttpStatus.OK).json({ status: 'OK' });
+      return { status: 'OK' };
     }
+    return { status: 'OK' };
   }
 }
