@@ -46,5 +46,8 @@ export const createIntellectMoneyWebhookHash = (
     SecretKey ?? '',
   ].join('::');
 
+  console.log('input: ', input);
+  console.log('params:', params);
+
   return createHash(algo).update(input, 'utf8').digest('hex');
 };
