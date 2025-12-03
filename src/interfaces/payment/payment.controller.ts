@@ -41,12 +41,10 @@ export class PaymentController {
   @Post('intellect-money-payment-status')
   public async intellectMoneyPaymentStatusWebhook(
     @Body() data: IntellectMoneyWebhookDto,
-    @Res({ passthrough: true }) res: Response,
   ) {
     console.log('INTELLECT_MONEY_WEBHOOK', data);
     return await this.paymentWebhookService.intellectMoneyPaymentStatusWebhook(
       data,
-      res,
     );
   }
 
