@@ -16,13 +16,12 @@ export class CatalogUpdate {
 
   @CallbackQuery(/^catalog:/)
   public async getCatalog(ctx: Context) {
+    await ctx.answerCallbackQuery();
     const data = ctx.callbackQuery?.data;
     if (!data) return;
     const [_, strPage, type, region, editable] = data.split(':');
     const page = Number(strPage);
-    console.log(strPage, type, region, editable);
     if (isNaN(page)) return;
-    await ctx.answerCallbackQuery();
     const isEditable = editable === 'true';
 
     const reg = (!region || region === 'undefined' ? undefined : region) as

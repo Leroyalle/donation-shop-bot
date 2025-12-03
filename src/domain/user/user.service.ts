@@ -23,6 +23,11 @@ export class UserService {
       where: {
         telegramId,
       },
+      select: {
+        cart: {
+          cartItems: true,
+        },
+      },
     });
   }
 

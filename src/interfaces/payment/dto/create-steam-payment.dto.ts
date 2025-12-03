@@ -1,4 +1,4 @@
-import { IsString, IsEmail, IsNumber, Min } from 'class-validator';
+import { IsString, IsEmail, IsNumber, Min, Max } from 'class-validator';
 
 export class CreateSteamPaymentDto {
   @IsString()
@@ -14,6 +14,7 @@ export class CreateSteamPaymentDto {
   email: string;
 
   @IsNumber()
-  @Min(1)
+  @Min(5, { message: 'Amount must be between 5 and 100000' })
+  @Max(100000, { message: 'Amount must be between 5 and 100000' })
   amount: number;
 }

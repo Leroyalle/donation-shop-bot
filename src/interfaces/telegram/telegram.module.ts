@@ -21,6 +21,10 @@ import { PaymentConversationService } from './services/payment-conversation/paym
 import { OrderModule } from 'src/domain/order/order.module';
 import { SupportUpdate } from './updates/support.update';
 import { SupportService } from './services/support.service';
+import { KeysUpdate } from './updates/keys.update';
+import { KeysPaymentConversationsService } from './services/payment-conversation/keys-payment-conversations.service';
+import { ConversationHelpersService } from './services/payment-conversation/conversation-helpers.service';
+import { KeysService } from './services/keys.service';
 
 @Module({
   imports: [
@@ -63,6 +67,10 @@ import { SupportService } from './services/support.service';
     TelegramCartService,
     AdditionalProductsService,
     CatalogService,
+    KeysUpdate,
+    KeysService,
+    KeysPaymentConversationsService,
+    ConversationHelpersService,
   ],
 })
 export class TelegramModule {}

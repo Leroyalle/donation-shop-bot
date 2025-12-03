@@ -31,16 +31,19 @@ export class Product {
 
   @BeforeInsert()
   @BeforeUpdate()
-  validateStarRegion() {
+  validate() {
     if (this.type === ProductType.STARS && this.region) {
       throw new BadRequestException('STAR products cannot have region');
+    }
+    if (this.type !== ProductType.CARD && this.region) {
+      throw new BadRequestException('Only CARD products can have region');
     }
   }
 
   @Column({ type: 'enum', enum: ProductType })
   type: ProductType;
 
-  @Column({ type: 'integer', nullable: true })
+  @Column({ type: 'integer', nullable: true, default: 1 })
   quantity?: number;
 
   @Column()

@@ -9,10 +9,11 @@ import { ProductType } from './types/product-type.enum';
 export class ProductService {
   constructor(
     @InjectRepository(Product)
-    private readonly cardRepository: Repository<Product>,
+    private readonly productRepository: Repository<Product>,
   ) {}
+
   async getAll() {
-    return await this.cardRepository.find();
+    return await this.productRepository.find();
   }
 
   async getByPage(
@@ -21,7 +22,7 @@ export class ProductService {
     type: ProductType,
     region?: Region,
   ) {
-    return await this.cardRepository.findAndCount({
+    return await this.productRepository.findAndCount({
       skip: page * take,
       take,
       order: { price: 'ASC' },
@@ -33,7 +34,15 @@ export class ProductService {
   }
 
   async getById(id: string) {
-    return await this.cardRepository.findOne({ where: { id } });
+    return await this.productRepository.findOne({ where: { id } });
+  }
+
+  async getByIdAndType(id: string, type: ProductType) {
+    return await this.productRepository.findOne({ where: { id, type } });
+  }
+
+  async getFirstByType(type: ProductType) {
+    return await this.productRepository.findOne({ where: { type } });
   }
 
   public getCardsRegions() {

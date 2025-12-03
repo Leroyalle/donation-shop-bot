@@ -9,6 +9,11 @@ import { PaymentNotificationsService } from './payment-notification.service';
 import { Response } from 'express';
 import { ConfigService } from '@nestjs/config';
 import { createHash } from '../lib/create-hash';
+import {
+  IntellectMoneyWebhookDto,
+  PaymentStatus,
+} from '../dto/intellect-money-payment-webhook.dto';
+import { createIntellectMoneyHash } from 'src/domain/payment/lib/create-intellect-money-hash.lib';
 
 @Injectable()
 export class PaymentWebhookService {
@@ -53,16 +58,15 @@ export class PaymentWebhookService {
           .json({ status: 'order_not_found' });
       }
 
-      const cartItems = await this.cartItemService.findAllByCart(order.cart.id);
+      // const cartItems = await this.cartItemService.findAllByCart(order.cart.id);
 
-      if (cartItems.length === 0) {
-        console.warn('⚠️ Пустая корзина у заказа', order.id);
-        return res.status(HttpStatus.OK).json({ status: 'empty_cart' });
-      }
-
-      await this.resolveCkassaWebhook(order, data.state);
+      // if (cartItems.length === 0) {
+      //   console.warn('⚠️ Пустая корзина у заказа', order.id);
+      //   return res.status(HttpStatus.OK).json({ status: 'empty_cart' });
+      // }
 
       if (data.state === 'PAYED') {
+        await this.clearCartAndOrderUpdate(order);
         await this.paymentNotificationsService.notifyUserOrderPaid(order);
         await this.paymentNotificationsService.notifyAdminNewOrder(order);
         return res.status(HttpStatus.OK).json({ status: 'ok' });
@@ -75,20 +79,16 @@ export class PaymentWebhookService {
     }
   }
 
-  async resolveCkassaWebhook(
-    order: Order,
-    state: ICkassaPaymentWebhookData['state'],
-  ) {
+  async clearCartAndOrderUpdate(order: Order) {
     if (!order.cart) return;
-    if (state === 'PAYED') {
-      await this.orderService.update(order.id, {
-        status: 'CONFIRMED',
-      });
-      await this.cartService.clearCart(order.user.id);
-    }
+
+    await this.orderService.update(order.id, {
+      status: 'CONFIRMED',
+    });
+    await this.cartService.clearCart(order.user.id);
+
     return {
       user: order.user,
-      state,
     };
   }
 
@@ -152,5 +152,80 @@ export class PaymentWebhookService {
     }
 
     return hash === data.hash;
+  }
+
+  public async intellectMoneyPaymentStatusWebhook(
+    data: IntellectMoneyWebhookDto,
+    res: Response,
+  ) {
+    const hash = createIntellectMoneyHash(
+      {
+        Email: data.UserEmail,
+        EshopId: data.EshopId,
+        OrderId: data.OrderId,
+        RecipientAmount: String(data.RecipientAmount),
+        RecipientCurrency: data.RecipientCurrency,
+        SignSecretKey: this.configService.getOrThrow<string>(
+          'INTELLECT_MONEY_SECRET_KEY',
+        ),
+        // ServiceName: data.ServiceName,
+        // SuccessUrl: data.SuccessUrl,
+        // ResultUrl: data.ResultUrl,
+        // Preference: data.Preference,
+        // HoldMode: data.HoldMode,
+        // ExpireDate: data.ExpireDate,
+        // BackUrl: data.BackUrl,
+      },
+      'md5',
+    );
+
+    const isHashValid = hash === data.Hash;
+    if (!isHashValid) {
+      console.warn(
+        '⚠️ [intellectMoneyPaymentStatusWebhook] Неверная подпись вебхука',
+        data,
+      );
+      return res
+        .status(HttpStatus.FORBIDDEN)
+        .json({ status: 'invalid_signature' });
+    }
+    const paymentId = data.PaymentId.toString();
+    const order = await this.orderService.findByPaymentId(paymentId);
+
+    if (!order || !order.cart || !order.user.id) {
+      console.warn(
+        '⚠️ [intellectMoneyPaymentStatusWebhook] Заказ или корзина и юзер в нем не найден по paymentId',
+        paymentId,
+      );
+      return res
+        .status(HttpStatus.NOT_FOUND)
+        .json({ status: 'order_not_found' });
+    }
+
+    const isPayed =
+      order.status === 'CONFIRMED' && data.PaymentStatus === PaymentStatus.Paid;
+    // const isRefunded =
+    //   order.status === 'REJECTED' && data.PaymentStatus === 'REFUNDED';
+    if (isPayed) {
+      console.log(
+        `ℹ️ [intellectMoneyWebhook] Статус ${data.PaymentStatus} уже обработан, дублирование вебхука`,
+      );
+      return res.status(HttpStatus.OK).json({ status: 'duplicate' });
+    }
+
+    if (data.PaymentStatus === PaymentStatus.Paid) {
+      await this.clearCartAndOrderUpdate(order);
+      await this.paymentNotificationsService.notifyUserOrderPaid(order);
+      await this.paymentNotificationsService.notifyAdminNewOrder(order);
+      return res.status(HttpStatus.OK).json({ status: 'OK' });
+    }
+
+    if (data.PaymentStatus === PaymentStatus.Refunded) {
+      console.log(
+        '🔙 [intellectMoneyPaymentStatusWebhook] Сделан возврат paymentId:',
+        paymentId,
+      );
+      return res.status(HttpStatus.OK).json({ status: 'OK' });
+    }
   }
 }

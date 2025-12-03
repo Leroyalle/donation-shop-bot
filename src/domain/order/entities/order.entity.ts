@@ -9,6 +9,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { OrderType } from '../types/order-type.type';
 
 @Entity()
 export class Order {
@@ -28,6 +29,9 @@ export class Order {
   @Column({ nullable: true, type: 'varchar' })
   email: string | null;
 
+  @Column({ nullable: true })
+  tgUsername?: string;
+
   @Column('jsonb')
   items: string;
 
@@ -39,7 +43,7 @@ export class Order {
   status: 'NEW' | 'CONFIRMED' | 'REJECTED';
 
   @Column({ default: 'CARD' })
-  type: 'TOPUP' | 'VOUCHER' | 'STEAM' | 'CARD';
+  type: OrderType;
 
   @CreateDateColumn()
   createdAt: Date;

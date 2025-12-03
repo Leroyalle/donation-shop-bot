@@ -5,6 +5,8 @@ export enum PAY_DIGITAL_PAYMENT_URL {
   v2 = 'https://keys.foreignpay.ru/webhook/v2/merchant',
   v1 = 'https://keys.foreignpay.ru/webhook/proxy-request-post',
 }
+export const INTELLECT_MONEY_PAYMENT_URL =
+  'https://api.intellectmoney.ru/merchant';
 
 export const CKASSA_PAYMENT_ENDPOINTS = {
   invoice: `${CKASSA_PAYMENT_URL}/invoice/create2`,
@@ -20,3 +22,7 @@ export const PAY_DIGITAL_PAYMENT_ENDPOINTS = {
   steamCheck: `${PAY_DIGITAL_PAYMENT_URL.steam}/steam/check`,
   steamPay: `${PAY_DIGITAL_PAYMENT_URL.steam}/steam/pay`,
 };
+
+export enum INTELLECT_MONEY_PAYMENT_ENDPOINTS {
+  createInvoice = `${INTELLECT_MONEY_PAYMENT_URL}/createInvoice`,
+}
