@@ -81,8 +81,6 @@ export class PaymentWebhookService {
   }
 
   async clearCartAndOrderUpdate(order: Order) {
-    if (!order.cart) return;
-
     await this.orderService.update(order.id, {
       status: 'CONFIRMED',
     });
@@ -205,11 +203,9 @@ export class PaymentWebhookService {
     }
 
     if (data.paymentStatus === PaymentStatus.Paid) {
-      console.log('Payment status is paid, before update');
       await this.clearCartAndOrderUpdate(order);
       await this.paymentNotificationsService.notifyUserOrderPaid(order);
       await this.paymentNotificationsService.notifyAdminNewOrder(order);
-      console.log('Payment status is paid, after update');
       return 'OK';
     }
 
@@ -221,7 +217,6 @@ export class PaymentWebhookService {
       return 'OK';
     }
 
-    console.log('After all BEFORE OK');
     return 'OK';
   }
 }

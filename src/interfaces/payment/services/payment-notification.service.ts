@@ -5,6 +5,7 @@ import { ConfigService } from '@nestjs/config';
 import { Order } from 'src/domain/order/entities/order.entity';
 import { CartItem } from 'src/domain/cart-item/entities/cart-item.entity';
 import { OrderType } from 'src/domain/order/types/order-type.type';
+import { Product } from 'src/domain/product/entities/product.entity';
 
 @Injectable()
 export class PaymentNotificationsService {
@@ -23,6 +24,10 @@ export class PaymentNotificationsService {
         )
         .join('\n')
     );
+  }
+
+  private buildKeyString(item: Product) {
+    return `📌 <b>${item.name}</b> (${item.id})`;
   }
 
   public async notifyAdminNewOrder(order: Order) {
@@ -50,7 +55,10 @@ export class PaymentNotificationsService {
         filling = this.buildItemsString(parsedItems as CartItem[]);
         break;
       }
-      case 'BUY_KEY':
+      case 'BUY_KEY': {
+        filling = this.buildKeyString(parsedItems as Product);
+        break;
+      }
       case 'EXTEND_KEY': {
         filling = order.items;
         break;
@@ -69,11 +77,7 @@ export class PaymentNotificationsService {
 👤 <b>Покупатель:</b> ${displayUser}
 💰 <b>Сумма:</b> ${order.type === 'CARD' ? order.amount / 100 : order.amount} ₽
 📋 <b>Тип:</b> ${order.type}
-${
-  order.type === 'CARD' || order.type === 'STARS'
-    ? `🛫 <b>Отправить на:</b> email: ${order.email}${order.tgUsername ? `, tgUsername: ${order.tgUsername}` : ''}`
-    : ''
-}
+${`🛫 <b>Отправить на:</b> email: ${order.email}${order.tgUsername ? `, tgUsername: ${order.tgUsername}` : ''}`}
 🕒 <b>Дата:</b> ${new Date(order.createdAt).toLocaleString('ru-RU', {
         timeZone: 'Europe/Moscow',
       })}
