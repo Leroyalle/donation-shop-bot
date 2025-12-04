@@ -43,7 +43,7 @@ export class PaymentController {
   public async intellectMoneyPaymentStatusWebhook(
     @Body() data: IntellectMoneyWebhookDto,
   ) {
-    console.log('INTELLECT_MONEY_WEBHOOK', data);
+    // console.log('INTELLECT_MONEY_WEBHOOK', data);
     return await this.paymentWebhookService.intellectMoneyPaymentStatusWebhook(
       data,
     );
