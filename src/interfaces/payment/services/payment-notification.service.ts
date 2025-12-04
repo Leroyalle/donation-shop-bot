@@ -7,7 +7,6 @@ import { CartItem } from 'src/domain/cart-item/entities/cart-item.entity';
 import { OrderType } from 'src/domain/order/types/order-type.type';
 import { Product } from 'src/domain/product/entities/product.entity';
 import { orderTypeManager } from '../constants/order-type-manager.constant';
-import path from 'path';
 
 @Injectable()
 export class PaymentNotificationsService {
@@ -131,14 +130,9 @@ ${`🛫 <b>Отправить на:</b> email: ${order.email}${order.tgUsername 
 ⭐ Ваш аккаунт будет пополнен в ближайшее время!`,
       };
 
-      // await this.bot.api.sendMessage(
-      //   order.user.telegramId,
-      //   notificationManager[order.type],
-      //   { parse_mode: 'HTML' },
-      // );
       await this.bot.api.sendPhoto(
         order.user.telegramId,
-        '/public/images/thx.jpg',
+        'https://brosshop.ru/upload/iblock/13c/kaeqnljr2c0gz69tpvp85ebhirdyob1r.jpg',
         {
           caption: notificationManager[order.type],
           parse_mode: 'HTML',
