@@ -5,6 +5,9 @@ import { ConfigService } from '@nestjs/config';
 import { Order } from 'src/domain/order/entities/order.entity';
 import { CartItem } from 'src/domain/cart-item/entities/cart-item.entity';
 import { OrderType } from 'src/domain/order/types/order-type.type';
+import { Product } from 'src/domain/product/entities/product.entity';
+import { orderTypeManager } from '../constants/order-type-manager.constant';
+import path from 'path';
 
 @Injectable()
 export class PaymentNotificationsService {
@@ -23,6 +26,14 @@ export class PaymentNotificationsService {
         )
         .join('\n')
     );
+  }
+
+  private buildBuyKeyString(item: Product) {
+    return `📌 <b>${item.name}</b> (${item.id})`;
+  }
+
+  private buildExtendKeyString({ extendKey }: { extendKey: string }) {
+    return `📌 <b>Продлить ключ - ${extendKey}</b>`;
   }
 
   public async notifyAdminNewOrder(order: Order) {
@@ -50,9 +61,14 @@ export class PaymentNotificationsService {
         filling = this.buildItemsString(parsedItems as CartItem[]);
         break;
       }
-      case 'BUY_KEY':
+      case 'BUY_KEY': {
+        filling = this.buildBuyKeyString(parsedItems as Product);
+        break;
+      }
       case 'EXTEND_KEY': {
-        filling = order.items;
+        filling = this.buildExtendKeyString(
+          parsedItems as { extendKey: string },
+        );
         break;
       }
 
@@ -68,12 +84,8 @@ export class PaymentNotificationsService {
 🧾 <b>ID заказа:</b> <code>${order.id}</code>
 👤 <b>Покупатель:</b> ${displayUser}
 💰 <b>Сумма:</b> ${order.type === 'CARD' ? order.amount / 100 : order.amount} ₽
-📋 <b>Тип:</b> ${order.type}
-${
-  order.type === 'CARD' || order.type === 'STARS'
-    ? `🛫 <b>Отправить на:</b> email: ${order.email}${order.tgUsername ? `, tgUsername: ${order.tgUsername}` : ''}`
-    : ''
-}
+📋 <b>Тип:</b> ${orderTypeManager[order.type]}
+${`🛫 <b>Отправить на:</b> email: ${order.email}${order.tgUsername ? `, tgUsername: ${order.tgUsername}` : ''}`}
 🕒 <b>Дата:</b> ${new Date(order.createdAt).toLocaleString('ru-RU', {
         timeZone: 'Europe/Moscow',
       })}
@@ -107,7 +119,7 @@ ${
 
       BUY_KEY: `✅ <b>Оплата прошла успешно!</b>
 🧾 Заказ <b>#${order.id}</b>
-🗝️ Ключ будет выслан на вашу электронную почту в ближайшее время!.`,
+🗝️ Ключ будет выслан на вашу электронную почту в ближайшее время!`,
 
       EXTEND_KEY: `✅ <b>Оплата прошла успешно!</b>
 🧾 Заказ <b>#${order.id}</b>
@@ -118,11 +130,16 @@ ${
 ⭐ Ваш аккаунт будет пополнен в ближайшее время!`,
     };
 
-    await this.bot.api.sendMessage(
-      order.user.telegramId,
-      notificationManager[order.type],
-      { parse_mode: 'HTML' },
-    );
+    // await this.bot.api.sendMessage(
+    //   order.user.telegramId,
+    //   notificationManager[order.type],
+    //   { parse_mode: 'HTML' },
+    // );
+    const filePath = path.join(process.cwd(), 'public', 'images', 'thx.jpg');
+    await this.bot.api.sendPhoto(order.user.telegramId, filePath, {
+      caption: notificationManager[order.type],
+      parse_mode: 'HTML',
+    });
   }
 
   public async notifyUserError(telegramId: number) {
