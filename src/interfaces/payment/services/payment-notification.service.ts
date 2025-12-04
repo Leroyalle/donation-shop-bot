@@ -97,49 +97,56 @@ ${`🛫 <b>Отправить на:</b> email: ${order.email}${order.tgUsername 
   }
 
   public async notifyUserOrderPaid(order: Order) {
-    if (!order.user?.telegramId) return;
+    try {
+      if (!order.user?.telegramId) return;
 
-    const notificationManager: Record<OrderType, string> = {
-      CARD: `✅ <b>Платеж успешно выполнен!</b>
+      const notificationManager: Record<OrderType, string> = {
+        CARD: `✅ <b>Платеж успешно выполнен!</b>
 🧾 Заказ <b>#${order.id}</b>
 💳 Сумма: <b>${order.amount / 100} ₽</b>
 ⏳ <i>Данные будут отправлены на вашу почту в течение 20 минут.</i>`,
 
-      TOPUP: `✅ <b>Оплата прошла успешно!</b>
+        TOPUP: `✅ <b>Оплата прошла успешно!</b>
 🧾 Заказ <b>#${order.id}</b>
 💰 Пополнение аккаунта будет выполнено в ближайшее время!`,
 
-      VOUCHER: `✅ <b>Оплата прошла успешно!</b>
+        VOUCHER: `✅ <b>Оплата прошла успешно!</b>
 🧾 Заказ <b>#${order.id}</b>
 💰 Ссылка будет отправлена на вашу почту в ближайшее время! Не забудьте проверить папку СПАМ ❗`,
 
-      STEAM: `✅ <b>Оплата прошла успешно!</b>
+        STEAM: `✅ <b>Оплата прошла успешно!</b>
 🧾 Заказ <b>#${order.id}</b>
 🎮 Пополнение Steam-аккаунта будет выполнено в ближайшее время.`,
 
-      BUY_KEY: `✅ <b>Оплата прошла успешно!</b>
+        BUY_KEY: `✅ <b>Оплата прошла успешно!</b>
 🧾 Заказ <b>#${order.id}</b>
 🗝️ Ключ будет выслан на вашу электронную почту в ближайшее время!`,
 
-      EXTEND_KEY: `✅ <b>Оплата прошла успешно!</b>
+        EXTEND_KEY: `✅ <b>Оплата прошла успешно!</b>
 🧾 Заказ <b>#${order.id}</b>
 🗝️ Ключ будет продлен в ближайшее время! Спасибо что выбираете нас!`,
 
-      STARS: `✅ <b>Оплата прошла успешно!</b>
+        STARS: `✅ <b>Оплата прошла успешно!</b>
 🧾 Заказ <b>#${order.id}</b>
 ⭐ Ваш аккаунт будет пополнен в ближайшее время!`,
-    };
+      };
 
-    // await this.bot.api.sendMessage(
-    //   order.user.telegramId,
-    //   notificationManager[order.type],
-    //   { parse_mode: 'HTML' },
-    // );
-    const filePath = path.join(process.cwd(), 'public', 'images', 'thx.jpg');
-    await this.bot.api.sendPhoto(order.user.telegramId, filePath, {
-      caption: notificationManager[order.type],
-      parse_mode: 'HTML',
-    });
+      // await this.bot.api.sendMessage(
+      //   order.user.telegramId,
+      //   notificationManager[order.type],
+      //   { parse_mode: 'HTML' },
+      // );
+      await this.bot.api.sendPhoto(
+        order.user.telegramId,
+        '/public/images/thx.jpg',
+        {
+          caption: notificationManager[order.type],
+          parse_mode: 'HTML',
+        },
+      );
+    } catch (error) {
+      console.log('notifyUserOrderPaid', error);
+    }
   }
 
   public async notifyUserError(telegramId: number) {
