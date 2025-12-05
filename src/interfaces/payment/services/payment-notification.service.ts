@@ -7,6 +7,7 @@ import { CartItem } from 'src/domain/cart-item/entities/cart-item.entity';
 import { OrderType } from 'src/domain/order/types/order-type.type';
 import { Product } from 'src/domain/product/entities/product.entity';
 import { orderTypeManager } from '../constants/order-type-manager.constant';
+import { ProductType } from 'src/domain/product/types/product-type.enum';
 
 @Injectable()
 export class PaymentNotificationsService {
@@ -19,10 +20,14 @@ export class PaymentNotificationsService {
     return (
       items &&
       items
-        .map(
-          (item) =>
-            `📌 <b>${item.card.name}</b> (${item.card.region}) — x${item.quantity}`,
-        )
+        .map((item) => {
+          if (item.card.type === ProductType.CARD) {
+            return `📌 <b>${item.card.name}</b> (${item.card.region}) — x${item.quantity}`;
+          }
+          if (item.card.type === ProductType.STARS) {
+            return `📌 <b>${item.card.name}</b> (Кол-во: ${item.card.quantity}) — x${item.quantity}`;
+          }
+        })
         .join('\n')
     );
   }
@@ -82,7 +87,7 @@ export class PaymentNotificationsService {
 📦 <b>Новый заказ!</b>
 🧾 <b>ID заказа:</b> <code>${order.id}</code>
 👤 <b>Покупатель:</b> ${displayUser}
-💰 <b>Сумма:</b> ${order.type === 'CARD' ? order.amount / 100 : order.amount} ₽
+💰 <b>Сумма:</b> ${order.amount} ₽
 📋 <b>Тип:</b> ${orderTypeManager[order.type]}
 ${`🛫 <b>Отправить на:</b> email: ${order.email}${order.tgUsername ? `, tgUsername: ${order.tgUsername}` : ''}`}
 🕒 <b>Дата:</b> ${new Date(order.createdAt).toLocaleString('ru-RU', {
