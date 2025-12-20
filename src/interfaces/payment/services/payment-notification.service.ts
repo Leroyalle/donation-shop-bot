@@ -55,21 +55,24 @@ export class PaymentNotificationsService {
         : `@${username}`
       : name || 'Неизвестен';
 
-    const parsedItems = JSON.parse(order.items);
-
     let filling = '';
+    const parsedItems =
+      order.items.trim().length > 0 ? JSON.parse(order.items) : filling;
 
     switch (order.type) {
       case 'STARS':
       case 'CARD': {
+        if (!parsedItems) break;
         filling = this.buildItemsString(parsedItems as CartItem[]);
         break;
       }
       case 'BUY_KEY': {
+        if (!parsedItems) break;
         filling = this.buildBuyKeyString(parsedItems as Product);
         break;
       }
       case 'EXTEND_KEY': {
+        if (!parsedItems) break;
         filling = this.buildExtendKeyString(
           parsedItems as { extendKey: string },
         );

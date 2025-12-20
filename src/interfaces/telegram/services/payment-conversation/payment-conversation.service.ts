@@ -200,8 +200,8 @@ export class PaymentConversationService {
         break;
       }
     } catch (error) {
-      console.log('[STEAM_PAY_CONV]', error);
       if (error.message === 'Conversation cancelled') return;
+      console.log('[STEAM_PAY_CONV]', error);
       await ctx.reply('❌ Ошибка. Попробуйте ещё раз.');
     }
   };
