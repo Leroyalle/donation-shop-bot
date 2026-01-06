@@ -20,6 +20,7 @@ export class GameConversationService {
     { user, game }: { user: User; game: Product },
   ) => {
     try {
+      await this.conversationHelpersService.cancelNotification(ctx);
       await ctx.reply('Введите ваш никнейм в Steam:');
       const nickname =
         await this.conversationHelpersService.waitForText(conversation);
