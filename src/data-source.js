@@ -13,9 +13,10 @@ const dataSource = new DataSource({
   database: process.env.DB_DATABASE,
   entities: ['src/**/*.entity.ts'],
   migrations: ['src/migrations/*.ts'],
-  ssl: {
-    rejectUnauthorized: false,
-  },
+  ssl: false,
+  // ssl: {
+  //   rejectUnauthorized: false,
+  // },
 });
 
 export default dataSource;
