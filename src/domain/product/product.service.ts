@@ -16,6 +16,10 @@ export class ProductService {
     return await this.productRepository.find();
   }
 
+  async getAllByType(type: ProductType) {
+    return await this.productRepository.find({ where: { type } });
+  }
+
   async getByPage(
     page: number,
     take: number = 1,

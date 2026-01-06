@@ -8,4 +8,5 @@ export const orderTypeManager: Record<OrderType, string> = {
   STEAM: 'Пополнение Steam',
   TOPUP: 'Пополнение аккаунта TOPUP',
   VOUCHER: 'Пополнение аккаунта VOUCHER',
+  BUY_GAME: 'Покупка игры Steam',
 };

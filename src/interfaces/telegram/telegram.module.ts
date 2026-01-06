@@ -25,6 +25,7 @@ import { KeysUpdate } from './updates/keys.update';
 import { KeysPaymentConversationsService } from './services/payment-conversation/keys-payment-conversations.service';
 import { ConversationHelpersService } from './services/payment-conversation/conversation-helpers.service';
 import { KeysService } from './services/keys.service';
+import { GameConversationService } from './services/payment-conversation/game-conversation.service';
 
 @Module({
   imports: [
@@ -71,6 +72,7 @@ import { KeysService } from './services/keys.service';
     KeysService,
     KeysPaymentConversationsService,
     ConversationHelpersService,
+    GameConversationService,
   ],
 })
 export class TelegramModule {}

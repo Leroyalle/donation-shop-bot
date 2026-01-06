@@ -5,4 +5,5 @@ export type OrderType =
   | 'CARD'
   | 'STARS'
   | 'BUY_KEY'
-  | 'EXTEND_KEY';
+  | 'EXTEND_KEY'
+  | 'BUY_GAME';

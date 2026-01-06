@@ -79,6 +79,7 @@ export class PaymentService {
     user: User,
     orderType: OrderType,
     tgUsername?: string,
+    steamName?: string,
   ): Promise<string | undefined> {
     const order = await this.orderService.create({
       amount,
@@ -90,6 +91,7 @@ export class PaymentService {
       status: 'NEW',
       type: orderType,
       tgUsername,
+      steamName,
     });
 
     const shopId = this.configService.getOrThrow<number>(
