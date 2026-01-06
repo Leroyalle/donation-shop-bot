@@ -43,10 +43,12 @@ export class GameConversationService {
         return;
       }
 
+      const stringifyGame = JSON.stringify(game);
+
       const paymentUrl = await this.paymentService.createIntellectMoneyInvoice(
         game.price,
         null,
-        '',
+        stringifyGame,
         email,
         user,
         'BUY_GAME',

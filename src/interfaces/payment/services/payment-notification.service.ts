@@ -80,7 +80,8 @@ export class PaymentNotificationsService {
       }
 
       case 'BUY_GAME': {
-        filling = `Отправить на Steam - ${order.steamName}`;
+        const game = JSON.parse(order.items) as Product;
+        filling = `Отправить на Steam - <b>${order.steamName}</b>\nGame - <b>${game.name}</b>\n<b>GameId - ${game.id}</b>`;
         break;
       }
 
