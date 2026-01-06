@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { OrderService } from 'src/domain/order/order.service';
 import { CartService } from 'src/domain/cart/cart.service';
 import { CartItemService } from 'src/domain/cart-item/cart-item.service';
@@ -13,7 +13,6 @@ import {
   IntellectMoneyWebhookDto,
   PaymentStatus,
 } from '../dto/intellect-money-payment-webhook.dto';
-import { createIntellectMoneyHash } from 'src/domain/payment/lib/create-intellect-money-hash.lib';
 import { createIntellectMoneyWebhookHash } from '../lib/create-intellect-money-webhook-hash';
 
 @Injectable()

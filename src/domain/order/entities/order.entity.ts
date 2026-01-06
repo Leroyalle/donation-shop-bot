@@ -32,6 +32,9 @@ export class Order {
   @Column({ nullable: true })
   tgUsername?: string;
 
+  @Column({ nullable: true })
+  steamName?: string;
+
   @Column('jsonb')
   items: string;
 

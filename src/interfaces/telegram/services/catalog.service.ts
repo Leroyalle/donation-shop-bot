@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Context } from 'grammy';
+import { Context, InlineKeyboard } from 'grammy';
 import { ProductService } from 'src/domain/product/product.service';
 import { UiBuilderService } from './ui-builder.service';
 import { Region } from 'src/domain/product/types/region.enum';
@@ -73,5 +73,20 @@ export class CatalogService {
     const regions = this.productService.getCardsRegions();
     const keyboard = this.uiBuilderService.buildCardsRegionsList(regions);
     await ctx.reply('Выберите регион:', { reply_markup: keyboard });
+  }
+
+  public async showSteamGames(ctx: Context) {
+    await ctx.answerCallbackQuery();
+    const games = await this.productService.getAllByType(ProductType.GAME);
+    if (!games || games.length === 0) {
+      return await ctx.reply('😟 Этих товаров пока нет! Попробуйте позже');
+    }
+    const keyboard = new InlineKeyboard();
+    games.map((game) =>
+      keyboard
+        .text(game.name + ' - ' + game.price + '₽', `buy_steam_game:${game.id}`)
+        .row(),
+    );
+    await ctx.reply('Выберите игру:', { reply_markup: keyboard });
   }
 }

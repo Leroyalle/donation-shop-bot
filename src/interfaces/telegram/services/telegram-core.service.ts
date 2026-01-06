@@ -8,12 +8,14 @@ import { PaymentConversationService } from './payment-conversation/payment-conve
 import { UserSource } from 'src/shared/types/user/user-sourse.enum';
 import { ProductType } from 'src/domain/product/types/product-type.enum';
 import { KeysPaymentConversationsService } from './payment-conversation/keys-payment-conversations.service';
+import { GameConversationService } from './payment-conversation/game-conversation.service';
 
 @Injectable()
 export class TelegramCoreService {
   constructor(
     private readonly userService: UserService,
     private readonly paymentConversationService: PaymentConversationService,
+    private readonly gameConversationService: GameConversationService,
     @InjectBot() private readonly bot: Bot<Context>,
     private readonly keysPaymentConversationsService: KeysPaymentConversationsService,
   ) {
@@ -32,6 +34,13 @@ export class TelegramCoreService {
       createConversation(
         this.paymentConversationService.steamPayConversation,
         'steam-pay',
+      ),
+    );
+
+    this.bot.use(
+      createConversation(
+        this.gameConversationService.buyGameConversation,
+        'buy_steam_game',
       ),
     );
 
@@ -132,6 +141,12 @@ export class TelegramCoreService {
           {
             text: 'Пополнение в играх',
             callback_data: 'additionalCategories',
+          },
+        ],
+        [
+          {
+            text: 'Донат в steam играх',
+            callback_data: 'show_steam_games',
           },
         ],
       ]);

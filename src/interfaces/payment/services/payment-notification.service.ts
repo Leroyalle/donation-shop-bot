@@ -79,6 +79,11 @@ export class PaymentNotificationsService {
         break;
       }
 
+      case 'BUY_GAME': {
+        filling = `Отправить на Steam - ${order.steamName}`;
+        break;
+      }
+
       default:
         filling = 'Автоматически выполнено поставщиком';
         break;
@@ -110,7 +115,7 @@ ${`🛫 <b>Отправить на:</b> email: ${order.email}${order.tgUsername 
       const notificationManager: Record<OrderType, string> = {
         CARD: `✅ <b>Платеж успешно выполнен!</b>
 🧾 Заказ <b>#${order.id}</b>
-💳 Сумма: <b>${order.amount / 100} ₽</b>
+💳 Сумма: <b>${order.amount}₽</b>
 ⏳ <i>Данные будут отправлены на вашу почту в течение 20 минут.</i>`,
 
         TOPUP: `✅ <b>Оплата прошла успешно!</b>
@@ -136,6 +141,10 @@ ${`🛫 <b>Отправить на:</b> email: ${order.email}${order.tgUsername 
         STARS: `✅ <b>Оплата прошла успешно!</b>
 🧾 Заказ <b>#${order.id}</b>
 ⭐ Ваш аккаунт будет пополнен в ближайшее время!`,
+
+        BUY_GAME: `✅ <b>Оплата прошла успешно!</b>
+🧾 Заказ <b>#${order.id}</b>
+🎮 Игра будет отправлена на ваш аккаунт в ближайшее время.`,
       };
 
       await this.bot.api.sendPhoto(

@@ -11,7 +11,7 @@ import { ProductType } from 'src/domain/product/types/product-type.enum';
 export class CatalogUpdate {
   constructor(
     private readonly catalogService: CatalogService,
-    private readonly telegramService: TelegramCoreService,
+    private readonly telegramCoreService: TelegramCoreService,
   ) {}
 
   @CallbackQuery(/^catalog:/)
@@ -42,10 +42,15 @@ export class CatalogUpdate {
     await ctx.answerCallbackQuery();
     await this.catalogService.getCardsRegions(ctx);
   }
+  @CallbackQuery('show_steam_games')
+  public async showSteamGames(ctx: Context) {
+    await ctx.answerCallbackQuery();
+    await this.catalogService.showSteamGames(ctx);
+  }
 
   @CallbackQuery('categories')
   public async getCategories(ctx: Context) {
     await ctx.answerCallbackQuery();
-    await this.telegramService.showCategories(ctx);
+    await this.telegramCoreService.showCategories(ctx);
   }
 }
