@@ -125,27 +125,32 @@ export class TelegramCoreService {
       const keyboards = new InlineKeyboard([
         [
           {
-            text: 'Telegram Stars 🆕',
+            text: '⭐ Telegram Stars',
             callback_data: `catalog:0:${ProductType.STARS}:${undefined}:false`,
           },
         ],
         [
           {
-            text: 'Ключи 🆕',
+            text: '🔑 Ключи',
             callback_data: `keys`,
           },
         ],
-        [{ text: 'Карты пополнения APP STORE', callback_data: 'apple_cards' }],
-        [{ text: 'Пополнение Steam', callback_data: 'steam' }],
         [
           {
-            text: 'Пополнение в играх',
+            text: '🍎 App Store — карты пополнения',
+            callback_data: 'apple_cards',
+          },
+        ],
+        [{ text: '🎮 Steam — пополнение', callback_data: 'steam' }],
+        [
+          {
+            text: '🕹️ Пополнение в играх',
             callback_data: 'additionalCategories',
           },
         ],
         [
           {
-            text: 'Донат в steam играх',
+            text: '🧩 Игры Steam',
             callback_data: 'show_steam_games',
           },
         ],
