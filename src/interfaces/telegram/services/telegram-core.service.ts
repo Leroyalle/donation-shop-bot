@@ -6,7 +6,6 @@ import { InjectBot } from '@grammyjs/nestjs';
 import { conversations, createConversation } from '@grammyjs/conversations';
 import { PaymentConversationService } from './payment-conversation/payment-conversation.service';
 import { UserSource } from 'src/shared/types/user/user-sourse.enum';
-import { ProductType } from 'src/domain/product/types/product-type.enum';
 import { KeysPaymentConversationsService } from './payment-conversation/keys-payment-conversations.service';
 import { GameConversationService } from './payment-conversation/game-conversation.service';
 
@@ -124,10 +123,10 @@ export class TelegramCoreService {
     try {
       const keyboards = new InlineKeyboard([
         [
-          {
-            text: '⭐ Telegram Stars',
-            callback_data: `catalog:0:${ProductType.STARS}:${undefined}:false`,
-          },
+          // {
+          //   text: '⭐ Telegram Stars',
+          //   callback_data: `catalog:0:${ProductType.STARS}:${undefined}:false`,
+          // },
         ],
         [
           {
